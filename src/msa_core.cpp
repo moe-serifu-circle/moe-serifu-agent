@@ -2,7 +2,7 @@
 
 #include <pthread.h>
 #include <cstdio>
-#include <cunistd>
+#include <unistd.h>
 
 namespace msa_core {
     

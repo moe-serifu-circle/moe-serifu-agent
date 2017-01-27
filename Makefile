@@ -1,4 +1,4 @@
-CC=gcc
+CC=g++
 CFLAGS=-pthread
 ODIR=obj
 SDIR=src

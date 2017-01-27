@@ -56,7 +56,7 @@ namespace msa::control {
 		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &retval);
 		while (true)
 		{
-			printf("I am alive!\n");
+			printf("Cute Anime Girl: \"I am alive\"!\n");
 			sleep(2);
 		}
 	}

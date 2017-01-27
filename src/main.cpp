@@ -14,14 +14,14 @@ int main(int argc, char *argv[]) {
         perror("could not init msa handle");
         return EXIT_FAILURE;
     }
-    printf("Waiting to kill\n");
+    printf("Watchdog: \"Waiting 10 seconds to kill AI...\"\n");
     sleep(10);
-    printf("Killing.\n");
+    printf("Watchdog: \"Killing AI.\"\n");
     if (msa::control::quit(hdl) != 0)
     {
         perror("could not quit msa");
         return EXIT_FAILURE;
     }
-    printf("Dead\n");
+    printf("Watchdog: \"AI killed.\"\n");
     return EXIT_SUCCESS;
 }

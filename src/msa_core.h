@@ -3,13 +3,13 @@
 
 namespace msa_core {
 
-	enum status_t { CREATED, RUNNING, STOPPED };
+	typedef enum status_t { CREATED, RUNNING, STOPPED } STATUS;
 
-	typedef struct sys_handle_t sys_handle;
+	typedef struct env_t* HANDLE;
 
-	sys_handle *init();
-	void stop(sys_handle *handle);
-	status_t status(sys_handle *handle);
+	extern int init(HANDLE *msa));
+	extern int quit(HANDLE msa);
+	extern STATUS status(HANDLE msa);
 }
 
 #endif

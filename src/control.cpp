@@ -1,24 +1,24 @@
-#include "msa_core.hpp"
+#include "control.hpp"
 
 #include <pthread.h>
 #include <cstdio>
 #include <unistd.h>
 
-namespace msa_core {
+namespace msa::control {
 
-	static void *agent_main(void *args);
+	static void *msa_main(void *args);
 
-	struct env_t
+	struct environment_type
 	{
 		pthread_t exec_thread;
-		STATUS status;
+		Status status;
 	};
 
-	extern int init(HANDLE *msa)
+	extern int init(Handle *msa)
 	{
-		env_t *hdl = new env_t;
+		environment_type *hdl = new environment_type;
 		hdl->status = CREATED;
-		int create_status = pthread_create(&hdl->exec_thread, NULL, agent_main, hdl);
+		int create_status = pthread_create(&hdl->exec_thread, NULL, msa_main, hdl);
 		if (create_status != 0)
 		{
 			delete hdl;
@@ -28,7 +28,7 @@ namespace msa_core {
 		return 0;
 	}
 
-	extern int quit(HANDLE msa)
+	extern int quit(Handle msa)
 	{
 		int err = pthread_cancel(msa->exec_thread);
 		if (err != 0)
@@ -44,12 +44,12 @@ namespace msa_core {
 		return 0;
 	}
 
-	extern STATUS status(HANDLE msa)
+	extern Status status(Handle msa)
 	{
 		return msa->status;
 	}
 
-	static void *agent_main(void *args)
+	static void *msa_main(void *args)
 	{
 		int retval; // include for portability according to man page
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &retval);

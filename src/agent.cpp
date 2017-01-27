@@ -1,18 +1,20 @@
 #include "agent.hpp"
 
-namespace agent {
+#include <cstdint>
 
-	struct agent_t
+namespace msa::agent {
+
+	struct agent_type
 	{
 		// current activity
-		MODE mode;
+		Mode mode;
 		
 		// positive attitude to the master user,
 		// TODO: make this into an ID->attitude table
-		uint_32 attitude;
+		uint32_t attitude;
 	
 		// current emotional state, affected by context and responses
-		MOOD mood;
+		Mood mood;
 	};
 
 }

@@ -3,20 +3,12 @@
 
 // Moe Serifu Agent state and manipulation
 
-enum msa_mode { IDLE, ALERT, LISTEN, ERO, CONVERSE, DEBUG };
+namespace agent {
 
-enum msa_mood { NEUTRAL };
+	typedef enum mode_t { IDLE, ALERT, LISTEN, ERO, CONVERSE, DEBUG } MODE;
+	typedef enum mood_t { NEUTRAL } MOOD;
 
-typedef struct
-{
-	// current activity
-	msa_mode mode;
+	typedef struct agent_t agent;
 	
-	// positive attitude to the master user
-	int attitude;
-
-	// current emotional state, affected by context and responses
-	msa_mood mood;
-} agent;
-
+}
 #endif

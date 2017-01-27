@@ -1,4 +1,4 @@
-#include "msa_core.h"
+#include "msa_core.hpp"
 
 #include <pthread.h>
 #include <stdio.h>

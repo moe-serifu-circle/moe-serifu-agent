@@ -1,5 +1,5 @@
-#ifndef MSA_CORE_H
-#define MSA_CORE_H
+#ifndef MSA_CORE_HPP
+#define MSA_CORE_HPP
 
 namespace msa_core {
 

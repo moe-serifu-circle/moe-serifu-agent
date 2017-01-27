@@ -1,5 +1,5 @@
-#ifndef AGENT_H
-#define AGENT_H
+#ifndef AGENT_HPP
+#define AGENT_HPP
 
 // Moe Serifu Agent state and manipulation
 

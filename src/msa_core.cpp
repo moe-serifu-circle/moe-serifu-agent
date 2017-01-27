@@ -1,7 +1,8 @@
 #include "msa_core.hpp"
 
 #include <pthread.h>
-#include <stdio.h>
+#include <cstdio>
+#include <cunistd>
 
 namespace msa_core {
     
@@ -54,6 +55,7 @@ namespace msa_core {
         while (true)
         {
             printf("I am alive!\n");
+            sleep(2);
         }
     }
     

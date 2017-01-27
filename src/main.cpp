@@ -4,7 +4,7 @@
 
 #include <cstdlib>
 #include <cstdio>
-#include <cunistd>
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
     msa_core::HANDLE hdl;

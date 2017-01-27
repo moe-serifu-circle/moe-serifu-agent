@@ -10,7 +10,7 @@ enum msa_mood { NEUTRAL };
 typedef struct
 {
 	// current activity
-	msa_state mode;
+	msa_mode mode;
 	
 	// positive attitude to the master user
 	int attitude;

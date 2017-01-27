@@ -7,7 +7,7 @@ namespace msa_core {
 
 	typedef struct env_t* HANDLE;
 
-	extern int init(HANDLE *msa));
+	extern int init(HANDLE *msa);
 	extern int quit(HANDLE msa);
 	extern STATUS status(HANDLE msa);
 }

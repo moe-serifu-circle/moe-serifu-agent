@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-pthread
 TEST_CFLAGS=$(CFLAGS) -g -O0
 
-DEP_TARGETS=agent.o control.o
+DEP_TARGETS=agent.o control.o event.o
 
 ODIR=obj
 SDIR=src
@@ -65,6 +65,9 @@ $(ODIR)/control.o: $(ODIR) $(SDIR)/control.cpp $(SDIR)/control.hpp
 $(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
 	$(CC) -c -o $@ $(SDIR)/agent.cpp $(CFLAGS)
 
+$(ODIR)/event.o: $(ODIR) $(SDIR)/event.cpp $(SDIR)/event.hpp
+	$(CC) -c -o $@ $(SDIR)/event.cpp $(CFLAGS)
+
 
 # --------------
 # Test recipies
@@ -81,4 +84,8 @@ $(TDIR)/$(ODIR)/control.o: $(TDIR)/$(ODIR) $(SDIR)/control.cpp $(SDIR)/control.h
     
 $(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
 	$(CC) -c -o $@ $(SDIR)/agent.cpp $(TEST_CFLAGS)
+
+$(TDIR)/$(ODIR)/event.o: $(TDIR)/$(ODIR) $(SDIR)/event.cpp $(SDIR)/event.hpp
+	$(CC) -c -o $@ $(SDIR)/event.cpp $(TEST_CFLAGS)
+
 

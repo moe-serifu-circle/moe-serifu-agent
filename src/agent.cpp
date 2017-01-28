@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace msa::agent {
+namespace msa { namespace agent {
 
 	struct agent_type
 	{
@@ -17,4 +17,4 @@ namespace msa::agent {
 		Mood mood;
 	};
 
-}
+} }

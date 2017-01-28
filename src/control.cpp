@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <unistd.h>
 
-namespace msa::control {
+namespace msa { namespace control {
 
 	static void *msa_main(void *args);
 
@@ -60,4 +60,4 @@ namespace msa::control {
 			sleep(2);
 		}
 	}
-}
+} }

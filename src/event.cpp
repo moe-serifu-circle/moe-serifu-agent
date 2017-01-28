@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace msa::event {
+namespace msa { namespace event {
 
 	struct topic_attr {
 		uint8_t priority;
@@ -45,4 +45,4 @@ namespace msa::event {
 	}
 
 	#undef ATTR_INDEX_MAX
-}
+} }

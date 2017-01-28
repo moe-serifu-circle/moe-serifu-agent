@@ -3,7 +3,7 @@
 
 #include <ctime>
 
-namespace msa::event {
+namespace msa { namespace event {
 
 	// MUST BE SEQUENTIAL!! Do not assign specific constants
 	typedef enum topic_type {
@@ -25,6 +25,6 @@ namespace msa::event {
 	extern const Event *create(Topic topic, void *args);
 	extern void dispose(Event *e);
 
-}
+} }
 
 #endif

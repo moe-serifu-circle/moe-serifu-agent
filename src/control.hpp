@@ -1,7 +1,7 @@
 #ifndef CONTROL_HPP
 #define CONTROL_HPP
 
-namespace msa::control {
+namespace msa { namespace control {
 
 	typedef enum status_type { CREATED, RUNNING, STOPPED } Status;
 
@@ -10,6 +10,6 @@ namespace msa::control {
 	extern int init(Handle *msa);
 	extern int quit(Handle msa);
 	extern Status status(Handle msa);
-}
+} }
 
 #endif

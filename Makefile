@@ -1,6 +1,7 @@
 CC=g++
-CFLAGS=-pthread
-TEST_CFLAGS=$(CFLAGS) -g -O0
+CFLAGS_COMMON=-pthread
+CFLAGS_DEBUG=$(CFLAGS_COMMON) -g -O0
+CFLAGS_RELEASE=$(CFLAGS_COMMON)
 
 DEP_TARGETS=agent.o control.o event.o
 
@@ -10,7 +11,7 @@ TDIR=testing
 
 DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
-TEST_DEP_OBJS=$(patsubst %,$(TDIR)/$(ODIR)/%,$(DEP_TARGETS))
+DEP_OBJS_DEBUG=$(patsubst %,$(TDIR)/$(ODIR)/%,$(DEP_TARGETS))
 
 
 
@@ -21,7 +22,7 @@ all: directories moe-serifu
 
 directories: $(ODIR)
 
-test: clean $(TDIR)/moe-serifu
+test: $(TDIR)/moe-serifu
 	valgrind --leak-check=yes --track-origins=yes $(TDIR)/moe-serifu
 
 clean:
@@ -35,7 +36,6 @@ clean:
 
 
 # -------------
-
 # Dir recipies
 # -------------
 
@@ -49,43 +49,43 @@ $(TDIR)/$(ODIR):
 	mkdir -p $(TDIR)/$(ODIR)
 
 
-# --------------
-# Main recipies
-# --------------
+# -----------------
+# Release recipies
+# -----------------
 
 moe-serifu: $(ODIR)/main.o $(DEP_OBJS)
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS_RELEASE)
     
 $(ODIR)/main.o: $(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
-	$(CC) -c -o $@ $(SDIR)/main.cpp $(CFLAGS)
+	$(CC) -c -o $@ $(SDIR)/main.cpp $(CFLAGS_RELEASE)
 
 $(ODIR)/control.o: $(ODIR) $(SDIR)/control.cpp $(SDIR)/control.hpp
-	$(CC) -c -o $@ $(SDIR)/control.cpp $(CFLAGS)
+	$(CC) -c -o $@ $(SDIR)/control.cpp $(CFLAGS_RELEASE)
     
 $(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
-	$(CC) -c -o $@ $(SDIR)/agent.cpp $(CFLAGS)
+	$(CC) -c -o $@ $(SDIR)/agent.cpp $(CFLAGS_RELEASE)
 
 $(ODIR)/event.o: $(ODIR) $(SDIR)/event.cpp $(SDIR)/event.hpp
-	$(CC) -c -o $@ $(SDIR)/event.cpp $(CFLAGS)
+	$(CC) -c -o $@ $(SDIR)/event.cpp $(CFLAGS_RELEASE)
 
 
-# --------------
-# Test recipies
-# --------------
+# ---------------
+# Debug recipies
+# ---------------
 
-$(TDIR)/moe-serifu: $(TDIR)/$(ODIR)/main.o $(TEST_DEP_OBJS)
-	$(CC) -o $@ $^ $(TEST_CFLAGS)
+$(TDIR)/moe-serifu: $(TDIR)/$(ODIR)/main.o $(DEP_OBJS_DEBUG)
+	$(CC) -o $@ $^ $(CFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(TEST_DEP_INCS)
-	$(CC) -c -o $@ $(SDIR)/main.cpp $(TEST_CFLAGS)
+$(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
+	$(CC) -c -o $@ $(SDIR)/main.cpp $(CFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/control.o: $(TDIR)/$(ODIR) $(SDIR)/control.cpp $(SDIR)/control.hpp
-	$(CC) -c -o $@ $(SDIR)/control.cpp $(TEST_CFLAGS)
+	$(CC) -c -o $@ $(SDIR)/control.cpp $(CFLAGS_DEBUG)
     
 $(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
-	$(CC) -c -o $@ $(SDIR)/agent.cpp $(TEST_CFLAGS)
+	$(CC) -c -o $@ $(SDIR)/agent.cpp $(CFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/event.o: $(TDIR)/$(ODIR) $(SDIR)/event.cpp $(SDIR)/event.hpp
-	$(CC) -c -o $@ $(SDIR)/event.cpp $(TEST_CFLAGS)
+	$(CC) -c -o $@ $(SDIR)/event.cpp $(CFLAGS_DEBUG)
 
 

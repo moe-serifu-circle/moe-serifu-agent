@@ -12,15 +12,15 @@ namespace msa { namespace event {
 		EVENT_INTERRUPTED
 	} Topic;
 
-	extern struct topic_attr;
+	struct topic_attr;
 
-	typedef struct event_type Event
+	typedef struct event_type
 	{
 		Topic topic;
-		const topic_attr &attributes;
+		const topic_attr *attributes;
 		time_t generation_time;
 		void *args;
-	};
+	} Event;
 
 	extern const Event *create(Topic topic, void *args);
 	extern void dispose(Event *e);

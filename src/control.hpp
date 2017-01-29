@@ -1,6 +1,8 @@
 #ifndef CONTROL_HPP
 #define CONTROL_HPP
 
+#include "event_handler.hpp"
+
 namespace msa { namespace control {
 
 	typedef enum status_type { CREATED, RUNNING, STOPPED } Status;
@@ -9,7 +11,11 @@ namespace msa { namespace control {
 
 	extern int init(Handle *msa);
 	extern int quit(Handle msa);
+	extern int dispose(Handle msa);
+	extern void subscribe(Handle msa, msa::event::Topic, msa::event::EventHandler);
+	extern void unsubscribe(Handle msa, msa::event::Topic, msa::event::EventHandler);
 	extern Status status(Handle msa);
+	extern void push_event(Handle msa, Event *e);
 } }
 
 #endif

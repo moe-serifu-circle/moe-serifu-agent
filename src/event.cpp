@@ -1,6 +1,7 @@
 #include "event.hpp"
 
 #include <stdexcept>
+#include <unistd.h>
 
 namespace msa { namespace event {
 
@@ -14,14 +15,49 @@ namespace msa { namespace event {
 		//EVENT_HANDLED
 		{10},
 		//EVENT_INTERRUPTED
-		{10}
+		{10},
+		// COMMAND_ANNOUNCE
+		{1},
 	};
 
-	#define ATTR_INDEX_MAX (sizeof(topic_attr_table) / sizeof(struct topic_attr) - 1)
+	inline bool operator<(const Event &e1, const Event &e2)
+	{
+		return e1.attributes.priority < e2.attributes.priority;
+	}
+
+	inline bool operator>(const Event &e1, const Event &e2)
+	{
+		return (e2 < e1);
+	}
+
+	inline bool operator<=(const Event &e1, const Event &e2)
+	{
+		return !(e1 > e2);
+	}
+
+	inline bool operator>=(const Event &e1, const Event &e2)
+	{
+		return !(e1 < e2);
+	}
+
+	inline bool operator==(const Event &e1, const Event &e2)
+	{
+		return e1.attributes.priority == e2.attributes.priority;
+	}
+
+	inline bool operator!=(const Event &e1, const Event &e2)
+	{
+		return !(e1 == e2);
+	}
+
+	extern const int max_topic_index()
+	{
+		return sizeof(topic_attr_table) / sizeof(struct topic_attr) - 1);
+	}
 
 	static const struct topic_attr *get_topic_attr(Topic t)
 	{
-		if (t > ATTR_INDEX_MAX || t < 0)
+		if (t > max_topic_index() || t < 0)
 		{
 			throw std::invalid_argument("unknown topic");
 		}
@@ -42,6 +78,11 @@ namespace msa { namespace event {
 	extern void dispose(Event *e)
 	{
 		delete e;
+	}
+
+	extern uint8_t get_priority(Event *e)
+	{
+		return e->attributes.priority;
 	}
 
 	#undef ATTR_INDEX_MAX

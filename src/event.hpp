@@ -9,7 +9,8 @@ namespace msa { namespace event {
 	typedef enum topic_type {
 		EVENT_STACK_CLEARED,
 		EVENT_HANDLED,
-		EVENT_INTERRUPTED
+		EVENT_INTERRUPTED,
+		COMMAND_ANNOUNCE
 	} Topic;
 
 	struct topic_attr;
@@ -22,8 +23,17 @@ namespace msa { namespace event {
 		void *args;
 	} Event;
 
+	inline bool operator<(const Event &e1, const Event &e2);
+	inline bool operator>(const Event &e1, const Event &e2);
+	inline bool operator<=(const Event &e1, const Event &e2);
+	inline bool operator>=(const Event &e1, const Event &e2);
+	inline bool operator==(const Event &e1, const Event &e2);
+	inline bool operator!=(const Event &e1, const Event &e2);
+
 	extern const Event *create(Topic topic, void *args);
 	extern void dispose(Event *e);
+	extern uint8_t get_priority(Event *e);
+	extern int max_topic_index();
 
 } }
 

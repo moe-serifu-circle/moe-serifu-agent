@@ -8,7 +8,7 @@
 
 #include <unistd.h>
 
-static void say_func(const Event *const e, HandlerSync *cons);
+static void say_func(const msa::event::Event *const e, msa::event::HandlerSync *cons);
 
 int main(int argc, char *argv[]) {
 	msa::control::Handle hdl;
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 		perror("could not init msa handle");
 		return EXIT_FAILURE;
 	}
-	msa::control::subscribe(hdl, Topic::COMMAND_ANNOUNCE, say_func);
+	msa::control::subscribe(hdl, msa::event::Topic::COMMAND_ANNOUNCE, say_func);
 	printf("Master: \"subscribed to announce\"\n");
 	while (true)
 	{
@@ -25,13 +25,13 @@ int main(int argc, char *argv[]) {
 		printf("Master: \"waiting %d seconds...\"\n", seconds_sleep);
 		sleep(seconds_sleep);
 		printf("Master: \"Masa-chan, Announce Yourself.\"\n");
-		msa::event::Event *e = msa::event::create(Topic::COMMAND_ANNOUNCE, NULL);
-		msa::control::push_event(e);
+		const msa::event::Event *e = msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL);
+		msa::control::push_event(hdl, e);
 	}
 	return EXIT_SUCCESS;
 }
 
-static void say_func(const Event *const e, HandlerSync *cons)
+static void say_func(const msa::event::Event *const e, msa::event::HandlerSync *cons)
 {
 	printf("Masa-chan: \"I'd like to announce my presence!\"\n");
 }

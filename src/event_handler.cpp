@@ -13,7 +13,7 @@ namespace msa { namespace event {
 
 	extern void create_handler_sync(HandlerSync **sync)
 	{
-		handler_syncronization_type *handler_sync = new handler_synchronization_type;
+		handler_synchronization_type *handler_sync = new handler_synchronization_type;
 		handler_sync->resume_cond = PTHREAD_COND_INITIALIZER;
 		handler_sync->suspend_mutex = PTHREAD_MUTEX_INITIALIZER;
 		handler_sync->suspend_flag = false;
@@ -23,8 +23,8 @@ namespace msa { namespace event {
 
 	extern void dispose_handler_sync(HandlerSync *sync)
 	{
-		pthread_cond_destroy(sync->resume_cond);
-		pthread_mutex_destory(sync->suspend_mutex);
+		pthread_cond_destroy(&sync->resume_cond);
+		pthread_mutex_destroy(&sync->suspend_mutex);
 		delete sync;
 	}
 
@@ -40,7 +40,7 @@ namespace msa { namespace event {
 		pthread_mutex_lock(&sync->suspend_mutex);
 		sync->suspend_flag = false;
 		pthread_cond_broadcast(&sync->resume_cond);
-		pthread_mutex_unlock(&sync->
+		pthread_mutex_unlock(&sync->suspend_mutex);
 	}
 
 	extern bool handler_suspended(HandlerSync *sync)
@@ -60,7 +60,7 @@ namespace msa { namespace event {
 			pthread_cond_wait(&sync->resume_cond, &sync->suspend_mutex);
 		}
 		sync->in_wait_loop = false;
-		pthread_mutex_unlock(&
+		pthread_mutex_unlock(&sync->suspend_mutex);
 	}
 
 } }

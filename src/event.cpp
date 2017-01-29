@@ -22,7 +22,7 @@ namespace msa { namespace event {
 
 	inline bool operator<(const Event &e1, const Event &e2)
 	{
-		return e1.attributes.priority < e2.attributes.priority;
+		return e1.attributes->priority < e2.attributes->priority;
 	}
 
 	inline bool operator>(const Event &e1, const Event &e2)
@@ -42,7 +42,7 @@ namespace msa { namespace event {
 
 	inline bool operator==(const Event &e1, const Event &e2)
 	{
-		return e1.attributes.priority == e2.attributes.priority;
+		return e1.attributes->priority == e2.attributes->priority;
 	}
 
 	inline bool operator!=(const Event &e1, const Event &e2)
@@ -50,9 +50,9 @@ namespace msa { namespace event {
 		return !(e1 == e2);
 	}
 
-	extern const int max_topic_index()
+	extern int max_topic_index()
 	{
-		return sizeof(topic_attr_table) / sizeof(struct topic_attr) - 1);
+		return sizeof(topic_attr_table) / sizeof(struct topic_attr) - 1;
 	}
 
 	static const struct topic_attr *get_topic_attr(Topic t)
@@ -75,14 +75,14 @@ namespace msa { namespace event {
 		return e;
 	}
 
-	extern void dispose(Event *e)
+	extern void dispose(const Event *e)
 	{
 		delete e;
 	}
 
-	extern uint8_t get_priority(Event *e)
+	extern uint8_t get_priority(const Event *e)
 	{
-		return e->attributes.priority;
+		return e->attributes->priority;
 	}
 
 	#undef ATTR_INDEX_MAX

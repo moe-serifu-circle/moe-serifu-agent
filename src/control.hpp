@@ -15,7 +15,7 @@ namespace msa { namespace control {
 	extern void subscribe(Handle msa, msa::event::Topic, msa::event::EventHandler);
 	extern void unsubscribe(Handle msa, msa::event::Topic, msa::event::EventHandler);
 	extern Status status(Handle msa);
-	extern void push_event(Handle msa, Event *e);
+	extern void push_event(Handle msa, const msa::event::Event *e);
 } }
 
 #endif

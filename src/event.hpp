@@ -11,7 +11,8 @@ namespace msa { namespace event {
 		EVENT_STACK_CLEARED,
 		EVENT_HANDLED,
 		EVENT_INTERRUPTED,
-		COMMAND_ANNOUNCE
+		COMMAND_ANNOUNCE,
+		COMMAND_EXIT
 	} Topic;
 
 	struct topic_attr;

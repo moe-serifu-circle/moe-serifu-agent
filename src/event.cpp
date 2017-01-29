@@ -18,6 +18,8 @@ namespace msa { namespace event {
 		{10},
 		// COMMAND_ANNOUNCE
 		{1},
+		// COMMAND_EXIT
+		{1}
 	};
 
 	inline bool operator<(const Event &e1, const Event &e2)

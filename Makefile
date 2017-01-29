@@ -3,7 +3,7 @@ CFLAGS_COMMON=-std=c++11 -pthread
 CFLAGS_DEBUG=$(CFLAGS_COMMON) -g -O0
 CFLAGS_RELEASE=$(CFLAGS_COMMON)
 
-DEP_TARGETS=agent.o control.o event.o
+DEP_TARGETS=agent.o control.o event.o event_handler.o
 
 ODIR=obj
 SDIR=src
@@ -59,7 +59,7 @@ moe-serifu: $(ODIR)/main.o $(DEP_OBJS)
 $(ODIR)/main.o: $(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CC) -c -o $@ $(SDIR)/main.cpp $(CFLAGS_RELEASE)
 
-$(ODIR)/control.o: $(ODIR) $(SDIR)/control.cpp $(SDIR)/control.hpp
+$(ODIR)/control.o: $(ODIR) $(SDIR)/control.cpp $(SDIR)/control.hpp $(ODIR)/event_handler.o
 	$(CC) -c -o $@ $(SDIR)/control.cpp $(CFLAGS_RELEASE)
     
 $(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
@@ -67,6 +67,10 @@ $(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
 
 $(ODIR)/event.o: $(ODIR) $(SDIR)/event.cpp $(SDIR)/event.hpp
 	$(CC) -c -o $@ $(SDIR)/event.cpp $(CFLAGS_RELEASE)
+
+$(ODIR)/event_handler.o: $(ODIR) $(SDIR)/event_handler.cpp $(SDIR)/event_handler.hpp $(ODIR)/event.o
+	$(CC) -c -o $@ $(SDIR)/event_handler.cpp $(CFLAGS_RELEASE)
+
 
 
 # ---------------
@@ -79,7 +83,7 @@ $(TDIR)/moe-serifu: $(TDIR)/$(ODIR)/main.o $(DEP_OBJS_DEBUG)
 $(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CC) -c -o $@ $(SDIR)/main.cpp $(CFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/control.o: $(TDIR)/$(ODIR) $(SDIR)/control.cpp $(SDIR)/control.hpp
+$(TDIR)/$(ODIR)/control.o: $(TDIR)/$(ODIR) $(SDIR)/control.cpp $(SDIR)/control.hpp $(TDIR)/$(ODIR)/event_handler.o
 	$(CC) -c -o $@ $(SDIR)/control.cpp $(CFLAGS_DEBUG)
     
 $(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
@@ -87,5 +91,8 @@ $(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
 
 $(TDIR)/$(ODIR)/event.o: $(TDIR)/$(ODIR) $(SDIR)/event.cpp $(SDIR)/event.hpp
 	$(CC) -c -o $@ $(SDIR)/event.cpp $(CFLAGS_DEBUG)
+
+$(TDIR)/$(ODIR)/event_handler.o: $(TDIR)/$(ODIR) $(SDIR)/event_handler.cpp $(SDIR)/event_handler.hpp $(TDIR)/$(ODIR)/event.o
+	$(CC) -c -o $@ $(SDIR)/event_handler.cpp $(CFLAGS_DEBUG)
 
 

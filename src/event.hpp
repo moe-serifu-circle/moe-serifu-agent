@@ -2,6 +2,7 @@
 #define EVENT_HPP
 
 #include <ctime>
+#include <cstdint>
 
 namespace msa { namespace event {
 

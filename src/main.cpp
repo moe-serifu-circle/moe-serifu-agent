@@ -1,5 +1,6 @@
 /* Main source code file. */
 
+#include "environment.hpp"
 #include "control.hpp"
 #include "event_handler.hpp"
 
@@ -24,12 +25,11 @@ int main(int argc, char *argv[]) {
 	msa::core::subscribe(hdl, msa::event::Topic::COMMAND_EXIT, exit_func);
 	printf("Master: \"subscribed to exit\"\n");
 	int events_count = 0;
-	while (msa::core::status(hdl) == msa::core::Status::CREATED)
+	while (hdl->status == msa::core::Status::CREATED)
 	{
 		printf("Master \"Waiting for run...\"\n");
 	}
-
-	while (msa::core::status(hdl) == msa::core::Status::RUNNING)
+	while (hdl->status == msa::core::Status::RUNNING)
 	{
 		events_count++;
 		printf("Master: \"Masa-chan, Announce Yourself.\"\n");
@@ -44,6 +44,10 @@ int main(int argc, char *argv[]) {
 		int seconds_sleep = rand() % 10 + 1;
 		printf("Master: \"waiting %d seconds...\"\n", seconds_sleep);
 		sleep(seconds_sleep);
+	}
+	while (hdl->status != msa::core::Status::STOPPED)
+	{
+		printf("Master: \"Waiting for Masa-chan to exit...\"\n");
 	}
 	if (msa::core::status(hdl) == msa::core::Status::STOPPED)
 	{
@@ -62,7 +66,7 @@ static void exit_func(const msa::event::Event *const e, msa::event::HandlerSync 
 {
 	printf("Masa-chan: \"Right away master, I will terminate my EDT for you now!\"\n");
 	int status = msa::core::quit(hdl);
-	printf("Maka-chan: \"Status: %d\"\n", msa::core::status(hdl));
+	printf("Maka-chan: \"Environment Status: %d\"\n", hdl->status);
 	if (status == 0)
 	{
 		printf("Masa-chan: \"System shutdown.\"\n");

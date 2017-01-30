@@ -8,23 +8,32 @@
 #include <map>
 
 namespace msa { namespace core {
-
-	#define SLEEP_NANO(x) do {struct timespec u__tSpec
-
+	
 	static void sleep_milli(int millisec) {
 		struct timespec t;
 		t.tv_nsec = (uint64_t) millisec * 1000000000;
 		nanosleep(&t, NULL);
 	}
 
-	struct handler_context_type {
+	typedef struct handler_context_type {
 		const msa::event::Event *event;
 		msa::event::EventHandler handler_func;
 		msa::event::HandlerSync *sync;
 		bool running;
 		pthread_t thread;
+	} HandlerContext;
+
+	struct event_dispatch_context_type {
+		pthread_t edt;
+		pthread_mutext_t queue_mutex;
+		HandlerContext *current_handler;
+		std::priority_queue<const msa::event::Event *> queue;
+		std::map<msa::event::Topic, msa::event::EventHandler> handlers;
+		std::stack<HandlerContext *> interrupted;
 	};
 
+	static int create_event_dispatch_context(EventDispatchContext **event);
+	static int dispose_event_dispatch_context(EventDispatchContext *event);
 	static void *event_start(void *args);
 
 	static const msa::event::Event *peek_event(Handle msa);
@@ -32,64 +41,73 @@ namespace msa { namespace core {
 
 	static void *edt_start(void *args);
 	static void edt_run(Handle hdl);
+	static void edt_cleanup(Handle hdl);
 	static const msa::event::Event *edt_poll_event_queue(Handle hdl);
 	static void edt_interrupt_handler(Handle hdl);
 	static void edt_spawn_handler(Handle hdl, const msa::event::Event *e);
 	static void edt_dispatch_event(Handle hdl, const msa::event::Event *e);
-	static void edt_dispose_handler_context(Handle hdl);
+	static void dispose_handler_context(HandlerContext *ctx);
 
 	extern int init(Handle *msa)
 	{
 		environment_type *hdl = new environment_type;
 		hdl->status = Status::CREATED;
-		hdl->event_mutex = PTHREAD_MUTEX_INITIALIZER;
-		hdl->current_handler = NULL;
-		int create_status = pthread_create(&hdl->edt, NULL, edt_start, hdl);
+		int create_status = create_event_dispatch_context(&hdl->event);
 		if (create_status != 0)
 		{
-			pthread_mutex_destroy(&hdl->event_mutex);
 			return create_status;
-        	}
+		}
 		*msa = hdl;
 		return 0;
 	}
 
 	extern int quit(Handle msa)
 	{
-		int err = pthread_cancel(msa->edt);
-		if (err != 0)
-		{
-			return err;
-		}
-		err = pthread_join(msa->edt, NULL);
-		if (err != 0)
-		{
-			return err;
-		}
-		pthread_mutex_destroy(&msa->event_mutex);
-		msa->status = Status::STOPPED;
+		msa->status = Status::STOP_REQUESTED;
+		pthread_join(msa->event->edt);
 		return 0;
-	}
-
-	extern Status status(Handle msa)
-	{
-		return msa->status;
 	}
 
 	extern int dispose(Handle msa)
 	{
+		if (msa->event != NULL)
+		{
+			dispose_event_dispatch_context(msa->event);
+			msa->event = NULL;
+		}
 		delete msa;
 		return 0;
 	}
 
 	extern void subscribe(Handle msa, msa::event::Topic t, msa::event::EventHandler handler)
 	{
-		msa->handlers[t] = handler;
+		msa->event->handlers[t] = handler;
 	}
 
 	extern void unsubscribe(Handle msa, msa::event::Topic t, msa::event::EventHandler handler)
 	{
-		msa->handlers[t] = NULL;
+		msa->event->handlers[t] = NULL;
+	}
+
+	static int create_event_dispatch_context(EventDispatchContext **event)
+	{
+		EventDispatchContext *edc = new EventDispatchContext;
+		edc->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
+		edc->current_handler = NULL;
+		int create_status = pthread_create(&edc->edt, NULL, edt_start, hdl);
+		if (create_status != 0)
+		{
+			pthread_mutex_destroy(&edc->queue_mutex);
+			return create_status;
+        	}
+		*event = edc;
+		return 0;
+	}
+
+	static int dispose_event_dispatch_context(EventDispatchContext *event)
+	{
+		delete event;
+		return 0;
 	}
 
 	static void *edt_start(void *args)
@@ -99,10 +117,33 @@ namespace msa { namespace core {
 		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &retval);
 		Handle hdl = (Handle) args;
 		hdl->status = Status::RUNNING;
-		while (true)
+		while (hdl->status != Status::STOP_REQUESTED)
 		{
 			edt_run(hdl);
 		}
+		edt_cleanup(hdl);
+	}
+
+	static void edt_cleanup(Handle hdl)
+	{
+		if (hdl->event->current_handler != NULL)
+		{
+			dispose_handler_context(hdl->event->current_handler);
+		}
+		while (!hdl->event->interrupted.empty())
+		{
+			HandlerContext *ctx = hdl->event->interrupted.top();
+			hdl->event->interrupted.pop();
+			dispose_handler_context(ctx);
+		}
+		pthread_mutex_destroy(&hdl->event->queue_mutex);
+		while (!hdl->event->queue.empty())
+		{
+			const msa::event::Event *e = hdl->event->queue.top();
+			hdl->event->queue.pop();
+			delete e;
+		}
+		hdl->status = Status::STOPPED;
 	}
 
 
@@ -113,18 +154,21 @@ namespace msa { namespace core {
 		{
 			edt_dispatch_event(hdl, e);
 		}
+		
+		EventDispatchContext *edc = hdl->event;
 		// check if current task has finished
-		if (hdl->current_handler != NULL && !(hdl->current_handler->running))
+		if (edc->current_handler != NULL && !(edc->current_handler->running))
 		{
-			edt_dispose_handler_context(hdl);
+			dispose_handler_context(edc->current_handler);
+			edc->current_handler = NULL;
 		}
 		// if current task is clear, load up the next one that has been interrupted
-		if (hdl->current_handler == NULL && !hdl->interrupted_handlers.empty())
+		if (edc->current_handler == NULL && !edc->interrupted.empty())
 		{
-			HandlerContext *ctx = hdl->interrupted_handlers.top();
-			hdl->interrupted_handlers.pop();
+			HandlerContext *ctx = edc->interrupted.top();
+			edc->interrupted.pop();
 			msa::event::resume_handler(ctx->sync);
-			hdl->current_handler = ctx;
+			edc->current_handler = ctx;
 		}
 		// TODO: Add a synthetic event for when queue has emptied and no events
 	}
@@ -132,15 +176,15 @@ namespace msa { namespace core {
 	static const msa::event::Event *edt_poll_event_queue(Handle hdl)
 	{
 		const msa::event::Event *e = NULL;
-		pthread_mutex_lock(&hdl->event_mutex);
-		if (!hdl->event_queue.empty())
+		pthread_mutex_lock(&hdl->event->queue_mutex);
+		if (!hdl->event->queue.empty())
 		{
-			e = hdl->event_queue.top();
+			e = hdl->event->queue.top();
 			// if we have a current event, check to see if we should replace it
 			// with the event on the queue
-			if (hdl->current_handler != NULL)
+			if (hdl->event->current_handler != NULL)
 			{
-				HandlerContext *ctx = hdl->current_handler;
+				HandlerContext *ctx = hdl->event->current_handler;
 				uint8_t cur_prior = msa::event::get_priority(ctx->event);
 				uint8_t new_prior = msa::event::get_priority(e);
 				if (cur_prior >= new_prior)
@@ -152,45 +196,46 @@ namespace msa { namespace core {
 		}
 		if (e != NULL)
 		{
-			hdl->event_queue.pop();
+			hdl->event->queue.pop();
 		}
-		pthread_mutex_unlock(&hdl->event_mutex);
+		pthread_mutex_unlock(&hdl->event->queue_mutex);
 		return e;
 	}
 
 	static void edt_interrupt_handler(Handle hdl)
 	{
-		HandlerContext *ctx = hdl->current_handler;
+		HandlerContext *ctx = hdl->event->current_handler;
 		msa::event::suspend_handler(ctx->sync);
 		// wait till it stops
 		while (!msa::event::handler_suspended(ctx->sync)) {
 			// we just wait here until we can go
 			sleep_milli(10);
+			// TODO: Force handler to stop if it takes too long
 		}
 		// okay now put it on the stack
-		hdl->interrupted_handlers.push(ctx);
+		hdl->event->interrupted.push(ctx);
 		// and clear the current
-		hdl->current_handler = NULL;
+		hdl->event->current_handler = NULL;
 	}
 
 	static void edt_spawn_handler(Handle hdl, const msa::event::Event *e)
 	{
 		HandlerContext *new_ctx = new HandlerContext;
 		new_ctx->event = e;
-		new_ctx->handler_func = hdl->handlers[e->topic];
+		new_ctx->handler_func = hdl->event->handlers[e->topic];
 		msa::event::create_handler_sync(&new_ctx->sync);
-		hdl->current_handler = new_ctx;
+		hdl->event->current_handler = new_ctx;
 		new_ctx->running = (pthread_create(&new_ctx->thread, NULL, event_start, hdl) == 0);
 	}
 
 	static void edt_dispatch_event(Handle hdl, const msa::event::Event *e)
 	{
-		if (hdl->current_handler != NULL)
+		if (hdl->event->current_handler != NULL)
 		{
 			edt_interrupt_handler(hdl);
 		}
 		// start the thread (if we have a handler)
-		if (hdl->handlers[e->topic] != NULL)
+		if (hdl->event->handlers[e->topic] != NULL)
 		{
 			edt_spawn_handler(hdl, e);
 		}
@@ -200,23 +245,29 @@ namespace msa { namespace core {
 		}
 	}
 
-	static void edt_dispose_handler_context(Handle hdl)
+	static void dispose_handler_context(HandlerContext *ctx)
 	{
-		// we can delete this guy, he's done
-		HandlerContext *ctx = hdl->current_handler;
+		
+		if (ctx->running)
+		{
+			if (msa::event::handler_suspended(ctx->sync))
+			{
+				msa::event::resume_handler(ctx->sync));
+			}
+			// let current event run through
+			err = pthread_join(ctx->thread);
+		}
 		// delete event
 		msa::event::dispose(ctx->event);
 		// delete sync handler
 		msa::event::dispose_handler_sync(ctx->sync);
 		delete ctx;
-		hdl->current_handler = NULL;
 	}
 
 	void *event_start(void *args)
 	{
 		Handle hdl = (Handle) args;
-		HandlerContext *ctx = hdl->current_handler;
-		//ctx->event->args = hdl;
+		HandlerContext *ctx = hdl->event->current_handler;
 		ctx->handler_func(ctx->event, ctx->sync);
 		ctx->running = false;
 	}
@@ -224,25 +275,25 @@ namespace msa { namespace core {
 	extern void push_event(Handle msa, msa::event::Event *e)
 	{
 		e->env = msa;
-		pthread_mutex_lock(&msa->event_mutex);
-		msa->event_queue.push(e);
-		pthread_mutex_unlock(&msa->event_mutex);
+		pthread_mutex_lock(&msa->event->queue_mutex);
+		msa->event->queue.push(e);
+		pthread_mutex_unlock(&msa->event->queue_mutex);
 	}
 
 	static const msa::event::Event *peek_event(Handle msa)
 	{
-		pthread_mutex_lock(&msa->event_mutex);
-		const msa::event::Event *e = msa->event_queue.top();
-		pthread_mutex_unlock(&msa->event_mutex);
+		pthread_mutex_lock(&msa->event->queue_mutex);
+		const msa::event::Event *e = msa->event->queue.top();
+		pthread_mutex_unlock(&msa->event->queue_mutex);
 		return e;
 	}
 
 	static const msa::event::Event *pop_event(Handle msa)
 	{
-		pthread_mutex_lock(&msa->event_mutex);
-		const msa::event::Event *e = msa->event_queue.top();
-		msa->event_queue.pop();
-		pthread_mutex_unlock(&msa->event_mutex);
+		pthread_mutex_lock(&msa->event->queue_mutex);
+		const msa::event::Event *e = msa->event->queue.top();
+		msa->event->queue.pop();
+		pthread_mutex_unlock(&msa->event->queue_mutex);
 	}
 
 } }

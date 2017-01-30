@@ -7,7 +7,7 @@
 #include <stack>
 #include <map>
 
-namespace msa { namespace control {
+namespace msa { namespace core {
 
 	#define SLEEP_NANO(x) do {struct timespec u__tSpec
 

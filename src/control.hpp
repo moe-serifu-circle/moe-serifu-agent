@@ -3,7 +3,7 @@
 
 #include "event_handler.hpp"
 
-namespace msa { namespace control {
+namespace msa { namespace core {
 
 	typedef enum status_type { CREATED, RUNNING, STOPPED } Status;
 

@@ -1,13 +1,10 @@
 #ifndef CONTROL_HPP
 #define CONTROL_HPP
 
+#include "evironment.hpp"
 #include "event_handler.hpp"
 
 namespace msa { namespace core {
-
-	typedef enum status_type { CREATED, RUNNING, STOPPED } Status;
-
-	typedef struct environment_type* Handle;
 
 	extern int init(Handle *msa);
 	extern int quit(Handle msa);

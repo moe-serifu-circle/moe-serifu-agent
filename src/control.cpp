@@ -232,8 +232,9 @@ namespace msa { namespace core {
 		ctx->running = false;
 	}
 
-	extern void push_event(Handle msa, const msa::event::Event *e)
+	extern void push_event(Handle msa, msa::event::Event *e)
 	{
+		e->env = msa;
 		pthread_mutex_lock(&msa->event_mutex);
 		msa->event_queue.push(e);
 		pthread_mutex_unlock(&msa->event_mutex);

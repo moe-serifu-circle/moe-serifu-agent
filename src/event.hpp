@@ -22,6 +22,7 @@ namespace msa { namespace event {
 		Topic topic;
 		const topic_attr *attributes;
 		time_t generation_time;
+		void *env;
 		void *args;
 	} Event;
 
@@ -32,7 +33,7 @@ namespace msa { namespace event {
 	inline bool operator==(const Event &e1, const Event &e2);
 	inline bool operator!=(const Event &e1, const Event &e2);
 
-	extern const Event *create(Topic topic, void *args);
+	extern Event *create(Topic topic, void *args);
 	extern void dispose(const Event *e);
 	extern uint8_t get_priority(const Event *e);
 	extern int max_topic_index();

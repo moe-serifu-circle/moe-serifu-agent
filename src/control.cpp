@@ -25,7 +25,7 @@ namespace msa { namespace core {
 
 	struct event_dispatch_context_type {
 		pthread_t edt;
-		pthread_mutext_t queue_mutex;
+		pthread_mutex_t queue_mutex;
 		HandlerContext *current_handler;
 		std::priority_queue<const msa::event::Event *> queue;
 		std::map<msa::event::Topic, msa::event::EventHandler> handlers;
@@ -57,6 +57,12 @@ namespace msa { namespace core {
 		{
 			return create_status;
 		}
+		create_status = pthread_create(&hdl->event->edt, NULL, edt_start, hdl);
+		if (create_status != 0)
+		{
+			pthread_mutex_destroy(&hdl->event->queue_mutex);
+			return create_status;
+        	}
 		*msa = hdl;
 		return 0;
 	}
@@ -64,7 +70,7 @@ namespace msa { namespace core {
 	extern int quit(Handle msa)
 	{
 		msa->status = Status::STOP_REQUESTED;
-		pthread_join(msa->event->edt);
+		pthread_join(msa->event->edt, NULL);
 		return 0;
 	}
 
@@ -94,12 +100,6 @@ namespace msa { namespace core {
 		EventDispatchContext *edc = new EventDispatchContext;
 		edc->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 		edc->current_handler = NULL;
-		int create_status = pthread_create(&edc->edt, NULL, edt_start, hdl);
-		if (create_status != 0)
-		{
-			pthread_mutex_destroy(&edc->queue_mutex);
-			return create_status;
-        	}
 		*event = edc;
 		return 0;
 	}
@@ -121,6 +121,7 @@ namespace msa { namespace core {
 		{
 			edt_run(hdl);
 		}
+		printf("CLEANUP_THREAD\n");
 		edt_cleanup(hdl);
 	}
 
@@ -247,15 +248,14 @@ namespace msa { namespace core {
 
 	static void dispose_handler_context(HandlerContext *ctx)
 	{
-		
 		if (ctx->running)
 		{
 			if (msa::event::handler_suspended(ctx->sync))
 			{
-				msa::event::resume_handler(ctx->sync));
+				msa::event::resume_handler(ctx->sync);
 			}
 			// let current event run through
-			err = pthread_join(ctx->thread);
+			int err = pthread_join(ctx->thread, NULL);
 		}
 		// delete event
 		msa::event::dispose(ctx->event);

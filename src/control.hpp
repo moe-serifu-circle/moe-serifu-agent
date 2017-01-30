@@ -1,7 +1,7 @@
 #ifndef CONTROL_HPP
 #define CONTROL_HPP
 
-#include "evironment.hpp"
+#include "environment.hpp"
 #include "event_handler.hpp"
 
 namespace msa { namespace core {

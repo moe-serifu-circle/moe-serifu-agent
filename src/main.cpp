@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 		events_count++;
 		printf("Master: \"Masa-chan, Announce Yourself.\"\n");
 		msa::event::Event *e = msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL);
-		msa::control::push_event(hdl, e);
+		msa::core::push_event(hdl, e);
 		if (events_count >= 2)
 		{
 			printf("Master: \"Masa-chan, I want you to exit.\"\n");
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 	{
 		printf("Master: \"Waiting for Masa-chan to exit...\"\n");
 	}
-	if (msa::core::status(hdl) == msa::core::Status::STOPPED)
+	if (hdl->status == msa::core::Status::STOPPED)
 	{
 		printf("Master: \"Masa-chan has exited.\"\n");
 		msa::core::dispose(hdl);

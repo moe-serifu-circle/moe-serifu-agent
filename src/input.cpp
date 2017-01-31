@@ -1,5 +1,7 @@
 #include "input.hpp"
 #include "control.hpp"
+#include "event.hpp"
+#include "event_handler.hpp"
 
 #include <map>
 #include <vector>
@@ -32,7 +34,7 @@ namespace msa { namespace io {
 	struct input_context_type
 	{
 		std::map<std::string, InputDevice *> devices;
-		std::vector<std::string> active;
+		std::vector<std::string> active;msa::core::Handle hdl, const Event *const e, HandlerSync *const sync
 		std::map<InputType, InputHandler> handlers;
 	};
 
@@ -47,11 +49,20 @@ namespace msa { namespace io {
 	static int create_input_context(InputContext **ctx);
 	static int dispose_input_context(InputContext *ctx);
 
+	static InputChunk *get_tty_input(msa::core::Handle hdl, InputDevice *dev);
+
+	static void interpret_cmd(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
+
 	static void *it_start(void *hdl);
 
 	extern int init(msa::core::Handle hdl)
 	{
-		return create_input_context(&hdl->input);
+		int stat = create_input_context(&hdl->input);
+		hdl->input->handlers[InputType::TTY] = get_tty_input;
+		std::string id = "stdin";
+		add_input_device(hdl, InputType::TTY, &id);
+		enable_input_device(hdl, "TTY:stdin");
+		std::core::subscribe(msa::event::Topic::TEXT_INPUT, interpret_cmd);
 	}
 
 	extern int quit(msa::core::Handle hdl)
@@ -69,7 +80,8 @@ namespace msa { namespace io {
 		InputDevice *dev;
 		create_input_device(&dev, type, device_id);
 		std::string id = dev->id;
-		if (hdl->input->devices.find(id) != hdl->input->devices.end())
+		if (hdl->input->devices.find(id) != hdl-
+	static InputChunk *get_tty_input(msa::core::Handle hdl, InputDevice *dev)>input->devices.end())
 		{
 			dispose_input_device(dev);
 			throw std::logic_error("input device " + id + " already exists");
@@ -216,7 +228,32 @@ namespace msa { namespace io {
 		InputHandler input_handler = hdl->input->handlers[dev->type];
 		while (dev->running)
 		{
-			input_handler(hdl, dev);
+			InputChunk *chunk = input_handler(hdl, dev);
+			const Event *e = msa::event::create(msa::event::Topic::TEXT_INPUT, chunk);
+			msa::core::push_event(hdl, e);
+		}
+	}
+
+	static InputChunk *get_tty_input(msa::core::Handle hdl, InputDevice *dev)
+	{
+		std::string input;
+		std::cin >> input;
+		InputChunk *ch = new InputChunk;
+		ch->chars = input;
+		return ch;
+	}
+
+	static void interpret_cmd(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
+	{
+		InputChunk *ch = static_cast<InputChunk *>(e->args);
+		std::string input = ch->chars;
+		delete ch;
+		if (input == "kill")
+		{
+			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::COMMAND_EXIT, NULL));
+		} else if (input == "announce")
+		{
+			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL));
 		}
 	}
 

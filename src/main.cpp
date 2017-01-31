@@ -24,25 +24,14 @@ int main(int argc, char *argv[]) {
 	msa::core::subscribe(hdl, msa::event::Topic::COMMAND_EXIT, exit_func);
 	printf("Master: \"subscribed to exit\"\n");
 	int events_count = 0;
+	msa::io::init(hdl);
 	while (hdl->status == msa::core::Status::CREATED)
 	{
 		printf("Master \"Waiting for run...\"\n");
 	}
 	while (hdl->status == msa::core::Status::RUNNING)
 	{
-		events_count++;
-		printf("Master: \"Masa-chan, Announce Yourself.\"\n");
-		const msa::event::Event *e = msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL);
-		msa::core::push_event(hdl, e);
-		if (events_count >= 2)
-		{
-			printf("Master: \"Masa-chan, I want you to exit.\"\n");
-			const msa::event::Event *exit_e = msa::event::create(msa::event::Topic::COMMAND_EXIT, NULL);
-			msa::core::push_event(hdl, exit_e);
-		}
-		int seconds_sleep = rand() % 10 + 1;
-		printf("Master: \"waiting %d seconds...\"\n", seconds_sleep);
-		sleep(seconds_sleep);
+		// busy wait, user enters commands
 	}
 	while (hdl->status != msa::core::Status::STOPPED)
 	{

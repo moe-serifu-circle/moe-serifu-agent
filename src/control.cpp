@@ -46,7 +46,7 @@ namespace msa { namespace core {
 	static void edt_interrupt_handler(Handle hdl);
 	static void edt_spawn_handler(Handle hdl, const msa::event::Event *e);
 	static void edt_dispatch_event(Handle hdl, const msa::event::Event *e);
-	static void dispose_handler_context(HandlerContext *ctx);
+	static void dispose_handler_context(HandlerContext *ctx, bool join);
 
 	extern int init(Handle *msa)
 	{
@@ -69,7 +69,16 @@ namespace msa { namespace core {
 
 	extern int quit(Handle msa)
 	{
+		// if the quit was initiated by the current event thread,
+		// we must mark it as such so that the EDT knows not to
+		// join on it (since this thread also joins on the EDT,
+		// this would cause deadlock)
+		if (pthread_self() == msa->event->current_handler->thread)
+		{
+			msa::event::set_handler_syscall_origin(msa->event->current_handler->sync);
+		}
 		msa->status = Status::STOP_REQUESTED;
+		pthread_join(msa->event->edt, NULL);
 		return 0;
 	}
 
@@ -99,6 +108,7 @@ namespace msa { namespace core {
 		EventDispatchContext *edc = new EventDispatchContext;
 		edc->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 		edc->current_handler = NULL;
+		edc->request_from_event = false;
 		*event = edc;
 		return 0;
 	}
@@ -125,15 +135,20 @@ namespace msa { namespace core {
 
 	static void edt_cleanup(Handle hdl)
 	{
-		if (hdl->event->current_handler != NULL)
+		EventDispatchContext *ctx = hdl->event;
+		if (ctx->current_handler != NULL)
 		{
-			dispose_handler_context(hdl->event->current_handler);
+			// if the syscall that caused the EDT to enter cleanup
+			// is from the current event handler, do not wait for it
+			// to complete before freeing its resources
+			bool join = !msa::event::handler_syscall_origin(ctx->current_handler->sync);
+			dispose_handler_context(ctx->current_handler, join);
 		}
-		while (!hdl->event->interrupted.empty())
+		while (!ctx->interrupted.empty())
 		{
-			HandlerContext *ctx = hdl->event->interrupted.top();
-			hdl->event->interrupted.pop();
-			dispose_handler_context(ctx);
+			HandlerContext *intr_ctx = ctx->interrupted.top();
+			ctx->interrupted.pop();
+			dispose_handler_context(intr_ctx, true);
 		}
 		pthread_mutex_destroy(&hdl->event->queue_mutex);
 		while (!hdl->event->queue.empty())
@@ -144,7 +159,6 @@ namespace msa { namespace core {
 		}
 		hdl->status = Status::STOPPED;
 	}
-
 
 	static void edt_run(Handle hdl) {
 		// check event_queue, decide if we want the current top
@@ -244,7 +258,7 @@ namespace msa { namespace core {
 		}
 	}
 
-	static void dispose_handler_context(HandlerContext *ctx)
+	static void dispose_handler_context(HandlerContext *ctx, bool join)
 	{
 		if (ctx->running)
 		{
@@ -252,8 +266,11 @@ namespace msa { namespace core {
 			{
 				msa::event::resume_handler(ctx->sync);
 			}
-			// let current event run through
-			int err = pthread_join(ctx->thread, NULL);
+			if (join)
+			{
+				// wait until current event runs through
+				int err = pthread_join(ctx->thread, NULL);
+			}
 		}
 		// delete event
 		msa::event::dispose(ctx->event);

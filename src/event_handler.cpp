@@ -9,6 +9,7 @@ namespace msa { namespace event {
 		pthread_mutex_t suspend_mutex;
 		bool suspend_flag;
 		bool in_wait_loop;
+		bool syscall_origin;
 	};
 
 	extern void create_handler_sync(HandlerSync **sync)
@@ -18,6 +19,7 @@ namespace msa { namespace event {
 		handler_sync->suspend_mutex = PTHREAD_MUTEX_INITIALIZER;
 		handler_sync->suspend_flag = false;
 		handler_sync->in_wait_loop = false;
+		handler_sync->syscall_origin = false;
 		*sync = handler_sync;
 	}
 
@@ -49,6 +51,21 @@ namespace msa { namespace event {
 		bool suspended = sync->in_wait_loop;
 		pthread_mutex_unlock(&sync->suspend_mutex);
 		return suspended;
+	}
+
+	extern void set_handler_syscall_origin(HandlerSync *sync)
+	{
+		sync->syscall_origin = true;
+	}
+
+	extern void clear_handler_syscall_origin(HandlerSync *sync)
+	{
+		sync->syscall_origin = false;
+	}
+
+	extern bool handler_syscall_origin(HandlerSync *sync)
+	{
+		return sync->syscall_origin;
 	}
 
 	extern void HANDLER_INTERRUPT_POINT(HandlerSync *sync)

@@ -66,7 +66,7 @@ static void exit_func(const msa::event::Event *const e, msa::event::HandlerSync 
 {
 	printf("Masa-chan: \"Right away master, I will terminate my EDT for you now!\"\n");
 	int status = msa::core::quit(hdl);
-	printf("Maka-chan: \"Environment Status: %d\"\n", hdl->status);
+	printf("Masa-chan: \"Environment Status: %d\"\n", hdl->status);
 	if (status == 0)
 	{
 		printf("Masa-chan: \"System shutdown.\"\n");

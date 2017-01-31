@@ -70,7 +70,6 @@ namespace msa { namespace core {
 	extern int quit(Handle msa)
 	{
 		msa->status = Status::STOP_REQUESTED;
-		pthread_join(msa->event->edt, NULL);
 		return 0;
 	}
 
@@ -121,7 +120,6 @@ namespace msa { namespace core {
 		{
 			edt_run(hdl);
 		}
-		printf("CLEANUP_THREAD\n");
 		edt_cleanup(hdl);
 	}
 

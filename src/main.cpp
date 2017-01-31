@@ -9,12 +9,11 @@
 
 #include <unistd.h>
 
-static void say_func(const msa::event::Event *const e, msa::event::HandlerSync *sync);
-static void exit_func(const msa::event::Event *const e, msa::event::HandlerSync *sync);
-
-static msa::core::Handle hdl;
+static void say_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
+static void exit_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
 
 int main(int argc, char *argv[]) {
+	msa::core::Handle hdl;
 	if (msa::core::init(&hdl) != 0)
 	{
 		perror("could not init msa handle");
@@ -33,12 +32,12 @@ int main(int argc, char *argv[]) {
 	{
 		events_count++;
 		printf("Master: \"Masa-chan, Announce Yourself.\"\n");
-		msa::event::Event *e = msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL);
+		const msa::event::Event *e = msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL);
 		msa::core::push_event(hdl, e);
 		if (events_count >= 2)
 		{
 			printf("Master: \"Masa-chan, I want you to exit.\"\n");
-			msa::event::Event *exit_e = msa::event::create(msa::event::Topic::COMMAND_EXIT, NULL);
+			const msa::event::Event *exit_e = msa::event::create(msa::event::Topic::COMMAND_EXIT, NULL);
 			msa::core::push_event(hdl, exit_e);
 		}
 		int seconds_sleep = rand() % 10 + 1;
@@ -57,12 +56,12 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
-static void say_func(const msa::event::Event *const e, msa::event::HandlerSync *cons)
+static void say_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *cons)
 {
 	printf("Masa-chan: \"I'd like to announce my presence!\"\n");
 }
 
-static void exit_func(const msa::event::Event *const e, msa::event::HandlerSync *cons)
+static void exit_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *cons)
 {
 	printf("Masa-chan: \"Right away master, I will terminate my EDT for you now!\"\n");
 	int status = msa::core::quit(hdl);

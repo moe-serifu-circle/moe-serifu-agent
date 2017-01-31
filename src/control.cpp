@@ -266,13 +266,12 @@ namespace msa { namespace core {
 	{
 		Handle hdl = (Handle) args;
 		HandlerContext *ctx = hdl->event->current_handler;
-		ctx->handler_func(ctx->event, ctx->sync);
+		ctx->handler_func(hdl, ctx->event, ctx->sync);
 		ctx->running = false;
 	}
 
-	extern void push_event(Handle msa, msa::event::Event *e)
+	extern void push_event(Handle msa, const msa::event::Event *e)
 	{
-		e->env = msa;
 		pthread_mutex_lock(&msa->event->queue_mutex);
 		msa->event->queue.push(e);
 		pthread_mutex_unlock(&msa->event->queue_mutex);

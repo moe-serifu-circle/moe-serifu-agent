@@ -1,13 +1,14 @@
 #ifndef EVENT_HANDLER_HPP
 #define EVENT_HANDLER_HPP
 
+#include "environment.hpp"
 #include "event.hpp"
 
 namespace msa { namespace event {
 
 	typedef struct handler_synchronization_type HandlerSync;
 
-	typedef void (*EventHandler)(const Event *const e, HandlerSync *const sync);
+	typedef void (*EventHandler)(msa::core::Handle hdl, const Event *const e, HandlerSync *const sync);
 
 	// creates a handler sync and initializes the variables in it
 	extern void create_handler_sync(HandlerSync **sync);

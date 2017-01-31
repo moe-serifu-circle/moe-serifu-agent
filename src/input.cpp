@@ -33,10 +33,14 @@ namespace msa { namespace io {
 	{
 		std::map<std::string, InputDevice *> devices;
 		std::vector<std::string> active;
+		std::map<InputType, InputHandler> handlers;
 	};
 
-	extern void enable_input_device(msa::core::Handle hdl, const std::string &id);
-	extern void disable_input_device(msa::core::Handle hdl, const std::string &id);
+	typedef struct it_args_type
+	{
+		Handle hdl;
+		InputDevice *dev;
+	} InputThreadArgs;
 
 	static void create_input_device(InputDevice **dev, InputType type, void *device_id);
 	static void dispose_input_device(InputDevice *device);
@@ -90,12 +94,52 @@ namespace msa { namespace io {
 
 	extern void get_input_devices(msa::core::Handle hdl, std::vector<const std::string> *list)
 	{
-		std::map<std::string, InputDevice *>
-		typedef std::map<std::string, const InputDevice *>::iterator it_type;
-		for (it_type = hdl->input->devices.begin(); i < hdl->input->devices.size(); i++)
+		std::map<std::string, InputDevice *> *devs = &hdl->input->devices;
+		typedef std::map<std::string, InputDevice *>::iterator it_type;
+		for (it_type iter = devs->begin(); iter != devs->end(); i++)
 		{
-			list->push_back(hdl->input->devices[i]->
+			list->push_back(iter->second->id);
 		}
+	}
+
+	extern void enable_input_device(msa::core::Handle hdl, const std::string &id)
+	{
+		if (hdl->input->active.find(id) != hdl->input->active.end())
+		{
+			// it's already active, leave it alone
+			return;
+		}
+		if (hdl->input->devices.find(id) == hdl->input->devices.end())
+		{
+			// device does not exist
+			throw std::logic_error("input device " + id + " does not exist");
+		}
+		// checks are done, we know it exists and is disabled
+		InputDevice *dev = hdl->input->devices[id];
+		InputThreadArgs *ita = new InputThreadArgs;
+		ita->dev = dev;
+		ita->hdl = hdl;
+		dev->running = (pthread_create(&dev->thread, NULL, it_start, ita) == 0);
+		if (dev->running)
+		{
+			hdl->input->active.push_back(dev->id);
+		}
+	}
+
+	extern void disable_input_device(msa::core::Handle hdl, const std::string &id)
+	{
+		if (hdl->input->active.find(id) == hdl->input->active.end())
+		{
+			// it's not enabled, leave it alone.
+			return;
+		}
+		if (hdl->input->devices.find(id) == hdl->input->devices.end())
+		{
+			// device does not exist
+			throw std::logic_error("input device " + id + " does not exist");
+		}
+		hdl->input->devices[id]->running = false;
+		hdl->input->active.erase(hdl->input->active.find(id));
 	}
 
 	static void create_input_device(InputDevice **dev_ptr, InputType type, const void *id)
@@ -159,7 +203,21 @@ namespace msa { namespace io {
 
 	static void *it_start(void *args)
 	{
-		msa::core::Handle hdl = static_cast<msa::core::Handle>(args);
+		InputThreadArgs *ita = static_cast<InputThreadArgs *>(args);
+		msa::core::Handle hdl = ita->hdl;
+		InputDevice *dev = ita->dev;
+		delete ita;
+		if (hdl->input->handlers.find(dev->type) == hdl->input->handlers.end())
+		{
+			dev->running = false;
+			disable_input_device(hdl, dev);
+			throw std::logic_error("no handler for input device type " + std::to_string(dev->type);
+		}
+		InputHandler input_handler = hdl->input->handlers[dev->type];
+		while (dev->running)
+		{
+			input_handler(hdl, dev);
+		}
 	}
 
 } }

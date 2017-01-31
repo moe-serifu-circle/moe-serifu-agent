@@ -108,7 +108,6 @@ namespace msa { namespace core {
 		EventDispatchContext *edc = new EventDispatchContext;
 		edc->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 		edc->current_handler = NULL;
-		edc->request_from_event = false;
 		*event = edc;
 		return 0;
 	}
@@ -172,7 +171,7 @@ namespace msa { namespace core {
 		// check if current task has finished
 		if (edc->current_handler != NULL && !(edc->current_handler->running))
 		{
-			dispose_handler_context(edc->current_handler);
+			dispose_handler_context(edc->current_handler, false);
 			edc->current_handler = NULL;
 		}
 		// if current task is clear, load up the next one that has been interrupted

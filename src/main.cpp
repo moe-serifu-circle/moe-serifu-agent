@@ -3,6 +3,7 @@
 #include "environment.hpp"
 #include "control.hpp"
 #include "event_handler.hpp"
+#include "input.hpp"
 
 #include <cstdlib>
 #include <cstdio>

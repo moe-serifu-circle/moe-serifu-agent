@@ -4,7 +4,6 @@
 #include "event_handler.hpp"
 
 #include <map>
-#include <vector>
 #include <string>
 #include <stdexcept>
 #include <pthread.h>

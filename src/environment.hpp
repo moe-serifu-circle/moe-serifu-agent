@@ -1,6 +1,12 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
+namespace msa { namespace io {
+
+	typedef struct input_context_type InputContext;
+
+} }
+
 namespace msa { namespace core {
 
 	typedef enum status_type { CREATED, RUNNING, STOP_REQUESTED, STOPPED } Status;
@@ -11,6 +17,7 @@ namespace msa { namespace core {
 	{
 		Status status;
 		EventDispatchContext *event;
+		msa::io::InputContext *input;
 	};
 
 	typedef struct environment_type* Handle;

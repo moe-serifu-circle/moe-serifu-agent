@@ -4,13 +4,11 @@
 #include <map>
 #include <string>
 #include <stdexcept>
+#include <pthread.h>
 
 namespace msa { namespace io {
-	
-	static int create_input_context(InputContext **ctx);
-	static int dispose_input_context(InputContext *ctx);
 
-	static inline void assert_exists(msa::core::Handle hdl, const std::string &id);
+	typedef InputChunk *(*InputHandler)(msa::core::Handle, InputDevice *);
 
 	struct input_chunk_type
 	{
@@ -21,6 +19,8 @@ namespace msa { namespace io {
 	{
 		std::string id;
 		InputType type;
+		pthread_t thread;
+		bool running;
 		union
 		{
 			uint16_t port;
@@ -33,6 +33,12 @@ namespace msa { namespace io {
 		std::map<std::string, InputDevice *> devices;
 		InputDevice *current_device;
 	};
+	
+	static int create_input_context(InputContext **ctx);
+	static int dispose_input_context(InputContext *ctx);
+	static void *it_start(void *hdl);
+
+	static inline void assert_exists(msa::core::Handle hdl, const std::string &id);
 
 	extern int init(msa::core::Handle hdl)
 	{
@@ -51,14 +57,56 @@ namespace msa { namespace io {
 
 	extern void select_input_channel(msa::core::Handle hdl, const std::string &id)
 	{
+		InputContext *ctx = hdl->input;
+		if (ctx->current_device->id == id)
+		{
+			// we're done, device is already selected.
+			return;
+		}
 		assert_exists(hdl, id, true);
+		if (ctx->current_device != NULL)
+		{
+			// bring it down
+		}
+		ctx->current_device = ctx->devices[id];
 		
+	}
+
+	extern void start_input_channel(msa::core::Handle hdl, const std::string &id)
+	{
+		InputContext *ctx = hdl->input;
+		if (ctx->current_device != NULL)
+		{
+			throw std::logic_error("cannot start input channel while another is running");
+		}
+		assert_exists(hdl, id, true);
+		InputDevice *dev = ctx->devices[id];
+		ctx->current_device = dev;
+		dev->running = pthread_create(&dev->thread, NULL, it_start, hdl);
+	}
+
+	extern void stop_input_channel(msa::core::Handle hdl, const std::string &id)
+	{
+		if (hdl->input->current_device == NULL)
+		{
+			return;
+		}
+		if (hdl->input->current_device->id != id)
+		{
+			throw std::logic_error("current input channel is not " + id);
+		}
+		if (hdl->input->current_device->running)
+		{
+			hdl->input->current_device->running = false;
+		}
+		hdl->input->current_device = NULL;
 	}
 
 	extern void create_input_device(msa::core::Handle hdl, InputType type, const void *id)
 	{
 		InputContext *ctx = hdl->input;
 		InputDevice *dev = new InputDevice;
+		dev->running = false;
 		dev->type = type;
 		switch (dev->type)
 		{
@@ -129,6 +177,11 @@ namespace msa { namespace io {
 			std::string err = (expected ? "does not exist" : "already exists");
 			throw std::invalid_argument("device " + id + " " + err);
 		}
+	}
+
+	static void *it_start(void *args)
+	{
+		msa::core::Handle hdl = static_cast<msa::core::Handle>(args);
 	}
 
 } }

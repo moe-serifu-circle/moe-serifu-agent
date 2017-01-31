@@ -13,8 +13,11 @@ namespace msa { namespace io {
 
 	extern int init(msa::core::Handle hdl);
 	extern int quit(msa::core::Handle hdl);
-	extern void create_input_device(msa::core::Handle hdl, InputType type, void *device_id);
-	extern void dispose_input_device(msa::core::Handle hdl, const std::string &id);
+	extern void add_input_device(msa::core::Handle hdl, InputType type, void *device_id);
+	extern void get_input_devices(msa::core::Handle hdl, std::vector<const std::string> *list);
+	extern void remove_input_device(msa::core::Handle hdl, const std::string &id);
+	extern void enable_input_device(msa::core::Handle hdl, const std::string &id);
+	extern void disable_input_device(msa::core::Handle hdl, const std::string &id);
 } }
 
 #endif

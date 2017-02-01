@@ -1,5 +1,5 @@
 #include "msa.hpp"
-#include "edt.hpp"
+#include "event_dispatch.hpp"
 #include "input.hpp"
 
 namespace msa {	

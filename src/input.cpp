@@ -256,9 +256,15 @@ namespace msa { namespace io {
 		if (input == "kill")
 		{
 			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::COMMAND_EXIT, NULL));
-		} else if (input == "announce")
+		}
+		else if (input == "announce")
 		{
 			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL));
+		}
+		else
+		{
+			std::string * heap_alloc_str = new std::string(input);
+			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::INVALID_COMMAND, heap_alloc_str));
 		}
 	}
 

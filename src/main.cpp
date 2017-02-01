@@ -12,6 +12,7 @@
 
 static void say_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
 static void exit_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
+static void bad_command_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
 
 int main(int argc, char *argv[]) {
 	msa::core::Handle hdl;
@@ -21,9 +22,9 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	msa::core::subscribe(hdl, msa::event::Topic::COMMAND_ANNOUNCE, say_func);
-	printf("Master: \"subscribed to announce\"\n");
+	msa::core::subscribe(hdl, msa::event::Topic::INVALID_COMMAND, bad_command_func);
 	msa::core::subscribe(hdl, msa::event::Topic::COMMAND_EXIT, exit_func);
-	printf("Master: \"subscribed to exit\"\n");
+	printf("Master: \"subscribed to command hooks\"\n");
 	int events_count = 0;
 	msa::io::init(hdl);
 	while (hdl->status == msa::core::Status::CREATED)
@@ -64,4 +65,11 @@ static void exit_func(msa::core::Handle hdl, const msa::event::Event *const e, m
 	{
 		printf("Masa-chan: \"Warning! could not quit: %d\"\n", status);
 	}
+}
+
+static void bad_command_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync)
+{
+	std::string *str = static_cast<std::string *>(e->args);
+	printf("Masa-chan: \"I'm sorry, Master. I don't understand the command '%s'\"\n", str->c_str());
+	delete str;
 }

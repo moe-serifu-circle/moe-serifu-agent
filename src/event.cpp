@@ -21,6 +21,8 @@ namespace msa { namespace event {
 		// COMMAND_EXIT
 		{1},
 		// TEXT_INPUT
+		{2},
+		// INVALID_COMMAND
 		{2}
 	};
 
@@ -63,7 +65,7 @@ namespace msa { namespace event {
 	{
 		if (t > max_topic_index() || t < 0)
 		{
-			throw std::invalid_argument("unknown topic");
+			throw std::invalid_argument("unknown topic; did you add the topic to the attr table?");
 		}
 		size_t idx = static_cast<size_t>(t);
 		return (topic_attr_table + idx);

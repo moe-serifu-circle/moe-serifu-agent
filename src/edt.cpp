@@ -1,5 +1,6 @@
 #include "control.hpp"
 #include "event.hpp"
+#include "util.hpp"
 
 #include <pthread.h>
 #include <cstdio>
@@ -7,13 +8,7 @@
 #include <stack>
 #include <map>
 
-namespace msa { namespace core {
-	
-	static void sleep_milli(int millisec) {
-		struct timespec t;
-		t.tv_nsec = (uint64_t) millisec * 1000000000;
-		nanosleep(&t, NULL);
-	}
+namespace msa { namespace event {
 
 	typedef struct handler_context_type {
 		const msa::event::Event *event;

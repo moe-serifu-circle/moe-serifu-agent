@@ -26,6 +26,10 @@ namespace msa {
 
 	typedef struct environment_type* Handle;
 
+	extern int init(Handle *hdl);
+	extern int quit(Handle hdl);
+	extern int dispose(Handle hdl);
+
 }
 
 #endif

@@ -43,10 +43,8 @@ namespace msa { namespace event {
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e);
 	static void dispose_handler_context(HandlerContext *ctx, bool join);
 
-	extern int init(msa::Handle *msa)
+	extern int init(msa::Handle hdl)
 	{
-		msa::environment_type *hdl = new msa::environment_type;
-		hdl->status = msa::Status::CREATED;
 		int create_status = create_event_dispatch_context(&hdl->event);
 		if (create_status != 0)
 		{
@@ -58,12 +56,19 @@ namespace msa { namespace event {
 			pthread_mutex_destroy(&hdl->event->queue_mutex);
 			return create_status;
        	}
-		*msa = hdl;
 		return 0;
 	}
 
 	extern int quit(msa::Handle msa)
 	{
+		if (msa->status == msa::Status::CREATED && msa::event != NULL)
+		{
+			// this shouldn't happen, but if we get here, it's because
+			// the event handle was inited but the EDT was not started.
+			// We can just destroy the mutex and delete everything immediately
+			pthread_mutex_destroy(&hdl->event->queue_mutex);
+			dispose_event_dispatch_context(msa->event);
+		}
 		// if the quit was initiated by the current event thread,
 		// we must mark it as such so that the EDT knows not to
 		// join on it (since this thread also joins on the EDT,
@@ -74,17 +79,7 @@ namespace msa { namespace event {
 		}
 		msa->status = msa::Status::STOP_REQUESTED;
 		pthread_join(msa->event->edt, NULL);
-		return 0;
-	}
-
-	extern int dispose(msa::Handle msa)
-	{
-		if (msa->event != NULL)
-		{
-			dispose_event_dispatch_context(msa->event);
-			msa->event = NULL;
-		}
-		delete msa;
+		dispose_event_dispatch_context(msa->event);
 		return 0;
 	}
 
@@ -110,6 +105,8 @@ namespace msa { namespace event {
 
 	static int dispose_event_dispatch_context(EventDispatchContext *event)
 	{
+		// it would seem that we should destory our queue mutex here, but
+		// that is instead handled in the edt_cleanup function.
 		delete event;
 		return 0;
 	}

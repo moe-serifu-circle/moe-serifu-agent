@@ -1,6 +1,10 @@
 #ifndef MSA_HPP
 #define MSA_HPP
 
+// DO NOT INCLUDE ANY MSA HEADER FILES HERE!
+// If you find you have to, re-think your design.
+// It will break here.
+
 namespace msa {
 
 	namespace io {

@@ -1,6 +1,6 @@
 #include "msa.hpp"
-#include "event_dispatch.hpp"
 #include "input.hpp"
+#include "event/dispatch.hpp"
 
 namespace msa {	
 

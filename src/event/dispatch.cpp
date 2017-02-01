@@ -1,4 +1,4 @@
-#include "event_dispatch.hpp"
+#include "event/dispatch.hpp"
 #include "util.hpp"
 
 #include <pthread.h>

@@ -1,8 +1,7 @@
 /* Main source code file. */
 
 #include "msa.hpp"
-#include "edt.hpp"
-#include "event_handler.hpp"
+#include "event/dispatch.hpp"
 
 #include <cstdlib>
 #include <cstdio>

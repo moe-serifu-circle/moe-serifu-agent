@@ -1,14 +1,12 @@
 #include "input.hpp"
-#include "edt.hpp"
-#include "event.hpp"
-#include "event_handler.hpp"
+#include "event/dispatch.hpp"
 
 #include <map>
 #include <string>
 #include <stdexcept>
-#include <pthread.h>
 #include <algorithm>
 #include <iostream>
+#include <pthread.h>
 
 namespace msa { namespace io {
 

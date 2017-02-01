@@ -90,6 +90,4 @@ namespace msa { namespace event {
 	{
 		return e->attributes->priority;
 	}
-
-	#undef ATTR_INDEX_MAX
 } }

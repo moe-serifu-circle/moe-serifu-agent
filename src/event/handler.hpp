@@ -1,8 +1,8 @@
 #ifndef EVENT_HANDLER_HPP
 #define EVENT_HANDLER_HPP
 
-#include "environment.hpp"
-#include "event.hpp"
+#include "msa.hpp"
+#include "event/event.hpp"
 
 namespace msa { namespace event {
 

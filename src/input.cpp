@@ -1,5 +1,5 @@
 #include "input.hpp"
-#include "control.hpp"
+#include "edt.hpp"
 #include "event.hpp"
 #include "event_handler.hpp"
 
@@ -12,7 +12,7 @@
 
 namespace msa { namespace io {
 
-	typedef InputChunk *(*InputHandler)(msa::core::Handle, InputDevice *);
+	typedef InputChunk *(*InputHandler)(msa::Handle, InputDevice *);
 
 	struct input_chunk_type
 	{
@@ -41,7 +41,7 @@ namespace msa { namespace io {
 
 	typedef struct it_args_type
 	{
-		msa::core::Handle hdl;
+		msa::Handle hdl;
 		InputDevice *dev;
 	} InputThreadArgs;
 
@@ -50,23 +50,23 @@ namespace msa { namespace io {
 	static int create_input_context(InputContext **ctx);
 	static int dispose_input_context(InputContext *ctx);
 
-	static InputChunk *get_tty_input(msa::core::Handle hdl, InputDevice *dev);
+	static InputChunk *get_tty_input(msa::Handle hdl, InputDevice *dev);
 
-	static void interpret_cmd(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
+	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
 	static void *it_start(void *hdl);
 
-	extern int init(msa::core::Handle hdl)
+	extern int init_input(msa::Handle hdl)
 	{
 		int stat = create_input_context(&hdl->input);
 		hdl->input->handlers[InputType::TTY] = get_tty_input;
 		std::string id = "stdin";
 		add_input_device(hdl, InputType::TTY, &id);
 		enable_input_device(hdl, "TTY:stdin");
-		msa::core::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
+		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 	}
 
-	extern int quit(msa::core::Handle hdl)
+	extern int quit_input(msa::Handle hdl)
 	{
 		int status = dispose_input_context(hdl->input);
 		if (status == 0)
@@ -76,7 +76,7 @@ namespace msa { namespace io {
 		return status;
 	}
 	
-	extern void add_input_device(msa::core::Handle hdl, InputType type, void *device_id)
+	extern void add_input_device(msa::Handle hdl, InputType type, void *device_id)
 	{
 		InputDevice *dev;
 		create_input_device(&dev, type, device_id);
@@ -89,7 +89,7 @@ namespace msa { namespace io {
 		hdl->input->devices[id] = dev;
 	}
 
-	extern void remove_input_device(msa::core::Handle hdl, const std::string &id)
+	extern void remove_input_device(msa::Handle hdl, const std::string &id)
 	{
 		if (hdl->input->devices.find(id) == hdl->input->devices.end())
 		{
@@ -105,7 +105,7 @@ namespace msa { namespace io {
 		dispose_input_device(dev);
 	}
 
-	extern void get_input_devices(msa::core::Handle hdl, std::vector<std::string> *list)
+	extern void get_input_devices(msa::Handle hdl, std::vector<std::string> *list)
 	{
 		std::map<std::string, InputDevice *> *devs = &hdl->input->devices;
 		typedef std::map<std::string, InputDevice *>::iterator it_type;
@@ -117,7 +117,7 @@ namespace msa { namespace io {
 		}
 	}
 
-	extern void enable_input_device(msa::core::Handle hdl, const std::string &id)
+	extern void enable_input_device(msa::Handle hdl, const std::string &id)
 	{
 		std::vector<std::string> &act = hdl->input->active;
 		if (std::find(act.begin(), act.end(), id) != act.end())
@@ -142,7 +142,7 @@ namespace msa { namespace io {
 		}
 	}
 
-	extern void disable_input_device(msa::core::Handle hdl, const std::string &id)
+	extern void disable_input_device(msa::Handle hdl, const std::string &id)
 	{
 		std::vector<std::string> &act = hdl->input->active;
 		if (std::find(act.begin(), act.end(), id) == act.end())
@@ -221,7 +221,7 @@ namespace msa { namespace io {
 	static void *it_start(void *args)
 	{
 		InputThreadArgs *ita = static_cast<InputThreadArgs *>(args);
-		msa::core::Handle hdl = ita->hdl;
+		msa::Handle hdl = ita->hdl;
 		InputDevice *dev = ita->dev;
 		delete ita;
 		if (hdl->input->handlers.find(dev->type) == hdl->input->handlers.end())
@@ -234,12 +234,11 @@ namespace msa { namespace io {
 		while (dev->running)
 		{
 			InputChunk *chunk = input_handler(hdl, dev);
-			const msa::event::Event *e = msa::event::create(msa::event::Topic::TEXT_INPUT, chunk);
-			msa::core::push_event(hdl, e);
+			msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, chunk);
 		}
 	}
 
-	static InputChunk *get_tty_input(msa::core::Handle hdl, InputDevice *dev)
+	static InputChunk *get_tty_input(msa::Handle hdl, InputDevice *dev)
 	{
 		std::string input;
 		std::cin >> input;
@@ -248,23 +247,23 @@ namespace msa { namespace io {
 		return ch;
 	}
 
-	static void interpret_cmd(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
+	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
 	{
 		InputChunk *ch = static_cast<InputChunk *>(e->args);
 		std::string input = ch->chars;
 		delete ch;
 		if (input == "kill")
 		{
-			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::COMMAND_EXIT, NULL));
+			msa::event::generate(hdl, msa::event::Topic::COMMAND_EXIT, NULL);
 		}
 		else if (input == "announce")
 		{
-			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL));
+			msa::event::generate(hdl, msa::event::Topic::COMMAND_ANNOUNCE, NULL);
 		}
 		else
 		{
 			std::string * heap_alloc_str = new std::string(input);
-			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::INVALID_COMMAND, heap_alloc_str));
+			msa::event::generate(hdl, msa::event::Topic::INVALID_COMMAND, heap_alloc_str);
 		}
 	}
 

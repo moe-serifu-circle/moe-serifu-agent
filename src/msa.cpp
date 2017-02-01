@@ -17,7 +17,7 @@ namespace msa {
 			dispose(hdl);
 			return ret;
 		}
-		ret = msa::io::init(hdl);
+		ret = msa::io::init_input(hdl);
 		if (ret != 0)
 		{
 			quit(hdl);
@@ -37,7 +37,7 @@ namespace msa {
 		}
 		if (msa->input != NULL)
 		{
-			msa::io::quit(msa);
+			msa::io::quit_input(msa);
 			msa->input = NULL;
 		}
 		return msa;

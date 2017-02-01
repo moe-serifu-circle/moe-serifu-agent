@@ -33,6 +33,7 @@ namespace msa { namespace event {
 
 	static const Event *peek_event(msa::Handle msa);
 	static const Event *pop_event(msa::Handle msa);
+	static void push_event(msa::Handle msa, const *Event e);
 
 	static void *edt_start(void *args);
 	static void edt_run(msa::Handle hdl);
@@ -91,6 +92,12 @@ namespace msa { namespace event {
 	extern void unsubscribe(msa::Handle msa, Topic t, EventHandler handler)
 	{
 		msa->event->handlers[t] = NULL;
+	}
+
+	extern void generate(msa::Handle msa, Topic t, void *args)
+	{
+		const *Event e = create(t, args);
+		push_event(msa, e);
 	}
 
 	static int create_event_dispatch_context(EventDispatchContext **event)
@@ -279,7 +286,7 @@ namespace msa { namespace event {
 		ctx->running = false;
 	}
 
-	extern void push_event(msa::Handle msa, const Event *e)
+	static void push_event(msa::Handle msa, const Event *e)
 	{
 		pthread_mutex_lock(&msa->event->queue_mutex);
 		msa->event->queue.push(e);

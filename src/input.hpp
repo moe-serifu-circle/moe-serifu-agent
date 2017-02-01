@@ -1,7 +1,7 @@
 #ifndef INPUT_HPP
 #define INPUT_HPP
 
-#include "environment.hpp"
+#include "msa.hpp"
 
 #include <vector>
 #include <string>
@@ -14,13 +14,13 @@ namespace msa { namespace io {
 
 	typedef struct input_device_type InputDevice;
 
-	extern int init(msa::core::Handle hdl);
-	extern int quit(msa::core::Handle hdl);
-	extern void add_input_device(msa::core::Handle hdl, InputType type, void *device_id);
-	extern void get_input_devices(msa::core::Handle hdl, std::vector<const std::string> *list);
-	extern void remove_input_device(msa::core::Handle hdl, const std::string &id);
-	extern void enable_input_device(msa::core::Handle hdl, const std::string &id);
-	extern void disable_input_device(msa::core::Handle hdl, const std::string &id);
+	extern int init_input(msa::Handle hdl);
+	extern int quit_input(msa::Handle hdl);
+	extern void add_input_device(msa::Handle hdl, InputType type, void *device_id);
+	extern void get_input_devices(msa::Handle hdl, std::vector<const std::string> *list);
+	extern void remove_input_device(msa::Handle hdl, const std::string &id);
+	extern void enable_input_device(msa::Handle hdl, const std::string &id);
+	extern void disable_input_device(msa::Handle hdl, const std::string &id);
 } }
 
 #endif

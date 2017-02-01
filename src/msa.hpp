@@ -1,5 +1,5 @@
-#ifndef ENVIRONMENT_H
-#define ENVIRONMENT_H
+#ifndef MSA_HPP
+#define MSA_HPP
 
 namespace msa {
 

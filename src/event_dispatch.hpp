@@ -1,7 +1,7 @@
 #ifndef EDT_HPP
 #define EDT_HPP
 
-#include "environment.hpp"
+#include "msa.hpp"
 #include "event_handler.hpp"
 
 namespace msa { namespace event {

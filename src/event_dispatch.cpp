@@ -1,5 +1,4 @@
-#include "control.hpp"
-#include "event.hpp"
+#include "event_dispatch.hpp"
 #include "util.hpp"
 
 #include <pthread.h>

@@ -3,6 +3,7 @@
 #include "environment.hpp"
 #include "control.hpp"
 #include "event_handler.hpp"
+#include "input.hpp"
 
 #include <cstdlib>
 #include <cstdio>
@@ -11,6 +12,7 @@
 
 static void say_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
 static void exit_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
+static void bad_command_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
 
 int main(int argc, char *argv[]) {
 	msa::core::Handle hdl;
@@ -20,29 +22,18 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	msa::core::subscribe(hdl, msa::event::Topic::COMMAND_ANNOUNCE, say_func);
-	printf("Master: \"subscribed to announce\"\n");
+	msa::core::subscribe(hdl, msa::event::Topic::INVALID_COMMAND, bad_command_func);
 	msa::core::subscribe(hdl, msa::event::Topic::COMMAND_EXIT, exit_func);
-	printf("Master: \"subscribed to exit\"\n");
+	printf("Master: \"subscribed to command hooks\"\n");
 	int events_count = 0;
+	msa::io::init(hdl);
 	while (hdl->status == msa::core::Status::CREATED)
 	{
 		printf("Master \"Waiting for run...\"\n");
 	}
 	while (hdl->status == msa::core::Status::RUNNING)
 	{
-		events_count++;
-		printf("Master: \"Masa-chan, Announce Yourself.\"\n");
-		const msa::event::Event *e = msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL);
-		msa::core::push_event(hdl, e);
-		if (events_count >= 2)
-		{
-			printf("Master: \"Masa-chan, I want you to exit.\"\n");
-			const msa::event::Event *exit_e = msa::event::create(msa::event::Topic::COMMAND_EXIT, NULL);
-			msa::core::push_event(hdl, exit_e);
-		}
-		int seconds_sleep = rand() % 10 + 1;
-		printf("Master: \"waiting %d seconds...\"\n", seconds_sleep);
-		sleep(seconds_sleep);
+		// busy wait, user enters commands
 	}
 	while (hdl->status != msa::core::Status::STOPPED)
 	{
@@ -74,4 +65,11 @@ static void exit_func(msa::core::Handle hdl, const msa::event::Event *const e, m
 	{
 		printf("Masa-chan: \"Warning! could not quit: %d\"\n", status);
 	}
+}
+
+static void bad_command_func(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync)
+{
+	std::string *str = static_cast<std::string *>(e->args);
+	printf("Masa-chan: \"I'm sorry, Master. I don't understand the command '%s'\"\n", str->c_str());
+	delete str;
 }

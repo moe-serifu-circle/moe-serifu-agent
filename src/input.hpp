@@ -3,6 +3,9 @@
 
 #include "environment.hpp"
 
+#include <vector>
+#include <string>
+
 namespace msa { namespace io {
 
 	typedef enum input_type_type { TTY, TCP, UDP } InputType;

@@ -1,11 +1,14 @@
 #include "input.hpp"
 #include "control.hpp"
+#include "event.hpp"
+#include "event_handler.hpp"
 
 #include <map>
-#include <vector>
 #include <string>
 #include <stdexcept>
 #include <pthread.h>
+#include <algorithm>
+#include <iostream>
 
 namespace msa { namespace io {
 
@@ -25,34 +28,47 @@ namespace msa { namespace io {
 		union
 		{
 			uint16_t port;
-			std::string device_name;
-		}
+			const std::string *device_name;
+		};
 	};
 
 	struct input_context_type
 	{
 		std::map<std::string, InputDevice *> devices;
 		std::vector<std::string> active;
+		std::map<InputType, InputHandler> handlers;
 	};
 
-	extern void enable_input_device(msa::core::Handle hdl, const std::string &id);
-	extern void disable_input_device(msa::core::Handle hdl, const std::string &id);
+	typedef struct it_args_type
+	{
+		msa::core::Handle hdl;
+		InputDevice *dev;
+	} InputThreadArgs;
 
-	static void create_input_device(InputDevice **dev, InputType type, void *device_id);
+	static void create_input_device(InputDevice **dev, InputType type, const void *device_id);
 	static void dispose_input_device(InputDevice *device);
 	static int create_input_context(InputContext **ctx);
 	static int dispose_input_context(InputContext *ctx);
+
+	static InputChunk *get_tty_input(msa::core::Handle hdl, InputDevice *dev);
+
+	static void interpret_cmd(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
 	static void *it_start(void *hdl);
 
 	extern int init(msa::core::Handle hdl)
 	{
-		return create_input_context(&hdl->input);
+		int stat = create_input_context(&hdl->input);
+		hdl->input->handlers[InputType::TTY] = get_tty_input;
+		std::string id = "stdin";
+		add_input_device(hdl, InputType::TTY, &id);
+		enable_input_device(hdl, "TTY:stdin");
+		msa::core::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 	}
 
 	extern int quit(msa::core::Handle hdl)
 	{
-		status = dispose_input_context(hdl->input);
+		int status = dispose_input_context(hdl->input);
 		if (status == 0)
 		{
 			hdl->input = NULL;
@@ -79,7 +95,8 @@ namespace msa { namespace io {
 		{
 			throw std::logic_error("input device " + id + " does not exist");
 		}
-		if (hdl->input->active.find(id) != hdl->input->devices.end())
+		std::vector<std::string> &act = hdl->input->active;
+		if (std::find(act.begin(), act.end(), id) != act.end())
 		{
 			disable_input_device(hdl, id);
 		}
@@ -88,14 +105,58 @@ namespace msa { namespace io {
 		dispose_input_device(dev);
 	}
 
-	extern void get_input_devices(msa::core::Handle hdl, std::vector<const std::string> *list)
+	extern void get_input_devices(msa::core::Handle hdl, std::vector<std::string> *list)
 	{
-		std::map<std::string, InputDevice *>
-		typedef std::map<std::string, const InputDevice *>::iterator it_type;
-		for (it_type = hdl->input->devices.begin(); i < hdl->input->devices.size(); i++)
+		std::map<std::string, InputDevice *> *devs = &hdl->input->devices;
+		typedef std::map<std::string, InputDevice *>::iterator it_type;
+		for (it_type iter = devs->begin(); iter != devs->end(); iter++)
 		{
-			list->push_back(hdl->input->devices[i]->
+			// TODO: figure out why we cant have a vec of const str passed in.
+			std::string id = iter->second->id;
+			list->push_back(id);
 		}
+	}
+
+	extern void enable_input_device(msa::core::Handle hdl, const std::string &id)
+	{
+		std::vector<std::string> &act = hdl->input->active;
+		if (std::find(act.begin(), act.end(), id) != act.end())
+		{
+			// it's already active, leave it alone
+			return;
+		}
+		if (hdl->input->devices.find(id) == hdl->input->devices.end())
+		{
+			// device does not exist
+			throw std::logic_error("input device " + id + " does not exist");
+		}
+		// checks are done, we know it exists and is disabled
+		InputDevice *dev = hdl->input->devices[id];
+		InputThreadArgs *ita = new InputThreadArgs;
+		ita->dev = dev;
+		ita->hdl = hdl;
+		dev->running = (pthread_create(&dev->thread, NULL, it_start, ita) == 0);
+		if (dev->running)
+		{
+			hdl->input->active.push_back(dev->id);
+		}
+	}
+
+	extern void disable_input_device(msa::core::Handle hdl, const std::string &id)
+	{
+		std::vector<std::string> &act = hdl->input->active;
+		if (std::find(act.begin(), act.end(), id) == act.end())
+		{
+			// it's not enabled, leave it alone.
+			return;
+		}
+		if (hdl->input->devices.find(id) == hdl->input->devices.end())
+		{
+			// device does not exist
+			throw std::logic_error("input device " + id + " does not exist");
+		}
+		hdl->input->devices[id]->running = false;
+		act.erase(std::find(act.begin(), act.end(), id));
 	}
 
 	static void create_input_device(InputDevice **dev_ptr, InputType type, const void *id)
@@ -116,8 +177,8 @@ namespace msa { namespace io {
 				break;
 
 			case InputType::TTY:
-				dev->device_name = std::string(static_cast<const char *>(id));
-				dev->id = "TTY:" + dev->device_name;
+				dev->device_name = static_cast<const std::string *>(id);
+				dev->id = "TTY:" + *dev->device_name;
 				break;
 
 			default:
@@ -132,7 +193,7 @@ namespace msa { namespace io {
 	{	
 		if (dev->running)
 		{
-			stop_input_device(dev);
+			dev->running = false;
 		}
 		delete dev;
 	}
@@ -146,11 +207,11 @@ namespace msa { namespace io {
 
 	static int dispose_input_context(InputContext *ctx)
 	{
-		typedef std::map<std::string, const InputDevice *>::iterator it_type;
+		typedef std::map<std::string, InputDevice *>::iterator it_type;
 		it_type iter = ctx->devices.begin();
 		while (iter != ctx->devices.end())
 		{
-			dispose_input_device(ctx->devices[iter]);
+			dispose_input_device(iter->second);
 			iter = ctx->devices.erase(iter);
 		}
 		delete ctx;
@@ -159,7 +220,52 @@ namespace msa { namespace io {
 
 	static void *it_start(void *args)
 	{
-		msa::core::Handle hdl = static_cast<msa::core::Handle>(args);
+		InputThreadArgs *ita = static_cast<InputThreadArgs *>(args);
+		msa::core::Handle hdl = ita->hdl;
+		InputDevice *dev = ita->dev;
+		delete ita;
+		if (hdl->input->handlers.find(dev->type) == hdl->input->handlers.end())
+		{
+			dev->running = false;
+			disable_input_device(hdl, dev->id);
+			throw std::logic_error("no handler for input device type " + std::to_string(dev->type));
+		}
+		InputHandler input_handler = hdl->input->handlers[dev->type];
+		while (dev->running)
+		{
+			InputChunk *chunk = input_handler(hdl, dev);
+			const msa::event::Event *e = msa::event::create(msa::event::Topic::TEXT_INPUT, chunk);
+			msa::core::push_event(hdl, e);
+		}
+	}
+
+	static InputChunk *get_tty_input(msa::core::Handle hdl, InputDevice *dev)
+	{
+		std::string input;
+		std::cin >> input;
+		InputChunk *ch = new InputChunk;
+		ch->chars = input;
+		return ch;
+	}
+
+	static void interpret_cmd(msa::core::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
+	{
+		InputChunk *ch = static_cast<InputChunk *>(e->args);
+		std::string input = ch->chars;
+		delete ch;
+		if (input == "kill")
+		{
+			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::COMMAND_EXIT, NULL));
+		}
+		else if (input == "announce")
+		{
+			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::COMMAND_ANNOUNCE, NULL));
+		}
+		else
+		{
+			std::string * heap_alloc_str = new std::string(input);
+			msa::core::push_event(hdl, msa::event::create(msa::event::Topic::INVALID_COMMAND, heap_alloc_str));
+		}
 	}
 
 } }

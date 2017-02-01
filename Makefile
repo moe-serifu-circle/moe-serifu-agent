@@ -3,7 +3,7 @@ CFLAGS_COMMON=-std=c++11 -pthread
 CFLAGS_DEBUG=$(CFLAGS_COMMON) -g -O0
 CFLAGS_RELEASE=$(CFLAGS_COMMON)
 
-DEP_TARGETS=agent.o control.o event.o event_handler.o
+DEP_TARGETS=agent.o control.o event.o event_handler.o input.o
 
 ODIR=obj
 SDIR=src
@@ -72,6 +72,9 @@ $(ODIR)/event.o: $(ODIR) $(SDIR)/event.cpp $(SDIR)/event.hpp
 $(ODIR)/event_handler.o: $(ODIR) $(SDIR)/event_handler.cpp $(SDIR)/event_handler.hpp $(SDIR)/event.hpp
 	$(CC) -c -o $@ $(SDIR)/event_handler.cpp $(CFLAGS_RELEASE)
 
+$(ODIR)/input.o: $(ODIR) $(SDIR)/input.cpp $(SDIR)/input.hpp
+	$(CC) -c -o $@ $(SDIR)/input.cpp $(CFLAGS_RELEASE)
+
 
 
 # ---------------
@@ -97,4 +100,6 @@ $(TDIR)/$(ODIR)/event.o: $(TDIR)/$(ODIR) $(SDIR)/event.cpp $(SDIR)/event.hpp
 $(TDIR)/$(ODIR)/event_handler.o: $(TDIR)/$(ODIR) $(SDIR)/event_handler.cpp $(SDIR)/event_handler.hpp $(SDIR)/event.hpp
 	$(CC) -c -o $@ $(SDIR)/event_handler.cpp $(CFLAGS_DEBUG)
 
+$(TDIR)/$(ODIR)/input.o: $(TDIR)/$(ODIR) $(SDIR)/input.cpp $(SDIR)/input.hpp
+	$(CC) -c -o $@ $(SDIR)/input.cpp $(CFLAGS_DEBUG)
 

@@ -86,7 +86,7 @@ $(ODIR)/event_dispatch.o: $(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(S
 # Debug recipies
 # -----------------
 
-moe-serifu: $(TDIR)/$(ODIR)/main.o $(DEP_OBJS_DEBUG)
+$(TDIR)/moe-serifu: $(TDIR)/$(ODIR)/main.o $(DEP_OBJS_DEBUG)
 	$(CC) -o $@ $^ $(CFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)

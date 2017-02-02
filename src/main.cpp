@@ -5,12 +5,13 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <string>
 
 #include <unistd.h>
 
-static void say_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
-static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
-static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync);
+static void say_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
+static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
+static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
 int main(int argc, char *argv[]) {
 	msa::Handle hdl;
@@ -44,12 +45,12 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
-static void say_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *cons)
+static void say_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const cons)
 {
 	printf("Masa-chan: \"I'd like to announce my presence!\"\n");
 }
 
-static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *cons)
+static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const cons)
 {
 	printf("Masa-chan: \"Right away master, I will terminate my EDT for you now!\"\n");
 	int status = msa::quit(hdl);
@@ -64,7 +65,7 @@ static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::ev
 	}
 }
 
-static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync)
+static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
 {
 	std::string *str = static_cast<std::string *>(e->args);
 	printf("Masa-chan: \"I'm sorry, Master. I don't understand the command '%s'\"\n", str->c_str());

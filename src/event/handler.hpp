@@ -8,7 +8,7 @@ namespace msa { namespace event {
 
 	typedef struct handler_synchronization_type HandlerSync;
 
-	typedef void (*EventHandler)(msa::core::Handle hdl, const Event *const e, HandlerSync *const sync);
+	typedef void (*EventHandler)(msa::Handle hdl, const Event *const e, HandlerSync *const sync);
 
 	// creates a handler sync and initializes the variables in it
 	extern void create_handler_sync(HandlerSync **sync);

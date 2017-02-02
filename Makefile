@@ -2,7 +2,7 @@ ODIR=obj
 SDIR=src
 TDIR=testing
 
-CC=g++
+CC?=g++
 CFLAGS_COMMON=-std=c++11 -pthread -I$(SDIR)
 CFLAGS_DEBUG=$(CFLAGS_COMMON) -g -O0
 CFLAGS_RELEASE=$(CFLAGS_COMMON)

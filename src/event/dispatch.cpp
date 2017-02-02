@@ -32,7 +32,7 @@ namespace msa { namespace event {
 
 	static const Event *peek_event(msa::Handle msa);
 	static const Event *pop_event(msa::Handle msa);
-	static void push_event(msa::Handle msa, const *Event e);
+	static void push_event(msa::Handle msa, const Event *e);
 
 	static void *edt_start(void *args);
 	static void edt_run(msa::Handle hdl);
@@ -95,7 +95,7 @@ namespace msa { namespace event {
 
 	extern void generate(msa::Handle msa, Topic t, void *args)
 	{
-		const *Event e = create(t, args);
+		const Event *e = create(t, args);
 		push_event(msa, e);
 	}
 

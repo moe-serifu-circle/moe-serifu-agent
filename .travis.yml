@@ -10,4 +10,4 @@ install:
 - export TDIR="testing"
 
 # try to build the normal bin and the testing bin
-script: make && make $(TDIR)/moe-serifu
+script: make && make $TDIR/moe-serifu

@@ -30,17 +30,26 @@ namespace msa {
 
 	extern int quit(Handle msa)
 	{
+		int status = 0;
 		if (msa->event != NULL)
 		{
-			msa::event::quit(msa);
+			status = msa::event::quit(msa);
+			if (status != 0)
+			{
+				return 1;
+			}
 			msa->event = NULL;
 		}
 		if (msa->input != NULL)
 		{
-			msa::io::quit_input(msa);
+			status = msa::io::quit_input(msa);
+			if (status != 0)
+			{
+				return 2;
+			}
 			msa->input = NULL;
 		}
-		return msa;
+		return 0;
 	}
 
 	extern int dispose(Handle msa)

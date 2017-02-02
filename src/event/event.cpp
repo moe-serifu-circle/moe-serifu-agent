@@ -1,7 +1,7 @@
 #include "event.hpp"
 
 #include <stdexcept>
-#include <unistd.h>
+#include <cstdint>
 
 namespace msa { namespace event {
 

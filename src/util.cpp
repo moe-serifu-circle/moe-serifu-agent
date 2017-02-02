@@ -8,6 +8,7 @@
 #else
 	// unix includes
 	#include <ctime>
+	#include <cstdint>
 #endif
 
 namespace msa { namespace util {
@@ -19,7 +20,7 @@ namespace msa { namespace util {
 #else
 	extern void sleep_milli(int millisec) {
 		struct timespec t;
-		t.tv_nsec = (uint64_t) millisec * 1000000000;
+		t.tv_nsec = (uint64_t) millisec * UINT64_C(1000000000);
 		nanosleep(&t, NULL);
 	}
 #endif

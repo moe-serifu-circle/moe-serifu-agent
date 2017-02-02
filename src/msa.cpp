@@ -28,7 +28,7 @@ namespace msa {
 		return 0;
 	}
 
-	extern int quit(Handle *msa)
+	extern int quit(Handle msa)
 	{
 		if (msa->event != NULL)
 		{
@@ -43,7 +43,7 @@ namespace msa {
 		return msa;
 	}
 
-	extern int dispose(msa::Handle msa)
+	extern int dispose(Handle msa)
 	{
 		// make sure our modules have been properly quit before deleting the pointer
 		if (msa->event != NULL)

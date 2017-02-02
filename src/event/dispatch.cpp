@@ -61,12 +61,12 @@ namespace msa { namespace event {
 
 	extern int quit(msa::Handle msa)
 	{
-		if (msa->status == msa::Status::CREATED && msa::event != NULL)
+		if (msa->status == msa::Status::CREATED && msa->event != NULL)
 		{
 			// this shouldn't happen, but if we get here, it's because
 			// the event handle was inited but the EDT was not started.
 			// We can just destroy the mutex and delete everything immediately
-			pthread_mutex_destroy(&hdl->event->queue_mutex);
+			pthread_mutex_destroy(&msa->event->queue_mutex);
 			dispose_event_dispatch_context(msa->event);
 		}
 		// if the quit was initiated by the current event thread,
@@ -104,7 +104,6 @@ namespace msa { namespace event {
 		EventDispatchContext *edc = new EventDispatchContext;
 		edc->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 		edc->current_handler = NULL;
-		edc->request_from_event = false;
 		*event = edc;
 		return 0;
 	}
@@ -170,7 +169,7 @@ namespace msa { namespace event {
 		// check if current task has finished
 		if (edc->current_handler != NULL && !(edc->current_handler->running))
 		{
-			dispose_handler_context(edc->current_handler);
+			dispose_handler_context(edc->current_handler, false);
 			edc->current_handler = NULL;
 		}
 		// if current task is clear, load up the next one that has been interrupted
@@ -220,7 +219,7 @@ namespace msa { namespace event {
 		// wait till it stops
 		while (!handler_suspended(ctx->sync)) {
 			// we just wait here until we can go
-			sleep_milli(10);
+			msa::util::sleep_milli(10);
 			// TODO: Force handler to stop if it takes too long
 		}
 		// okay now put it on the stack

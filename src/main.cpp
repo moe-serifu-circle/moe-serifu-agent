@@ -14,7 +14,7 @@ static void say_func(msa::Handle hdl, const msa::event::Event *const e, msa::eve
 static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
-int main(int UNUSED(argc), char *[] UNUSED(argv)) {
+int main(int UNUSED(argc), char **UNUSED(argv)) {
 	msa::Handle hdl;
 	if (msa::init(&hdl) != 0)
 	{

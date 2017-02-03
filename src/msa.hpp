@@ -31,7 +31,7 @@ namespace msa {
 	{
 		Status status;
 		msa::event::EventDispatchContext *event;
-		msa::io::InputContext *input;
+		msa::input::InputContext *input;
 		msa::agent::AgentContext *agent;
 	};
 

@@ -1,5 +1,6 @@
 #include "event/dispatch.hpp"
 #include "util.hpp"
+#include "cxx_normalization.hpp"
 
 #include <pthread.h>
 #include <cstdio>
@@ -29,9 +30,7 @@ namespace msa { namespace event {
 	static int create_event_dispatch_context(EventDispatchContext **event);
 	static int dispose_event_dispatch_context(EventDispatchContext *event);
 	static void *event_start(void *args);
-
-	static const Event *peek_event(msa::Handle msa);
-	static const Event *pop_event(msa::Handle msa);
+	
 	static void push_event(msa::Handle msa, const Event *e);
 
 	static void *edt_start(void *args);
@@ -88,7 +87,7 @@ namespace msa { namespace event {
 		msa->event->handlers[t] = handler;
 	}
 
-	extern void unsubscribe(msa::Handle msa, Topic t, EventHandler handler)
+	extern void unsubscribe(msa::Handle msa, Topic t, EventHandler UNUSED(handler))
 	{
 		msa->event->handlers[t] = NULL;
 	}
@@ -128,6 +127,7 @@ namespace msa { namespace event {
 			edt_run(hdl);
 		}
 		edt_cleanup(hdl);
+		return NULL;
 	}
 
 	static void edt_cleanup(msa::Handle hdl)
@@ -266,7 +266,7 @@ namespace msa { namespace event {
 			if (join)
 			{
 				// wait until current event runs through
-				int err = pthread_join(ctx->thread, NULL);
+				pthread_join(ctx->thread, NULL);
 			}
 		}
 		// delete event
@@ -282,28 +282,13 @@ namespace msa { namespace event {
 		HandlerContext *ctx = hdl->event->current_handler;
 		ctx->handler_func(hdl, ctx->event, ctx->sync);
 		ctx->running = false;
+		return NULL;
 	}
 
 	static void push_event(msa::Handle msa, const Event *e)
 	{
 		pthread_mutex_lock(&msa->event->queue_mutex);
 		msa->event->queue.push(e);
-		pthread_mutex_unlock(&msa->event->queue_mutex);
-	}
-
-	static const Event *peek_event(msa::Handle msa)
-	{
-		pthread_mutex_lock(&msa->event->queue_mutex);
-		const Event *e = msa->event->queue.top();
-		pthread_mutex_unlock(&msa->event->queue_mutex);
-		return e;
-	}
-
-	static const Event *pop_event(msa::Handle msa)
-	{
-		pthread_mutex_lock(&msa->event->queue_mutex);
-		const Event *e = msa->event->queue.top();
-		msa->event->queue.pop();
 		pthread_mutex_unlock(&msa->event->queue_mutex);
 	}
 

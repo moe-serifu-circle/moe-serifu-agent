@@ -1,5 +1,6 @@
 #include "input.hpp"
 #include "event/dispatch.hpp"
+#include "cxx_normalization.hpp"
 
 #include <map>
 #include <string>
@@ -57,11 +58,16 @@ namespace msa { namespace input {
 	extern int init(msa::Handle hdl)
 	{
 		int stat = create_input_context(&hdl->input);
+		if (stat != 0)
+		{
+			return 1;
+		}
 		hdl->input->handlers[InputType::TTY] = get_tty_input;
 		std::string id = "stdin";
 		add_input_device(hdl, InputType::TTY, &id);
 		enable_input_device(hdl, "TTY:stdin");
 		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
+		return 0;
 	}
 
 	extern int quit(msa::Handle hdl)
@@ -234,9 +240,10 @@ namespace msa { namespace input {
 			InputChunk *chunk = input_handler(hdl, dev);
 			msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, chunk);
 		}
+		return NULL;
 	}
 
-	static InputChunk *get_tty_input(msa::Handle hdl, InputDevice *dev)
+	static InputChunk *get_tty_input(msa::Handle UNUSED(hdl), InputDevice *UNUSED(dev))
 	{
 		std::string input;
 		std::cin >> input;
@@ -245,7 +252,7 @@ namespace msa { namespace input {
 		return ch;
 	}
 
-	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
+	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		InputChunk *ch = static_cast<InputChunk *>(e->args);
 		std::string input = ch->chars;

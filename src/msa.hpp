@@ -19,6 +19,12 @@ namespace msa {
 		
 	}
 
+	namespace agent {
+
+		typedef struct agent_context_type AgentContext;
+
+	}
+
 	typedef enum status_type { CREATED, RUNNING, STOP_REQUESTED, STOPPED } Status;
 
 	struct environment_type
@@ -26,6 +32,7 @@ namespace msa {
 		Status status;
 		msa::event::EventDispatchContext *event;
 		msa::io::InputContext *input;
+		msa::agent::AgentContext *agent;
 	};
 
 	typedef struct environment_type* Handle;

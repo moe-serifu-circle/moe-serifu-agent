@@ -98,7 +98,7 @@ namespace msa {
 			return ERR_INPUT;
 		}
 
-		if (msa>agent != NULL)
+		if (msa->agent != NULL)
 		{
 			return ERR_AGENT;
 		}

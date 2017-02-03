@@ -57,10 +57,10 @@ moe-serifu: $(ODIR)/main.o $(DEP_OBJS)
 $(ODIR)/main.o: $(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS_RELEASE)
 
-$(ODIR)/msa.o: $(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp
+$(ODIR)/msa.o: $(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_RELEASE)
 
-$(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
+$(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp
 	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS_RELEASE)
 
 $(ODIR)/util.o: $(ODIR) $(SDIR)/util.cpp $(SDIR)/util.hpp
@@ -89,10 +89,10 @@ $(TDIR)/moe-serifu: $(TDIR)/$(ODIR)/main.o $(DEP_OBJS_DEBUG)
 $(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp
+$(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp
+$(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp
 	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/util.o: $(TDIR)/$(ODIR) $(SDIR)/util.cpp $(SDIR)/util.hpp

@@ -10,7 +10,7 @@ namespace msa { namespace agent {
 		Agent *agent;
 	};
 
-	Agent::agent_type(const std::string &n) : name(n), attitude(0), state(State::IDLE), mood(Mood::NORMAL)
+	Agent::agent_type(const std::string &n) : name(n), state(State::IDLE), attitude(0), mood(Mood::NORMAL)
 	{}
 
 	extern int init(msa::Handle hdl)

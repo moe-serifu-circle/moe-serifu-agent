@@ -13,7 +13,7 @@ namespace msa { namespace agent {
 	Agent::agent_type(const std::string &n) : name(n), attitude(0), mood(Mood::NORMAL), state(State::IDLE)
 	{}
 
-	extern int init(msa::Handle *hdl)
+	extern int init(msa::Handle hdl)
 	{
 		AgentContext *ctx = new AgentContext;
 		ctx->agent = new Agent("Masa-chan");
@@ -21,7 +21,7 @@ namespace msa { namespace agent {
 		return 0;
 	}
 
-	extern int quit(msa::Handle *hdl)
+	extern int quit(msa::Handle hdl)
 	{
 		delete hdl->agent->agent;
 		delete hdl->agent;

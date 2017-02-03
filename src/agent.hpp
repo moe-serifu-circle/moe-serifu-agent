@@ -31,8 +31,8 @@ namespace msa { namespace agent {
 		agent_type(const std::string &n);
 	} Agent;
 
-	extern int init(msa::Handle *hdl);
-	extern int quit(msa::Handle *hdl);
+	extern int init(msa::Handle hdl);
+	extern int quit(msa::Handle hdl);
 	
 } }
 #endif

@@ -28,7 +28,7 @@ namespace msa {
 			return ERR_EVENT;
 		}
 
-		ret = msa::io::init_input(hdl);
+		ret = msa::input::init(hdl);
 		if (ret != 0)
 		{
 			quit(hdl);
@@ -64,7 +64,7 @@ namespace msa {
 
 		if (msa->input != NULL)
 		{
-			status = msa::io::quit_input(msa);
+			status = msa::input::quit(msa);
 			if (status != 0)
 			{
 				return ERR_INPUT;

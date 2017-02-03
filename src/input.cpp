@@ -8,7 +8,7 @@
 #include <iostream>
 #include <pthread.h>
 
-namespace msa { namespace io {
+namespace msa { namespace input {
 
 	typedef InputChunk *(*InputHandler)(msa::Handle, InputDevice *);
 
@@ -54,7 +54,7 @@ namespace msa { namespace io {
 
 	static void *it_start(void *hdl);
 
-	extern int init_input(msa::Handle hdl)
+	extern int init(msa::Handle hdl)
 	{
 		int stat = create_input_context(&hdl->input);
 		hdl->input->handlers[InputType::TTY] = get_tty_input;
@@ -64,7 +64,7 @@ namespace msa { namespace io {
 		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 	}
 
-	extern int quit_input(msa::Handle hdl)
+	extern int quit(msa::Handle hdl)
 	{
 		int status = dispose_input_context(hdl->input);
 		if (status == 0)

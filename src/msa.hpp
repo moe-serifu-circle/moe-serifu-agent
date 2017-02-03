@@ -7,7 +7,7 @@
 
 namespace msa {
 
-	namespace io {
+	namespace input {
 
 		typedef struct input_context_type InputContext;
 

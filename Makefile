@@ -3,7 +3,7 @@ SDIR?=src
 TDIR?=testing
 
 CXX?=g++
-CXXFLAGS?=-std=c++11 -pthread -I$(SDIR)
+CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -Werror -pthread -I$(SDIR)
 CXXFLAGS_DEBUG=$(CXXFLAGS) -g -O0
 CXXFLAGS_RELEASE=$(CXXFLAGS)
 

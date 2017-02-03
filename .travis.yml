@@ -2,8 +2,8 @@ language: cpp
 
 branches:
   only:
-    - master
-    - dev
+  - master
+  - dev
 
 before_install:
 - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test

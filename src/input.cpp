@@ -36,6 +36,7 @@ namespace msa { namespace input {
 		std::map<std::string, InputDevice *> devices;
 		std::vector<std::string> active;
 		std::map<InputType, InputHandler> handlers;
+		std::map<std::string, InputHandler> handler_table;
 	};
 
 	typedef struct it_args_type
@@ -62,10 +63,13 @@ namespace msa { namespace input {
 		{
 			return 1;
 		}
+		hdl->input->handler_table["get_tty_input"] = get_tty_input;
+/*
 		hdl->input->handlers[InputType::TTY] = get_tty_input;
 		std::string id = "stdin";
 		add_input_device(hdl, InputType::TTY, &id);
 		enable_input_device(hdl, "TTY:stdin");
+*//
 		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 		return 0;
 	}

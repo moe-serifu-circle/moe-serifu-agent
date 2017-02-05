@@ -43,7 +43,7 @@ namespace msa { namespace event {
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e);
 	static void dispose_handler_context(HandlerContext *ctx, bool join);
 
-	extern int init(msa::Handle hdl, const ConfigSection &config)
+	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
 		int create_status = create_event_dispatch_context(&hdl->event);
 		if (create_status != 0)

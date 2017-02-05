@@ -6,9 +6,9 @@
 
 namespace msa { namespace config {
 
-	typedef std::map<std::string, std::string> ConfigSection;
+	typedef std::map<std::string, std::string> Section;
 
-	typedef std::map<std::string, ConfigSection> Config;
+	typedef std::map<std::string, Section> Config;
 
 	extern Config *load(const std::string &path);
 	extern void save(const std::string &path, Config *configuration);

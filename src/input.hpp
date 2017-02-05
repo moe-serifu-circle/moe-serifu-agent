@@ -15,7 +15,7 @@ namespace msa { namespace input {
 
 	typedef struct input_device_type InputDevice;
 
-	extern int init(msa::Handle hdl, const ConfigSection &config);
+	extern int init(msa::Handle hdl, const msa::config::Section &config);
 	extern int quit(msa::Handle hdl);
 	extern void add_input_device(msa::Handle hdl, InputType type, void *device_id);
 	extern void get_input_devices(msa::Handle hdl, std::vector<const std::string> *list);

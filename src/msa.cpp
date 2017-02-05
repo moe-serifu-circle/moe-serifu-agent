@@ -17,7 +17,7 @@ namespace msa {
 	{
 		// load config first
 		const std::string config_path_str = config_path;
-		Config *conf = msa::config::load(config_path_str);
+		msa::config::Config *conf = msa::config::load(config_path_str);
 
 		environment_type *hdl = new environment_type;
 		hdl->status = Status::CREATED;
@@ -27,7 +27,7 @@ namespace msa {
 
 		int ret;
 
-		ConfigSection event_conf;
+		msa::config::Section event_conf;
 		if (conf->find("EVENT") != conf->end())
 		{
 			event_conf = (*conf)["EVENT"];
@@ -40,7 +40,7 @@ namespace msa {
 			return ERR_EVENT;
 		}
 
-		ConfigSection input_conf;
+		msa::config::Section input_conf;
 		if (conf->find("INPUT") != conf->end())
 		{
 			input_conf = (*conf)["INPUT"];
@@ -53,7 +53,7 @@ namespace msa {
 			return ERR_INPUT;
 		}
 
-		ConfigSection agent_conf;
+		msa::config::Section agent_conf;
 		if (conf->find("AGENT") != conf->end())
 		{
 			agent_conf = (*conf)["AGENT"];

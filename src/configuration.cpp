@@ -14,7 +14,7 @@ namespace msa { namespace config {
 	static void read_section_header(Config *config, std::string &section_name, const std::string &line);		static void read_kv_pair(Config *config, const std::string &section_name, const std::string &line);
 	static void check_is_identifier(const std::string &check);
 	static void remove_comments(std::string &line);
-	static void write_section(std::ostream out, const ConfigSection &sec);
+	static void write_section(std::ostream out, const Section &sec);
 
 	extern int save(const char *path, const Config *config)
 	{
@@ -131,9 +131,9 @@ namespace msa { namespace config {
 		}
 	}
 
-	static void write_section(std::ostream out, const ConfigSection &sec)
+	static void write_section(std::ostream out, const Section &sec)
 	{
-		typedef ConfigSection::const_iterator iter;
+		typedef Section::const_iterator iter;
 		for (iter it = sec.begin(); it != sec.end(); it++)
 		{
 			std::string k = it->first;

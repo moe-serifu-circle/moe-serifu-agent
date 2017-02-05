@@ -58,7 +58,7 @@ namespace msa { namespace input {
 
 	static void *it_start(void *hdl);
 
-	extern int init(msa::Handle hdl, const ConfigSection &config)
+	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
 		// init the static resources
 		if (INPUT_TYPE_NAMES.empty())

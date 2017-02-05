@@ -14,7 +14,7 @@ namespace msa { namespace config {
 	static void read_section_header(Config *config, std::string &section_name, const std::string &line);		static void read_kv_pair(Config *config, const std::string &section_name, const std::string &line);
 	static void check_is_identifier(const std::string &check);
 	static void remove_comments(std::string &line);
-	static void write_section(std::ostream out, const ConfigSection &sec)
+	static void write_section(std::ostream out, const ConfigSection &sec);
 
 	extern int save(const char *path, const Config *config)
 	{
@@ -35,7 +35,7 @@ namespace msa { namespace config {
 			config_file << std::endl;
 		}
 		typedef Config::const_iterator iter;
-		for (iter it = config->begin(); it < config->end(); it++)
+		for (iter it = config->begin(); it != config->end(); it++)
 		{
 			if (it->first == "")
 			{
@@ -43,8 +43,10 @@ namespace msa { namespace config {
 			}
 			config_file << section_header_start_char << it->first << section_header_end_char << std::endl;
 			write_section(config_file, it->second);
+			config_file << std::endl;
 		}
 		config_file.close();
+		return 0;
 	}
 
 	extern Config *load(const char *path)
@@ -126,6 +128,22 @@ namespace msa { namespace config {
 		if (pos == std::string::npos)
 		{
 			line = line.substr(0, pos);
+		}
+	}
+
+	static void write_section(std::ostream out, const ConfigSection &sec)
+	{
+		typedef ConfigSection::const_iterator iter;
+		for (iter it = sec.begin(); it != sec.end(); it++)
+		{
+			std::string k = it->first;
+			std::string v = it->second;
+			out << k << " = ";
+			if (v.front() == ' ' || v.front() == '\t')
+			{
+				v = "\"" + v + "\"";
+			}
+			out << v << std::endl;
 		}
 	}
 

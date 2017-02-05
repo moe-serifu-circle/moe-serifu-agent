@@ -7,8 +7,8 @@ CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -Werror -pthread -I$(SDIR)
 CXXFLAGS_DEBUG=$(CXXFLAGS) -g -O0
 CXXFLAGS_RELEASE=$(CXXFLAGS)
 
-DEP_TARGETS?=agent.o util.o msa.o event_event.o event_handler.o event_dispatch.o input.o
-DEP_INC_PATHS?=agent.hpp util.hpp msa.hpp event/event.hpp event/handler.hpp event/dispatch.hpp input.hpp
+DEP_TARGETS?=agent.o util.o msa.o event_event.o event_handler.o event_dispatch.o input.o string.o configuration.o
+DEP_INC_PATHS?=agent.hpp util.hpp msa.hpp event/event.hpp event/handler.hpp event/dispatch.hpp input.hpp string.hpp configuration.hpp
 DEP_INCS=$(patsubst %,$(SDIR)/%,$(DEP_INC_PATHS))
 
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
@@ -57,8 +57,14 @@ moe-serifu: $(ODIR)/main.o $(DEP_OBJS)
 $(ODIR)/main.o: $(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS_RELEASE)
 
-$(ODIR)/msa.o: $(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp
+$(ODIR)/msa.o: $(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_RELEASE)
+
+$(ODIR)/configuration.o: $(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
+	$(CXX) -c -o $@ $(SDIR)/configuration.cpp $(CXXFLAGS_RELEASE)
+
+$(ODIR)/string.o: $(ODIR) $(SDIR)/string.cpp $(SDIR)/string.hpp
+	$(CXX) -c -o $@ $(SDIR)/string.cpp $(CXXFLAGS_RELEASE)
 
 $(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp
 	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS_RELEASE)
@@ -91,6 +97,12 @@ $(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 
 $(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_DEBUG)
+
+$(TDIR)/(ODIR)/configuration.o: $(TDIR)/$(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
+	$(CXX) -c -o $@ $(SDIR)/configuration.cpp $(CXXFLAGS_DEBUG)
+
+$(TDIR)/$(ODIR)/string.o: $(TDIR)/$(ODIR) $(SDIR)/string.cpp $(SDIR)/string.hpp
+	$(CXX) -c -o $@ $(SDIR)/string.cpp $(CXXFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp
 	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS_DEBUG)

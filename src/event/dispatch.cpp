@@ -16,6 +16,7 @@ namespace msa { namespace event {
 		HandlerSync *sync;
 		bool running;
 		pthread_t thread;
+		int sleep_time;
 	} HandlerContext;
 
 	struct event_dispatch_context_type {
@@ -42,13 +43,17 @@ namespace msa { namespace event {
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e);
 	static void dispose_handler_context(HandlerContext *ctx, bool join);
 
-	extern int init(msa::Handle hdl)
+	extern int init(msa::Handle hdl, const ConfigSection &config)
 	{
 		int create_status = create_event_dispatch_context(&hdl->event);
 		if (create_status != 0)
 		{
 			return create_status;
 		}
+		
+		// read config
+		hdl->event->sleep_time = (config.find("IDLE_SLEEP_TIME") != config.end()) ? std::stoi(config["IDLE_SLEEP_TIME"]) : 10;
+
 		create_status = pthread_create(&hdl->event->edt, NULL, edt_start, hdl);
 		if (create_status != 0)
 		{
@@ -219,7 +224,7 @@ namespace msa { namespace event {
 		// wait till it stops
 		while (!handler_suspended(ctx->sync)) {
 			// we just wait here until we can go
-			msa::util::sleep_milli(10);
+			msa::util::sleep_milli(hdl->event->sleep_time);
 			// TODO: Force handler to stop if it takes too long
 		}
 		// okay now put it on the stack

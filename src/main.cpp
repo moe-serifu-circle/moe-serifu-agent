@@ -14,9 +14,15 @@ static void say_func(msa::Handle hdl, const msa::event::Event *const e, msa::eve
 static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
-int main(int UNUSED(argc), char **UNUSED(argv)) {
+int main(int argc, char *argv[]) {
+	if (argc < 2)
+	{
+		printf("need config file as argument");
+		return 1;
+	}
+
 	msa::Handle hdl;
-	if (msa::init(&hdl) != 0)
+	if (msa::init(&hdl, argv[1]) != 0)
 	{
 		perror("could not init msa handle");
 		return EXIT_FAILURE;

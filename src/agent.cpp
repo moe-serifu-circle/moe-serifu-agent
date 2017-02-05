@@ -13,10 +13,11 @@ namespace msa { namespace agent {
 	Agent::agent_type(const std::string &n) : name(n), state(State::IDLE), attitude(0), mood(Mood::NORMAL)
 	{}
 
-	extern int init(msa::Handle hdl)
+	extern int init(msa::Handle hdl, const ConfigSection &config)
 	{
 		AgentContext *ctx = new AgentContext;
-		ctx->agent = new Agent("Masa-chan");
+		std::string name = (config.find("NAME") != config.end()) ? config["NAME"] : "DEFAULT_NAME";
+		ctx->agent = new Agent(name);
 		hdl->agent = ctx;
 		return 0;
 	}

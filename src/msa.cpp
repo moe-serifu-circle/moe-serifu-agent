@@ -2,6 +2,9 @@
 #include "agent.hpp"
 #include "input.hpp"
 #include "event/dispatch.hpp"
+#include "configuration.hpp"
+
+#include <string>
 
 #define ERR_NONE 0
 #define ERR_EVENT 1
@@ -10,8 +13,12 @@
 
 namespace msa {
 
-	extern int init(Handle *msa)
-	{		
+	extern int init(Handle *msa, const char *config_path)
+	{
+		// load config first
+		const std::string config_path_str = config_path;
+		Config *conf = msa::config::load(config_path_str);
+
 		environment_type *hdl = new environment_type;
 		hdl->status = Status::CREATED;
 		hdl->event = NULL;
@@ -19,8 +26,13 @@ namespace msa {
 		hdl->agent = NULL;
 
 		int ret;
-		
-		ret = msa::event::init(hdl);
+
+		ConfigSection event_conf;
+		if (conf->find("EVENT") != conf->end())
+		{
+			event_conf = (*conf)["EVENT"];
+		}
+		ret = msa::event::init(hdl, event_conf);
 		if (ret != 0)
 		{
 			quit(hdl);
@@ -28,7 +40,12 @@ namespace msa {
 			return ERR_EVENT;
 		}
 
-		ret = msa::input::init(hdl);
+		ConfigSection input_conf;
+		if (conf->find("INPUT") != conf->end())
+		{
+			input_conf = (*conf)["INPUT"];
+		}
+		ret = msa::input::init(hdl, input_conf);
 		if (ret != 0)
 		{
 			quit(hdl);
@@ -36,7 +53,12 @@ namespace msa {
 			return ERR_INPUT;
 		}
 
-		ret = msa::agent::init(hdl);
+		ConfigSection agent_conf;
+		if (conf->find("AGENT") != conf->end())
+		{
+			agent_conf = (*conf)["AGENT"];
+		}
+		ret = msa::agent::init(hdl, agent_conf);
 		if (ret != 0)
 		{
 			quit(hdl);
@@ -45,6 +67,7 @@ namespace msa {
 		}
 
 		*msa = hdl;
+		delete conf;
 		return ERR_NONE;
 	}
 

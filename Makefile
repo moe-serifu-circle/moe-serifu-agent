@@ -66,13 +66,13 @@ $(ODIR)/configuration.o: $(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration
 $(ODIR)/string.o: $(ODIR) $(SDIR)/string.cpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/string.cpp $(CXXFLAGS_RELEASE)
 
-$(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp
+$(ODIR)/agent.o: $(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS_RELEASE)
 
 $(ODIR)/util.o: $(ODIR) $(SDIR)/util.cpp $(SDIR)/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/util.cpp $(CXXFLAGS_RELEASE)
 
-$(ODIR)/input.o: $(ODIR) $(SDIR)/input.cpp $(SDIR)/input.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp
+$(ODIR)/input.o: $(ODIR) $(SDIR)/input.cpp $(SDIR)/input.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp  $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/input.cpp $(CXXFLAGS_RELEASE)
 
 $(ODIR)/event_handler.o: $(ODIR) $(SDIR)/event/handler.cpp $(SDIR)/msa.hpp $(SDIR)/event/event.hpp
@@ -81,7 +81,7 @@ $(ODIR)/event_handler.o: $(ODIR) $(SDIR)/event/handler.cpp $(SDIR)/msa.hpp $(SDI
 $(ODIR)/event_event.o: $(ODIR) $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/event.cpp $(CXXFLAGS_RELEASE)
 
-$(ODIR)/event_dispatch.o: $(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp
+$(ODIR)/event_dispatch.o: $(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS_RELEASE)
 
 
@@ -95,7 +95,7 @@ $(TDIR)/moe-serifu: $(TDIR)/$(ODIR)/main.o $(DEP_OBJS_DEBUG)
 $(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp
+$(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_DEBUG)
 
 $(TDIR)/(ODIR)/configuration.o: $(TDIR)/$(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
@@ -104,13 +104,13 @@ $(TDIR)/(ODIR)/configuration.o: $(TDIR)/$(ODIR) $(SDIR)/configuration.cpp $(SDIR
 $(TDIR)/$(ODIR)/string.o: $(TDIR)/$(ODIR) $(SDIR)/string.cpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/string.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp
+$(TDIR)/$(ODIR)/agent.o: $(TDIR)/$(ODIR) $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/util.o: $(TDIR)/$(ODIR) $(SDIR)/util.cpp $(SDIR)/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/util.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/input.o: $(TDIR)/$(ODIR) $(SDIR)/input.cpp $(SDIR)/input.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp
+$(TDIR)/$(ODIR)/input.o: $(TDIR)/$(ODIR) $(SDIR)/input.cpp $(SDIR)/input.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/input.cpp $(CXXFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/event_handler.o: $(TDIR)/$(ODIR) $(SDIR)/event/handler.cpp $(SDIR)/msa.hpp $(SDIR)/event/event.hpp
@@ -119,5 +119,5 @@ $(TDIR)/$(ODIR)/event_handler.o: $(TDIR)/$(ODIR) $(SDIR)/event/handler.cpp $(SDI
 $(TDIR)/$(ODIR)/event_event.o: $(TDIR)/$(ODIR) $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/event.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/event_dispatch.o: $(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp
+$(TDIR)/$(ODIR)/event_dispatch.o: $(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS_DEBUG)

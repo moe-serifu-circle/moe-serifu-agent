@@ -2,6 +2,7 @@
 #define AGENT_HPP
 
 #include "msa.hpp"
+#include "configuration.hpp"
 
 #include <string>
 
@@ -31,7 +32,7 @@ namespace msa { namespace agent {
 		agent_type(const std::string &n);
 	} Agent;
 
-	extern int init(msa::Handle hdl);
+	extern int init(msa::Handle hdl, const ConfigSection &config);
 	extern int quit(msa::Handle hdl);
 	
 } }

@@ -13,6 +13,9 @@ namespace msa { namespace input {
 
 	typedef InputChunk *(*InputHandler)(msa::Handle, InputDevice *);
 
+	static std::map<std::string, InputType> INPUT_TYPE_NAMES;
+	static std::map<std::string, InputHandler> INPUT_HANDLER_NAMES;
+
 	struct input_chunk_type
 	{
 		std::string chars;
@@ -36,7 +39,6 @@ namespace msa { namespace input {
 		std::map<std::string, InputDevice *> devices;
 		std::vector<std::string> active;
 		std::map<InputType, InputHandler> handlers;
-		std::map<std::string, InputHandler> handler_table;
 	};
 
 	typedef struct it_args_type
@@ -56,20 +58,48 @@ namespace msa { namespace input {
 
 	static void *it_start(void *hdl);
 
-	extern int init(msa::Handle hdl)
+	extern int init(msa::Handle hdl, const ConfigSection &config)
 	{
+		// init the static resources
+		if (INPUT_TYPE_NAMES.empty())
+		{
+			INPUT_TYPE_NAMES["UDP"] = InputType::UDP;
+			INPUT_TYPE_NAMES["TCP"] = InputType::TCP;
+			INPUT_TYPE_NAMES["TTY"] = InputType::TTY;
+		}
+		if (INPUT_HANDLER_NAMES.empty())
+		{
+			INPUT_HANDLER_NAMES["get_tty_input"] = get_tty_input;
+		}
+
+		// now create the resource
 		int stat = create_input_context(&hdl->input);
 		if (stat != 0)
 		{
 			return 1;
 		}
-		hdl->input->handler_table["get_tty_input"] = get_tty_input;
-/*
-		hdl->input->handlers[InputType::TTY] = get_tty_input;
-		std::string id = "stdin";
-		add_input_device(hdl, InputType::TTY, &id);
-		enable_input_device(hdl, "TTY:stdin");
-*//
+		
+		// read the config
+		if (config.find("TYPE") != config.end() && config.find("ID") != config.end() &&
+			config.find("HANDLER") != config.end())
+		{
+			std::string id = config["ID"];
+			std::string type_str = config["TYPE"];
+			std::string handler_str = config["HANDLER"];
+			if (INPUT_TYPE_NAMES.find(type_str) == INPUT_TYPE_NAMES.end())
+			{
+				throw std::invalid_argument("'" + type_str + "' is not a valid input type");
+			}
+			if (INPUT_HANDLER_NAMES.find(handler_str) == INPUT_HANDLER_NAMES.end())
+			{
+				throw std::invalid_argument("'" + handler_str + "' is not a valid handler");
+			}
+			InputType type = INPUT_TYPE_NAMES[type_str];
+			InputHandler handler = INPUT_HANDLER_NAMES[handler_str];
+			hdl->input->handlers[type] = handler;
+			add_input_device(hdl, type, &id);
+			enable_input_device(hdl, type_str + ":" + id);
+		}
 		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 		return 0;
 	}

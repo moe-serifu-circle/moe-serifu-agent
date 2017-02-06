@@ -26,11 +26,13 @@ namespace msa {
 		hdl->agent = NULL;
 
 		int ret;
+		std::string sec_name;
 
-		msa::config::Section event_conf("EVENT");
-		if (conf->find("EVENT") != conf->end())
+		sec_name = "EVENT";
+		msa::config::Section event_conf(sec_name);
+		if (conf->find(sec_name) != conf->end())
 		{
-			event_conf = (*conf)["EVENT"];
+			event_conf = (*conf)[sec_name];
 		}
 		ret = msa::event::init(hdl, event_conf);
 		if (ret != 0)
@@ -40,10 +42,11 @@ namespace msa {
 			return ERR_EVENT;
 		}
 
-		msa::config::Section input_conf("INPUT");
-		if (conf->find("INPUT") != conf->end())
+		sec_name = "INPUT";
+		msa::config::Section input_conf(sec_name);
+		if (conf->find(sec_name) != conf->end())
 		{
-			input_conf = (*conf)["INPUT"];
+			input_conf = (*conf)[sec_name];
 		}
 		ret = msa::input::init(hdl, input_conf);
 		if (ret != 0)
@@ -53,10 +56,11 @@ namespace msa {
 			return ERR_INPUT;
 		}
 
-		msa::config::Section agent_conf("AGENT");
-		if (conf->find("AGENT") != conf->end())
+		sec_name = "AGENT";
+		msa::config::Section agent_conf(sec_name);
+		if (conf->find(sec_name) != conf->end())
 		{
-			agent_conf = (*conf)["AGENT"];
+			agent_conf = (*conf)[sec_name];
 		}
 		ret = msa::agent::init(hdl, agent_conf);
 		if (ret != 0)

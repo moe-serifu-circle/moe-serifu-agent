@@ -7,8 +7,8 @@ CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR)
 CXXFLAGS_DEBUG=$(CXXFLAGS) -g -O0 -Werror
 CXXFLAGS_RELEASE=$(CXXFLAGS)
 
-DEP_TARGETS?=agent.o util.o msa.o event_event.o event_handler.o event_dispatch.o input.o string.o configuration.o
-DEP_INC_PATHS?=agent.hpp util.hpp msa.hpp event/event.hpp event/handler.hpp event/dispatch.hpp input.hpp string.hpp configuration.hpp
+DEP_TARGETS?=agent.o util.o msa.o event_event.o event_handler.o event_dispatch.o input.o string.o configuration.o cmd.o
+DEP_INC_PATHS?=agent.hpp util.hpp msa.hpp event/event.hpp event/handler.hpp event/dispatch.hpp input.hpp string.hpp configuration.hpp cmd.hpp
 DEP_INCS=$(patsubst %,$(SDIR)/%,$(DEP_INC_PATHS))
 
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
@@ -57,7 +57,7 @@ moe-serifu: $(ODIR)/main.o $(DEP_OBJS)
 $(ODIR)/main.o: $(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS_RELEASE)
 
-$(ODIR)/msa.o: $(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp
+$(ODIR)/msa.o: $(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/cmd.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_RELEASE)
 
 $(ODIR)/configuration.o: $(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
@@ -84,6 +84,9 @@ $(ODIR)/event_event.o: $(ODIR) $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 $(ODIR)/event_dispatch.o: $(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS_RELEASE)
 
+$(ODIR)/cmd.o: $(ODIR) $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp
+	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS_RELEASE)
+
 
 # -----------------
 # Debug recipies
@@ -95,7 +98,7 @@ $(TDIR)/moe-serifu: $(TDIR)/$(ODIR)/main.o $(DEP_OBJS_DEBUG)
 $(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp
+$(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp  $(SDIR)/cmd.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_DEBUG)
 
 $(TDIR)/(ODIR)/configuration.o: $(TDIR)/$(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
@@ -119,5 +122,9 @@ $(TDIR)/$(ODIR)/event_handler.o: $(TDIR)/$(ODIR) $(SDIR)/event/handler.cpp $(SDI
 $(TDIR)/$(ODIR)/event_event.o: $(TDIR)/$(ODIR) $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/event.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/event_dispatch.o: $(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp
+$(TDIR)/$(ODIR)/event_dispatch.o: $(TIDR)/$(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS_DEBUG)
+
+$(TDIR)/(ODIR)/cmd.o: $(TDIR)/$(ODIR) $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp
+	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS_DEBUG)
+

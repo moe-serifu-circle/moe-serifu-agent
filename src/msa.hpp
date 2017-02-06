@@ -10,6 +10,7 @@
 #define MSA_ERR_INPUT 2
 #define MSA_ERR_AGENT 3
 #define MSA_ERR_CONFIG 4
+#define MSA_ERR_CMD 5
 
 namespace msa {
 
@@ -31,6 +32,12 @@ namespace msa {
 
 	}
 
+	namespace cmd {
+
+		typedef struct command_context_type CommandContext;
+
+	}
+
 	typedef enum status_type { CREATED, RUNNING, STOP_REQUESTED, STOPPED } Status;
 
 	struct environment_type
@@ -39,6 +46,7 @@ namespace msa {
 		msa::event::EventDispatchContext *event;
 		msa::input::InputContext *input;
 		msa::agent::AgentContext *agent;
+		msa::cmd::CommandContext *cmd;
 	};
 
 	typedef struct environment_type* Handle;

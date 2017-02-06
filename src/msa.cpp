@@ -1,12 +1,17 @@
 #include "msa.hpp"
 #include "agent.hpp"
 #include "input.hpp"
+#include "cmd.hpp"
 #include "event/dispatch.hpp"
 #include "configuration.hpp"
 
 #include <string>
 
 namespace msa {
+
+	static const msa::config::Section &get_module_section(msa::config::Config *conf, const char *name);
+
+	static const msa::config::Section blank_section("");
 
 	extern int init(Handle *msa, const char *config_path)
 	{
@@ -22,16 +27,11 @@ namespace msa {
 		hdl->event = NULL;
 		hdl->input = NULL;
 		hdl->agent = NULL;
+		hdl->cmd = NULL;
 
 		int ret;
-		std::string sec_name;
 		
-		sec_name = "EVENT";
-		msa::config::Section event_conf(sec_name);
-		if (conf->find(sec_name) != conf->end())
-		{
-			event_conf = (*conf)[sec_name];
-		}
+		msa::config::Section event_conf = get_module_section(conf, "EVENT");
 		ret = msa::event::init(hdl, event_conf);
 		if (ret != 0)
 		{
@@ -40,12 +40,7 @@ namespace msa {
 			return MSA_ERR_EVENT;
 		}
 
-		sec_name = "INPUT";
-		msa::config::Section input_conf(sec_name);
-		if (conf->find(sec_name) != conf->end())
-		{
-			input_conf = (*conf)[sec_name];
-		}
+		msa::config::Section input_conf = get_module_section(conf, "INPUT");
 		ret = msa::input::init(hdl, input_conf);
 		if (ret != 0)
 		{
@@ -54,18 +49,22 @@ namespace msa {
 			return MSA_ERR_INPUT;
 		}
 
-		sec_name = "AGENT";
-		msa::config::Section agent_conf(sec_name);
-		if (conf->find(sec_name) != conf->end())
-		{
-			agent_conf = (*conf)[sec_name];
-		}
+		msa::config::Section agent_conf = get_module_section(conf, "AGENT");
 		ret = msa::agent::init(hdl, agent_conf);
 		if (ret != 0)
 		{
 			quit(hdl);
 			dispose(hdl);
 			return MSA_ERR_AGENT;
+		}
+
+		msa::config::Section cmd_conf = get_module_section(conf, "CMD");
+		ret = msa::cmd::init(hdl, cmd_conf);
+		if (ret != 0)
+		{
+			quit(hdl);
+			dispose(hdl);
+			return MSA_ERR_CMD;
 		}
 
 		*msa = hdl;
@@ -107,6 +106,16 @@ namespace msa {
 			msa->agent = NULL;
 		}
 
+		if (msa->cmd != NULL)
+		{
+			status = msa::cmd::quit(msa);
+			if (status != 0)
+			{
+				return MSA_ERR_CMD;
+			}
+			msa->cmd = NULL;
+		}
+
 		return MSA_SUCCESS;
 	}
 
@@ -127,8 +136,27 @@ namespace msa {
 		{
 			return MSA_ERR_AGENT;
 		}
+
+		if (msa->cmd != NULL)
+		{
+			return MSA_ERR_CMD;
+		}
+		
 		delete msa;
 		return MSA_SUCCESS;
+	}
+
+	static const msa::config::Section &get_module_section(msa::config::Config *conf, const char *name)
+	{
+		const std::string name_str = name;
+		if (conf->find(name_str) != conf->end())
+		{
+			return (*conf)[name_str];
+		}
+		else
+		{
+			return blank_section;
+		}
 	}
 
 }

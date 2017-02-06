@@ -19,7 +19,7 @@ namespace msa { namespace config {
 			const std::string &operator[](const std::string &key) const;
 			std::string &operator[](const char *key);
 			std::string &operator[](const std::string &key);
-			const std::string &get_name const;
+			const std::string &get_name() const;
 			const std::map<std::string, std::string> &get_entries() const;
 		
 		private:

@@ -3,8 +3,8 @@ SDIR?=src
 TDIR?=testing
 
 CXX?=g++
-CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -Werror -pthread -I$(SDIR)
-CXXFLAGS_DEBUG=$(CXXFLAGS) -g -O0
+CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR)
+CXXFLAGS_DEBUG=$(CXXFLAGS) -g -O0 -Werror
 CXXFLAGS_RELEASE=$(CXXFLAGS)
 
 DEP_TARGETS?=agent.o util.o msa.o event_event.o event_handler.o event_dispatch.o input.o string.o configuration.o

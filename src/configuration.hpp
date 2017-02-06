@@ -17,13 +17,14 @@ namespace msa { namespace config {
 			const std::string &get_or(const std::string &key, const std::string &def) const;
 			const std::string &operator[](const char *key) const;
 			const std::string &operator[](const std::string &key) const;
+			Section &operator=(const Section &sec);
 			std::string &operator[](const char *key);
 			std::string &operator[](const std::string &key);
 			const std::string &get_name() const;
 			const std::map<std::string, std::string> &get_entries() const;
 		
 		private:
-			const std::string name;
+			std::string name;
 			std::map<std::string, std::string> entries;
 	};
 

@@ -212,6 +212,13 @@ namespace msa { namespace config {
 		return entries[key];
 	}
 
+	Section &Section::operator=(const Section &sec)
+	{
+		name = sec.name;
+		entries = sec.entries;
+		return *this;
+	}
+
 	const std::string &Section::get_name() const
 	{
 		return name;

@@ -27,7 +27,7 @@ namespace msa {
 
 		int ret;
 
-		msa::config::Section event_conf;
+		msa::config::Section event_conf("EVENT");
 		if (conf->find("EVENT") != conf->end())
 		{
 			event_conf = (*conf)["EVENT"];
@@ -40,7 +40,7 @@ namespace msa {
 			return ERR_EVENT;
 		}
 
-		msa::config::Section input_conf;
+		msa::config::Section input_conf("INPUT");
 		if (conf->find("INPUT") != conf->end())
 		{
 			input_conf = (*conf)["INPUT"];
@@ -53,7 +53,7 @@ namespace msa {
 			return ERR_INPUT;
 		}
 
-		msa::config::Section agent_conf;
+		msa::config::Section agent_conf("AGENT");
 		if (conf->find("AGENT") != conf->end())
 		{
 			agent_conf = (*conf)["AGENT"];

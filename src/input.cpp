@@ -82,22 +82,29 @@ namespace msa { namespace input {
 		// read the config
 		if (config.has("TYPE") && config.has("ID") && config.has("HANDLER"))
 		{
-			std::string id = config["ID"];
-			std::string type_str = config["TYPE"];
-			std::string handler_str = config["HANDLER"];
-			if (INPUT_TYPE_NAMES.find(type_str) == INPUT_TYPE_NAMES.end())
+			// for each of the configs, read it in
+			const std::vector<std::string> types = config.get_all("TYPE");
+			const std::vector<std::string> ids = config.get_all("ID");
+			const std::vector<std::string> handlers = config.get_all("HANDLER");
+			for (size_t i = 0; i < types.size() && i < ids.size() && i < handlers.size(); i++)
 			{
-				throw std::invalid_argument("'" + type_str + "' is not a valid input type");
+				std::string id = ids[i];
+				std::string type_str = types[i];
+				std::string handler_str = handlers[i];
+				if (INPUT_TYPE_NAMES.find(type_str) == INPUT_TYPE_NAMES.end())
+				{
+					throw std::invalid_argument("'" + type_str + "' is not a valid input type");
+				}
+				if (INPUT_HANDLER_NAMES.find(handler_str) == INPUT_HANDLER_NAMES.end())
+				{
+					throw std::invalid_argument("'" + handler_str + "' is not a valid handler");
+				}
+				InputType type = INPUT_TYPE_NAMES[type_str];
+				InputHandler handler = INPUT_HANDLER_NAMES[handler_str];
+				hdl->input->handlers[type] = handler;
+				add_input_device(hdl, type, &id);
+				enable_input_device(hdl, type_str + ":" + id);
 			}
-			if (INPUT_HANDLER_NAMES.find(handler_str) == INPUT_HANDLER_NAMES.end())
-			{
-				throw std::invalid_argument("'" + handler_str + "' is not a valid handler");
-			}
-			InputType type = INPUT_TYPE_NAMES[type_str];
-			InputHandler handler = INPUT_HANDLER_NAMES[handler_str];
-			hdl->input->handlers[type] = handler;
-			add_input_device(hdl, type, &id);
-			enable_input_device(hdl, type_str + ":" + id);
 		}
 		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 		return 0;

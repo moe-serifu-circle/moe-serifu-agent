@@ -11,7 +11,7 @@ namespace msa { namespace util {
 		{
 			return str;
 		}
-		size_t p = search.find_first_not_of(search);
+		size_t p = str.find_first_not_of(search);
 		if (p == String::npos)
 		{
 			// it is entirely the string, return a blank one
@@ -28,7 +28,7 @@ namespace msa { namespace util {
 		{
 			return str;
 		}
-		size_t p = search.find_last_not_of(search);
+		size_t p = str.find_last_not_of(search);
 		if (p == String::npos)
 		{
 			str = "";

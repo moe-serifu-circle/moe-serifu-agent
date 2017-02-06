@@ -63,19 +63,39 @@ namespace msa { namespace config {
 		std::string line;
 		std::string section_name = "";
 		config = new Config;
+		int line_num = 1;
+		bool no_errors = true;
 		while (!getline(config_file, line).eof())
 		{
 			remove_comments(line);
 			msa::util::trim(line);
 			if (line != "")
 			{
-				interpret(config, section_name, line);
+				// parsing is all-or-nothing, but try to parse the whole thing
+				// so all errors are shown at once
+				try
+				{
+					interpret(config, section_name, line);
+				}
+				catch (std::exception &e)
+				{
+					printf("error parsing config file:\n");
+					printf("  on line %d: %s\n", line_num, e.what());
+					no_errors = false;
+				}
 			}
+			line_num++;
 		}
 		config_file.close();
+		if (!no_errors)
+		{
+			printf("\ncould not parse config file '%s'\n", path);
+			delete config;
+			config = NULL;
+		}
 		return config;
 	}
-
+	
 	static void interpret(Config *config, std::string &section_name, const std::string &line)
 	{
 		const char &start = section_header_start_char;
@@ -96,7 +116,7 @@ namespace msa { namespace config {
 
 	static void read_section_header(Config *config, std::string &section_name, const std::string &line)
 	{
-		section_name = line.substr(1, line.size() - 1);
+		section_name = line.substr(1, line.size() - 2);
 		msa::util::to_upper(section_name);
 		check_is_identifier(section_name);
 		(*config)[section_name] = Section(section_name);
@@ -104,30 +124,69 @@ namespace msa { namespace config {
 
 	static void read_kv_pair(Config *config, const std::string &section_name, const std::string &line)
 	{
+		// split the line at the equals sign
 		size_t split_at = line.find('=');
 		std::string key = line.substr(0, split_at);
 		std::string val = line.substr(split_at + 1);
 		msa::util::trim(key);
 		msa::util::trim(val);
+		
+		// check if there is an index
+		int index = -1;
+		size_t bracket_pos = key.find('[');
+		if (bracket_pos != std::string::npos && key.back() == ']')
+		{
+			std::string idx_str = key.substr(bracket_pos + 1, key.size() - bracket_pos - 2);
+			msa::util::trim(idx_str);
+			// make sure we have ONLY digits
+			if (idx_str.find_first_not_of("1234567890") != std::string::npos)
+			{
+				throw std::invalid_argument("key index can only be digits");
+			}
+			index = std::stoi(idx_str);
+			key = key.substr(0, bracket_pos);
+			msa::util::trim(key);
+		}
+
+		// sanity check on the key
 		if (key == "")
 		{
-			throw std::invalid_argument("key is empty");
+			throw std::invalid_argument("key cannot be blank");
 		}
 		msa::util::to_upper(key);
 		// confirm key format
 		check_is_identifier(key);
-		// now parse out the value if in quotes
+		
+		// are there quotes around the value? take them out if so
 		if (val.front() == '"' && val.back() == '"')
 		{
-			val = val.substr(1, val.size() - 1);
+			val = val.substr(1, val.size() - 2);
 		}
-		(*config)[section_name][key] = val;
+
+		Section &sec = (*config)[section_name];
+		sec.create_key(key);
+
+		// did we have an explicit index set? If so, we must use it to set the
+		// the value
+		if (index != -1)
+		{
+			size_t idx = (size_t) index;
+			while (sec.get_all(key).size() < idx + 1)
+			{
+				sec.push(key, std::string());
+			}
+			sec.set(key, idx, val);
+		}
+		else
+		{
+			sec.push(key, val);
+		}
 	}
 
 	static void remove_comments(std::string &line)
 	{
 		size_t pos = line.find(comment_char);
-		if (pos == std::string::npos)
+		if (pos != std::string::npos)
 		{
 			line = line.substr(0, pos);
 		}
@@ -135,19 +194,33 @@ namespace msa { namespace config {
 
 	static void write_section(std::ostream &out, const Section &sec)
 	{
-		typedef std::map<std::string, std::string> Entries;
+		typedef std::map<std::string, std::vector<std::string>> Entries;
 		typedef Entries::const_iterator iter;
 		const Entries ent = sec.get_entries();
 		for (iter it = ent.begin(); it != ent.end(); it++)
 		{
 			std::string k = it->first;
-			std::string v = it->second;
-			out << k << " = ";
-			if (v.front() == ' ' || v.front() == '\t')
+			bool include_index = (it->second.size() > 1);
+			int index = 0;
+			std::vector<std::string>::const_iterator v;
+			for (v = it->second.begin(); v != it->second.end(); v++)
 			{
-				v = "\"" + v + "\"";
+				out << k;
+				if (include_index)
+				{
+					out << '[' << index << ']';
+				}
+				out << " = ";
+				if (v->front() == ' ' || v->front() == '\t')
+				{
+					out << "\"" << *v << "\"" << std::endl;
+				}
+				else
+				{
+					out << *v << std::endl;
+				}
+				index++;
 			}
-			out << v << std::endl;
 		}
 	}
 
@@ -196,24 +269,12 @@ namespace msa { namespace config {
 
 	const std::string &Section::operator[](const char *key) const
 	{
-		std::string str = std::string(key);
-		return (*this)[str];
+		return get_all(key).at(0);
 	}
 
 	const std::string &Section::operator[](const std::string &key) const
 	{
-		return entries.at(key);
-	}
-
-	std::string &Section::operator[](const char *key)
-	{
-		std::string str = std::string(key);
-		return (*this)[str];
-	}
-
-	std::string &Section::operator[](const std::string &key)
-	{
-		return entries[key];
+		return get_all(key).at(0);
 	}
 
 	Section &Section::operator=(const Section &sec)
@@ -228,9 +289,38 @@ namespace msa { namespace config {
 		return name;
 	}
 
-	const std::map<std::string, std::string> &Section::get_entries() const
+	const std::map<std::string, std::vector<std::string>> &Section::get_entries() const
 	{
 		return entries;
+	}
+
+	const std::vector<std::string> &Section::get_all(const char *key) const
+	{
+		std::string str = std::string(key);
+		return get_all(str);
+	}
+
+	const std::vector<std::string> &Section::get_all(const std::string &key) const
+	{
+		return entries.at(key);
+	}
+
+	void Section::push(const std::string &key, const std::string &val)
+	{
+		entries.at(key).push_back(val);
+	}
+	
+	void Section::set(const std::string &key, size_t index, std::string &val)
+	{
+		entries.at(key)[index] = val;
+	}
+	
+	void Section::create_key(const std::string &key)
+	{
+		if (!has(key))
+		{
+			entries[key] = std::vector<std::string>();
+		}
 	}
 
 } }

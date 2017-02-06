@@ -5,6 +5,12 @@
 // If you find you have to, re-think your design.
 // It will break here.
 
+#define MSA_SUCCESS 0
+#define MSA_ERR_EVENT 1
+#define MSA_ERR_INPUT 2
+#define MSA_ERR_AGENT 3
+#define MSA_ERR_CONFIG 4
+
 namespace msa {
 
 	namespace input {

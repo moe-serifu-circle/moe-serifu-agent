@@ -6,17 +6,16 @@
 
 #include <string>
 
-#define ERR_NONE 0
-#define ERR_EVENT 1
-#define ERR_INPUT 2
-#define ERR_AGENT 3
-
 namespace msa {
 
 	extern int init(Handle *msa, const char *config_path)
 	{
 		// load config first
 		msa::config::Config *conf = msa::config::load(config_path);
+		if (conf == NULL)
+		{
+			return MSA_ERR_CONFIG;
+		}
 
 		environment_type *hdl = new environment_type;
 		hdl->status = Status::CREATED;
@@ -26,7 +25,7 @@ namespace msa {
 
 		int ret;
 		std::string sec_name;
-
+		
 		sec_name = "EVENT";
 		msa::config::Section event_conf(sec_name);
 		if (conf->find(sec_name) != conf->end())
@@ -38,7 +37,7 @@ namespace msa {
 		{
 			quit(hdl);
 			dispose(hdl);
-			return ERR_EVENT;
+			return MSA_ERR_EVENT;
 		}
 
 		sec_name = "INPUT";
@@ -52,7 +51,7 @@ namespace msa {
 		{
 			quit(hdl);
 			dispose(hdl);
-			return ERR_INPUT;
+			return MSA_ERR_INPUT;
 		}
 
 		sec_name = "AGENT";
@@ -66,12 +65,12 @@ namespace msa {
 		{
 			quit(hdl);
 			dispose(hdl);
-			return ERR_AGENT;
+			return MSA_ERR_AGENT;
 		}
 
 		*msa = hdl;
 		delete conf;
-		return ERR_NONE;
+		return MSA_SUCCESS;
 	}
 
 	extern int quit(Handle msa)
@@ -83,7 +82,7 @@ namespace msa {
 			status = msa::event::quit(msa);
 			if (status != 0)
 			{
-				return ERR_EVENT;
+				return MSA_ERR_EVENT;
 			}
 			msa->event = NULL;
 		}
@@ -93,7 +92,7 @@ namespace msa {
 			status = msa::input::quit(msa);
 			if (status != 0)
 			{
-				return ERR_INPUT;
+				return MSA_ERR_INPUT;
 			}
 			msa->input = NULL;
 		}
@@ -103,12 +102,12 @@ namespace msa {
 			status = msa::agent::quit(msa);
 			if (status != 0)
 			{
-				return ERR_AGENT;
+				return MSA_ERR_AGENT;
 			}
 			msa->agent = NULL;
 		}
 
-		return ERR_NONE;
+		return MSA_SUCCESS;
 	}
 
 	extern int dispose(Handle msa)
@@ -116,20 +115,20 @@ namespace msa {
 		// make sure our modules have been properly quit before deleting the pointer
 		if (msa->event != NULL)
 		{
-			return ERR_EVENT;
+			return MSA_ERR_EVENT;
 		}
 
 		if (msa->input != NULL)
 		{
-			return ERR_INPUT;
+			return MSA_ERR_INPUT;
 		}
 
 		if (msa->agent != NULL)
 		{
-			return ERR_AGENT;
+			return MSA_ERR_AGENT;
 		}
 		delete msa;
-		return 0;
+		return MSA_SUCCESS;
 	}
 
 }

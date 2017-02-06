@@ -130,6 +130,7 @@ namespace msa { namespace event {
 		while (hdl->status != msa::Status::STOP_REQUESTED)
 		{
 			edt_run(hdl);
+			msa::util::sleep_milli(hdl->event->sleep_time);
 		}
 		edt_cleanup(hdl);
 		return NULL;

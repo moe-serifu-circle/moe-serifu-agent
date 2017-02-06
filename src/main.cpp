@@ -4,6 +4,7 @@
 #include "event/dispatch.hpp"
 #include "cxx_normalization.hpp"
 #include "agent.hpp"
+#include "util.hpp"
 
 #include <cstdlib>
 #include <cstdio>
@@ -16,38 +17,56 @@ static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::ev
 static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
 int main(int argc, char *argv[]) {
+	const char *cfg_path;
 	if (argc < 2)
 	{
-		printf("need config file as argument\n");
-		return 1;
+		printf("no config file given, defaulting to 'msa.cfg'\n");
+		cfg_path = "msa.cfg";
+	}
+	else
+	{
+		cfg_path = argv[1];
 	}
 
 	msa::Handle hdl;
-	if (msa::init(&hdl, argv[1]) != 0)
+	int succ = msa::init(&hdl, cfg_path);
+	if (succ != MSA_SUCCESS)
 	{
-		perror("could not init msa handle\n");
+		printf("\nMSA init failed");
+		if (succ == MSA_ERR_CONFIG)
+		{
+			printf(": could not load config file");
+		}
+		printf("\n");
 		return EXIT_FAILURE;
 	}
 	msa::event::subscribe(hdl, msa::event::Topic::COMMAND_ANNOUNCE, say_func);
 	msa::event::subscribe(hdl, msa::event::Topic::INVALID_COMMAND, bad_command_func);
 	msa::event::subscribe(hdl, msa::event::Topic::COMMAND_EXIT, exit_func);
-	printf("Master: \"subscribed to command hooks\"\n");
+	printf("Master: \"Subscribed to command hooks\"\n");
+	printf("Master: \"Waiting for EDT to start...\"\n");
 	while (hdl->status == msa::Status::CREATED)
 	{
-		printf("Master: \"Waiting for run...\"\n");
+		msa::util::sleep_milli(50);
 	}
+	printf("Master: \"System is ready.\"\n");
 	while (hdl->status == msa::Status::RUNNING)
 	{
 		// busy wait, user enters commands
 	}
+	printf("Master: \"Waiting for MSA to exit...\"\n");
 	while (hdl->status != msa::Status::STOPPED)
 	{
-		printf("Master: \"Waiting for Masa-chan to exit...\"\n");
+		msa::util::sleep_milli(50);
 	}
 	if (hdl->status == msa::Status::STOPPED)
 	{
-		printf("Master: \"Masa-chan has exited.\"\n");
+		printf("Master: \"MSA system has exited.\"\n");
 		msa::dispose(hdl);
+	}
+	else
+	{
+		printf("Master: \"MSA state is not shutdown, but still terminating.\n");
 	}
 	return EXIT_SUCCESS;
 }

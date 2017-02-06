@@ -16,7 +16,6 @@ namespace msa { namespace event {
 		HandlerSync *sync;
 		bool running;
 		pthread_t thread;
-		int sleep_time;
 	} HandlerContext;
 
 	struct event_dispatch_context_type {
@@ -26,6 +25,7 @@ namespace msa { namespace event {
 		std::priority_queue<const Event *> queue;
 		std::map<Topic, EventHandler> handlers;
 		std::stack<HandlerContext *> interrupted;
+		int sleep_time;
 	};
 
 	static int create_event_dispatch_context(EventDispatchContext **event);
@@ -52,7 +52,7 @@ namespace msa { namespace event {
 		}
 		
 		// read config
-		hdl->event->sleep_time = std::atoi(std::string(config.get_or("IDLE_SLEEP_TIME", "10")));
+		hdl->event->sleep_time = std::atoi(config.get_or("IDLE_SLEEP_TIME", "10"));
 
 		create_status = pthread_create(&hdl->event->edt, NULL, edt_start, hdl);
 		if (create_status != 0)

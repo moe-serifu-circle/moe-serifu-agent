@@ -16,8 +16,7 @@ namespace msa {
 	extern int init(Handle *msa, const char *config_path)
 	{
 		// load config first
-		const std::string config_path_str = config_path;
-		msa::config::Config *conf = msa::config::load(config_path_str);
+		msa::config::Config *conf = msa::config::load(config_path);
 
 		environment_type *hdl = new environment_type;
 		hdl->status = Status::CREATED;

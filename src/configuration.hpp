@@ -31,8 +31,8 @@ namespace msa { namespace config {
 
 	typedef std::map<std::string, Section> Config;
 
-	extern Config *load(const std::string &path);
-	extern void save(const std::string &path, Config *configuration);
+	extern Config *load(const char *path);
+	extern void save(const char *path, Config *configuration);
 
 } }
 

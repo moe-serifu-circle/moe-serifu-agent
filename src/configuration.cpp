@@ -14,7 +14,7 @@ namespace msa { namespace config {
 	static void read_section_header(Config *config, std::string &section_name, const std::string &line);		static void read_kv_pair(Config *config, const std::string &section_name, const std::string &line);
 	static void check_is_identifier(const std::string &check);
 	static void remove_comments(std::string &line);
-	static void write_section(std::ostream out, const Section &sec);
+	static void write_section(std::ostream &out, const Section &sec);
 
 	extern int save(const char *path, const Config *config)
 	{
@@ -24,20 +24,22 @@ namespace msa { namespace config {
 		}
 		std::ofstream config_file;
 		config_file.open(path);
-		if (!config_file.is_open)
+		if (!config_file.is_open())
 		{
 			return 1;
 		}
 		// is there a 'blank' section? if so, do that one first
-		if (config->find("") != config->end())
+		
+		typedef Config::const_iterator iter;
+		iter it = config->find(std::string(""));
+		if (it != config->end())
 		{
-			write_section(config_file, (*config)[""]);
+			write_section(config_file, it->second);
 			config_file << std::endl;
 		}
-		typedef Config::const_iterator iter;
 		for (iter it = config->begin(); it != config->end(); it++)
 		{
-			if (it->first == "")
+			if (it->first == std::string(""))
 			{
 				continue;
 			}
@@ -115,7 +117,7 @@ namespace msa { namespace config {
 		// confirm key format
 		check_is_identifier(key);
 		// now parse out the value if in quotes
-		if (val.front() == "\"" && val.back() == "\"")
+		if (val.front() == '"' && val.back() == '"')
 		{
 			val = val.substr(1, val.size() - 1);
 		}
@@ -131,7 +133,7 @@ namespace msa { namespace config {
 		}
 	}
 
-	static void write_section(std::ostream out, const Section &sec)
+	static void write_section(std::ostream &out, const Section &sec)
 	{
 		typedef std::map<std::string, std::string> Entries;
 		typedef Entries::const_iterator iter;
@@ -179,7 +181,7 @@ namespace msa { namespace config {
 
 	bool Section::has(const std::string &key) const
 	{
-		return entires.find(key) != entried.end();
+		return entries.find(key) != entries.end();
 	}
 
 	const char *Section::get_or(const char *key, const char *def) const
@@ -200,16 +202,16 @@ namespace msa { namespace config {
 
 	const std::string &Section::operator[](const std::string &key) const
 	{
-		return entries[key];
+		return entries.at(key);
 	}
 
-	const std::string &Section::operator[](const char *key)
+	std::string &Section::operator[](const char *key)
 	{
 		std::string str = std::string(key);
 		return (*this)[str];
 	}
 
-	const std::string &Section::operator[](const std::string &key)
+	std::string &Section::operator[](const std::string &key)
 	{
 		return entries[key];
 	}
@@ -226,7 +228,7 @@ namespace msa { namespace config {
 		return name;
 	}
 
-	const std::map<std::string, std::string> &get_entries() const
+	const std::map<std::string, std::string> &Section::get_entries() const
 	{
 		return entries;
 	}

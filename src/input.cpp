@@ -80,8 +80,7 @@ namespace msa { namespace input {
 		}
 		
 		// read the config
-		if (config.find("TYPE") != config.end() && config.find("ID") != config.end() &&
-			config.find("HANDLER") != config.end())
+		if (config.has("TYPE") && config.has("ID") && config.has("HANDLER"))
 		{
 			std::string id = config["ID"];
 			std::string type_str = config["TYPE"];

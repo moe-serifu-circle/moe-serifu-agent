@@ -16,7 +16,7 @@ namespace msa { namespace agent {
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
 		AgentContext *ctx = new AgentContext;
-		std::string name = (config.find("NAME") != config.end()) ? config["NAME"] : "DEFAULT_NAME";
+		std::string name = std::string(config.get_or("NAME", "DEFAULT_NAME"));
 		ctx->agent = new Agent(name);
 		hdl->agent = ctx;
 		return 0;

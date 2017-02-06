@@ -52,7 +52,7 @@ namespace msa { namespace event {
 		}
 		
 		// read config
-		hdl->event->sleep_time = (config.find("IDLE_SLEEP_TIME") != config.end()) ? std::stoi(config["IDLE_SLEEP_TIME"]) : 10;
+		hdl->event->sleep_time = std::atoi(std::string(config.get_or("IDLE_SLEEP_TIME", "10")));
 
 		create_status = pthread_create(&hdl->event->edt, NULL, edt_start, hdl);
 		if (create_status != 0)

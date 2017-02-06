@@ -97,7 +97,7 @@ namespace msa { namespace config {
 		section_name = line.substr(1, line.size() - 1);
 		msa::util::to_upper(section_name);
 		check_is_identifier(section_name);
-		(*config)[section_name] = std::map();
+		(*config)[section_name] = Section(section_name);
 	}
 
 	static void read_kv_pair(Config *config, const std::string &section_name, const std::string &line)
@@ -133,8 +133,10 @@ namespace msa { namespace config {
 
 	static void write_section(std::ostream out, const Section &sec)
 	{
-		typedef Section::const_iterator iter;
-		for (iter it = sec.begin(); it != sec.end(); it++)
+		typedef std::map<std::string, std::string> Entries;
+		typedef Entries::const_iterator iter;
+		const Entries ent = sec.get_entries();
+		for (iter it = ent.begin(); it != ent.end(); it++)
 		{
 			std::string k = it->first;
 			std::string v = it->second;
@@ -161,6 +163,63 @@ namespace msa { namespace config {
 				throw std::invalid_argument("identifiers may only have the characters '_', '$', A-Z, and 0-9");
 			}
 		}
+	}
+
+	Section::Section(const char *name) : name(name) {}
+
+	Section::Section(const std::string &name) : name(name) {}
+
+	bool Section::has(const char *key) const
+	{
+		const std::string str = std::string(key);
+		return has(str);
+	}
+
+	bool Section::has(const std::string &key) const
+	{
+		return entires.find(key) != entried.end();
+	}
+
+	const char *Section::get_or(const char *key, const char *def) const
+	{
+		return has(key) ? (*this)[key].c_str() : def;
+	}
+
+	const std::string &Section::get_or(const std::string &key, const std::string &def) const
+	{
+		return has(key) ? (*this)[key] : def;
+	}
+
+	const std::string &Section::operator[](const char *key) const
+	{
+		std::string str = std::string(key);
+		return (*this)[str];
+	}
+
+	const std::string &Section::operator[](const std::string &key) const
+	{
+		return entries[key];
+	}
+
+	const std::string &Section::operator[](const char *key)
+	{
+		std::string str = std::string(key);
+		return (*this)[str];
+	}
+
+	const std::string &Section::operator[](const std::string &key)
+	{
+		return entries[key];
+	}
+
+	const std::string &Section::get_name() const
+	{
+		return name;
+	}
+
+	const std::map<std::string, std::string> &get_entries() const
+	{
+		return entries;
 	}
 
 } }

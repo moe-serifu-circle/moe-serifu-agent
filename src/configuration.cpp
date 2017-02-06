@@ -165,6 +165,8 @@ namespace msa { namespace config {
 		}
 	}
 
+	Section::Section() : name("") {}
+
 	Section::Section(const char *name) : name(name) {}
 
 	Section::Section(const std::string &name) : name(name) {}

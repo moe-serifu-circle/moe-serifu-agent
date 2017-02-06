@@ -9,6 +9,7 @@ namespace msa { namespace config {
 	class Section
 	{
 		public:
+			Section();
 			Section(const char *name);
 			Section(const std::string &name);
 			bool has(const char *key) const;

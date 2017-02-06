@@ -34,6 +34,7 @@ namespace msa { namespace agent {
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config);
 	extern int quit(msa::Handle hdl);
+	extern const Agent *get_agent(msa::Handle hdl);
 	
 } }
 #endif

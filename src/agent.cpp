@@ -29,4 +29,9 @@ namespace msa { namespace agent {
 		return 0;
 	}
 
+	extern const Agent *get_agent(msa::Handle hdl)
+	{
+		return hdl->agent->agent;
+	}
+
 } }

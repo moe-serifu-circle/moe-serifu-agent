@@ -3,6 +3,7 @@
 #include "msa.hpp"
 #include "event/dispatch.hpp"
 #include "cxx_normalization.hpp"
+#include "agent.hpp"
 
 #include <cstdlib>
 #include <cstdio>
@@ -17,14 +18,14 @@ static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, 
 int main(int argc, char *argv[]) {
 	if (argc < 2)
 	{
-		printf("need config file as argument");
+		printf("need config file as argument\n");
 		return 1;
 	}
 
 	msa::Handle hdl;
 	if (msa::init(&hdl, argv[1]) != 0)
 	{
-		perror("could not init msa handle");
+		perror("could not init msa handle\n");
 		return EXIT_FAILURE;
 	}
 	msa::event::subscribe(hdl, msa::event::Topic::COMMAND_ANNOUNCE, say_func);
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
 	printf("Master: \"subscribed to command hooks\"\n");
 	while (hdl->status == msa::Status::CREATED)
 	{
-		printf("Master \"Waiting for run...\"\n");
+		printf("Master: \"Waiting for run...\"\n");
 	}
 	while (hdl->status == msa::Status::RUNNING)
 	{
@@ -51,29 +52,33 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
-static void say_func(msa::Handle UNUSED(hdl), const msa::event::Event *const UNUSED(e), msa::event::HandlerSync *const UNUSED(sync))
+static void say_func(msa::Handle hdl, const msa::event::Event *const UNUSED(e), msa::event::HandlerSync *const UNUSED(sync))
 {
-	printf("Masa-chan: \"I'd like to announce my presence!\"\n");
+	const msa::agent::Agent *a = msa::agent::get_agent(hdl);
+	printf("%s: \"I'd like to announce my presence!\"\n", a->name.c_str());
 }
 
 static void exit_func(msa::Handle hdl, const msa::event::Event *const UNUSED(e), msa::event::HandlerSync *const UNUSED(sync))
 {
-	printf("Masa-chan: \"Right away master, I will terminate my EDT for you now!\"\n");
+	const msa::agent::Agent *a = msa::agent::get_agent(hdl);
+	const char *name = a->name.c_str();
+	printf("%s: \"Right away master, I will terminate my EDT for you now!\"\n", name);
 	int status = msa::quit(hdl);
-	printf("Masa-chan: \"Environment Status: %d\"\n", hdl->status);
+	printf("%s: \"Environment Status: %d\"\n", name, hdl->status);
 	if (status == 0)
 	{
-		printf("Masa-chan: \"System shutdown.\"\n");
+		printf("%s: \"System shutdown.\"\n", name);
 	}
 	else
 	{
-		printf("Masa-chan: \"Warning! could not quit: %d\"\n", status);
+		printf("%s: \"Warning! could not quit: %d\"\n", name, status);
 	}
 }
 
-static void bad_command_func(msa::Handle UNUSED(hdl), const msa::event::Event *const e, msa::event::HandlerSync *const UNUSED(sync))
+static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const UNUSED(sync))
 {
+	const msa::agent::Agent *a = msa::agent::get_agent(hdl);
 	std::string *str = static_cast<std::string *>(e->args);
-	printf("Masa-chan: \"I'm sorry, Master. I don't understand the command '%s'\"\n", str->c_str());
+	printf("%s: \"I'm sorry, Master. I don't understand the command '%s'\"\n", a->name.c_str(), str->c_str());
 	delete str;
 }

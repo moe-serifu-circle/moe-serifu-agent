@@ -101,7 +101,7 @@ $(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 $(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp  $(SDIR)/cmd.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/(ODIR)/configuration.o: $(TDIR)/$(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
+$(TDIR)/$(ODIR)/configuration.o: $(TDIR)/$(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/configuration.cpp $(CXXFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/string.o: $(TDIR)/$(ODIR) $(SDIR)/string.cpp $(SDIR)/string.hpp
@@ -122,9 +122,9 @@ $(TDIR)/$(ODIR)/event_handler.o: $(TDIR)/$(ODIR) $(SDIR)/event/handler.cpp $(SDI
 $(TDIR)/$(ODIR)/event_event.o: $(TDIR)/$(ODIR) $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/event.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/event_dispatch.o: $(TIDR)/$(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp
+$(TDIR)/$(ODIR)/event_dispatch.o: $(TDIR)/$(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/(ODIR)/cmd.o: $(TDIR)/$(ODIR) $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp
+$(TDIR)/$(ODIR)/cmd.o: $(TDIR)/$(ODIR) $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS_DEBUG)
 

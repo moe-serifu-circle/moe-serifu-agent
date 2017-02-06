@@ -42,7 +42,7 @@ namespace msa { namespace util {
 	{
 		if (str == "" || search == "")
 		{
-			return;
+			return str;
 		}
 		left_trim(str, search);
 		right_trim(str, search);

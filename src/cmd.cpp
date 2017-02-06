@@ -1,6 +1,7 @@
 #include "cmd.hpp"
 #include "cxx_normalization.hpp"
 #include "event/dispatch.hpp"
+#include "string.hpp"
 #include "agent.hpp"
 
 #include <cstdio>
@@ -20,7 +21,7 @@ namespace msa { namespace cmd {
 	static void exit_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 	static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
-	extern int init(msa::Handle hdl, const msa::config::Section &UNUSED(config))
+	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
 		// need to init events before this
 		if (hdl->event == NULL)
@@ -34,6 +35,15 @@ namespace msa { namespace cmd {
 		msa::event::subscribe(hdl, msa::event::Topic::COMMAND_ANNOUNCE, say_func);
 		msa::event::subscribe(hdl, msa::event::Topic::INVALID_COMMAND, bad_command_func);
 		msa::event::subscribe(hdl, msa::event::Topic::COMMAND_EXIT, exit_func);
+		
+		// check config to see if we should do an announce event		
+		std::string do_anc = config.get_or("ANNOUNCE", "false");
+		msa::util::to_upper(do_anc);
+		if (do_anc == "TRUE" || do_anc == "YES" || do_anc == "1")
+		{	
+			msa::event::generate(hdl, msa::event::Topic::COMMAND_ANNOUNCE, NULL);
+		}
+		
 		return 0;
 	}
 

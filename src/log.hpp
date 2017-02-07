@@ -19,7 +19,7 @@ namespace msa { namespace log {
 	extern int quit(msa::Handle hdl);
 
 	// creates a new log stream and returns the ID of the stream
-	extern stream_id create_stream(msa::Handle hdl, StreamType type, const std::string &location, Format fmt);
+	extern stream_id create_stream(msa::Handle hdl, StreamType type, const std::string &location, Format fmt, const std::string &output_format_string);
 	extern void set_level(msa::Handle hdl, Level level);
 	extern Level get_level(msa::Handle hdl);
 	extern void set_stream_level(msa::Handle hdl, stream_id id, Level level);

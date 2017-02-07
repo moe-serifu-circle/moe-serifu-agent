@@ -53,6 +53,7 @@ namespace msa {
 		msa::input::InputContext *input;
 		msa::agent::AgentContext *agent;
 		msa::cmd::CommandContext *cmd;
+		msa::log::LogContext *log;
 	};
 
 	typedef struct environment_type* Handle;

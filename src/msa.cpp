@@ -76,16 +76,6 @@ namespace msa {
 	{
 		int status = 0;
 
-		if (msa->event != NULL)
-		{
-			status = msa::event::quit(msa);
-			if (status != 0)
-			{
-				return MSA_ERR_EVENT;
-			}
-			msa->event = NULL;
-		}
-
 		if (msa->input != NULL)
 		{
 			status = msa::input::quit(msa);
@@ -114,6 +104,16 @@ namespace msa {
 				return MSA_ERR_CMD;
 			}
 			msa->cmd = NULL;
+		}
+
+		if (msa->event != NULL)
+		{
+			status = msa::event::quit(msa);
+			if (status != 0)
+			{
+				return MSA_ERR_EVENT;
+			}
+			msa->event = NULL;
 		}
 
 		return MSA_SUCCESS;

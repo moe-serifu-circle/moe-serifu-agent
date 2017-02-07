@@ -7,8 +7,8 @@ CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR)
 CXXFLAGS_DEBUG=$(CXXFLAGS) -g -O0 -Werror
 CXXFLAGS_RELEASE=$(CXXFLAGS)
 
-DEP_TARGETS?=agent.o util.o msa.o event_event.o event_handler.o event_dispatch.o input.o string.o configuration.o cmd.o
-DEP_INC_PATHS?=agent.hpp util.hpp msa.hpp event/event.hpp event/handler.hpp event/dispatch.hpp input.hpp string.hpp configuration.hpp cmd.hpp
+DEP_TARGETS?=agent.o util.o msa.o event_event.o event_handler.o event_dispatch.o input.o string.o configuration.o cmd.o log.o
+DEP_INC_PATHS?=agent.hpp util.hpp msa.hpp event/event.hpp event/handler.hpp event/dispatch.hpp input.hpp string.hpp configuration.hpp cmd.hpp log.hpp
 DEP_INCS=$(patsubst %,$(SDIR)/%,$(DEP_INC_PATHS))
 
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
@@ -87,6 +87,9 @@ $(ODIR)/event_dispatch.o: $(ODIR) $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(S
 $(ODIR)/cmd.o: $(ODIR) $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS_RELEASE)
 
+$(ODIR)/log.o: $(ODIR) $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/configuration.hpp
+	$(CXX) -c -o $@ $(SDIR)/log.cpp $(CXXFLAGS_RELEASE)
+
 
 # -----------------
 # Debug recipies
@@ -98,7 +101,7 @@ $(TDIR)/moe-serifu: $(TDIR)/$(ODIR)/main.o $(DEP_OBJS_DEBUG)
 $(TDIR)/$(ODIR)/main.o: $(TDIR)/$(ODIR) $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS_DEBUG)
 
-$(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp  $(SDIR)/cmd.hpp
+$(TDIR)/$(ODIR)/msa.o: $(TDIR)/$(ODIR) $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp  $(SDIR)/cmd.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS_DEBUG)
 
 $(TDIR)/$(ODIR)/configuration.o: $(TDIR)/$(ODIR) $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
@@ -127,4 +130,7 @@ $(TDIR)/$(ODIR)/event_dispatch.o: $(TDIR)/$(ODIR) $(SDIR)/event/dispatch.cpp $(S
 
 $(TDIR)/$(ODIR)/cmd.o: $(TDIR)/$(ODIR) $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS_DEBUG)
+
+$(TDIR)/$(ODIR)/log.o: $(TDIR)/$(ODIR) $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/configuration.hpp
+	$(CXX) -c -o $@ $(SDIR)/log.cpp $(CXXFLAGS_DEBUG)
 

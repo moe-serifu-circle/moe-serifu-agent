@@ -11,6 +11,7 @@
 #define MSA_ERR_AGENT 3
 #define MSA_ERR_CONFIG 4
 #define MSA_ERR_CMD 5
+#define MSA_ERR_LOG 6
 
 namespace msa {
 

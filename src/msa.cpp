@@ -4,6 +4,7 @@
 #include "cmd.hpp"
 #include "event/dispatch.hpp"
 #include "configuration.hpp"
+#include "log.hpp"
 
 #include <string>
 
@@ -30,6 +31,15 @@ namespace msa {
 		hdl->cmd = NULL;
 
 		int ret;
+
+		msa::config::Section log_conf = get_module_section(conf, "LOG");
+		ret = msa::log::init(hdl, log_conf);
+		if (ret != 0)
+		{
+			quit(hdl);
+			dispose(hdl);
+			return MSA_ERR_LOG;
+		}
 		
 		msa::config::Section event_conf = get_module_section(conf, "EVENT");
 		ret = msa::event::init(hdl, event_conf);
@@ -116,6 +126,16 @@ namespace msa {
 			msa->event = NULL;
 		}
 
+		if (msa->log != NULL)
+		{
+			status = msa::log::quit(msa);
+			if (status != 0)
+			{
+				return MSA_ERR_LOG;
+			}
+			msa->log = NULL;
+		}
+
 		return MSA_SUCCESS;
 	}
 
@@ -140,6 +160,11 @@ namespace msa {
 		if (msa->cmd != NULL)
 		{
 			return MSA_ERR_CMD;
+		}
+
+		if (msa->log != NULL)
+		{
+			return MSA_ERR_LOG;
 		}
 		
 		delete msa;

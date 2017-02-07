@@ -38,6 +38,12 @@ namespace msa {
 
 	}
 
+	namespace log {
+
+		typedef struct log_context_type LogContext;
+
+	}
+
 	typedef enum status_type { CREATED, RUNNING, STOP_REQUESTED, STOPPED } Status;
 
 	struct environment_type

@@ -11,10 +11,38 @@ namespace msa { namespace config {
 	const char comment_char = '#';
 
 	static void interpret(Config *config, std::string &section_name, const std::string &line);
-	static void read_section_header(Config *config, std::string &section_name, const std::string &line);		static void read_kv_pair(Config *config, const std::string &section_name, const std::string &line);
+	static void read_section_header(Config *config, std::string &section_name, const std::string &line);
+	static void read_kv_pair(Config *config, const std::string &section_name, const std::string &line);
 	static void check_is_identifier(const std::string &check);
 	static void remove_comments(std::string &line);
 	static void write_section(std::ostream &out, const Section &sec);
+
+	extern void dump_conf(const Config *conf)
+	{
+		std::map<std::string, Section>::const_iterator it;
+		for (it = conf->begin(); it != conf->end(); it++)
+		{
+			printf("%s:\n", it->first.c_str());
+			dump_section(it->second);
+			printf("\n");
+		}
+	}
+
+	extern void dump_section(const Section &sect)
+	{
+		const std::map<std::string, std::vector<std::string>> entries = sect.get_entries();
+		std::map<std::string, std::vector<std::string>>::const_iterator it;
+		for (it = entries.begin(); it != entries.end(); it++)
+		{
+			printf("\t%s:\n", it->first.c_str());
+			std::vector<std::string>::const_iterator it2;
+			for (it2 = it->second.begin(); it2 != it->second.end(); it2++)
+			{
+				printf("\t\t%s\n", it2->c_str());
+			}
+			printf("\n");
+		}
+	}
 
 	extern int save(const char *path, const Config *config)
 	{

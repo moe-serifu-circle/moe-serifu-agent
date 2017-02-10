@@ -34,3 +34,4 @@
 
 # main bin files
 moe-serifu
+*.log

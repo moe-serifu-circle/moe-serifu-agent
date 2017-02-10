@@ -43,6 +43,9 @@ namespace msa { namespace config {
 	extern Config *load(const char *path);
 	extern int save(const char *path, const Config *configuration);
 
+	extern void dump_conf(const Config *conf);
+	extern void dump_section(const Section &sect);
+
 } }
 
 #endif

@@ -121,7 +121,7 @@ namespace msa { namespace log {
 				std::string output;
 				if (fmt == Format::TEXT)
 				{
-					if (outputs.size() >= i) {
+					if (outputs.size() <= i) {
 						throw std::invalid_argument("TEXT log format requires OUTPUT parameter");
 					}
 					output = outputs.at(i);

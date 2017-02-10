@@ -1,6 +1,5 @@
 #include "event/dispatch.hpp"
 #include "util.hpp"
-#include "cxx_normalization.hpp"
 
 #include <pthread.h>
 #include <cstdio>

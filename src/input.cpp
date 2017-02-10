@@ -1,6 +1,5 @@
 #include "input.hpp"
 #include "event/dispatch.hpp"
-#include "cxx_normalization.hpp"
 
 #include <map>
 #include <string>

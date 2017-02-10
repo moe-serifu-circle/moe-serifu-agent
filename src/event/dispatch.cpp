@@ -52,7 +52,7 @@ namespace msa { namespace event {
 		}
 		
 		// read config
-		hdl->event->sleep_time = std::atoi(config.get_or("IDLE_SLEEP_TIME", "10"));
+		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
 
 		create_status = pthread_create(&hdl->event->edt, NULL, edt_start, hdl);
 		if (create_status != 0)
@@ -122,9 +122,6 @@ namespace msa { namespace event {
 
 	static void *edt_start(void *args)
 	{
-		int retval; // include for portability according to man page
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &retval);
-		pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &retval);
 		msa::Handle hdl = (msa::Handle) args;
 		hdl->status = msa::Status::RUNNING;
 		while (hdl->status != msa::Status::STOP_REQUESTED)

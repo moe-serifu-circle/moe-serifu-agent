@@ -1,7 +1,7 @@
 #include "log.hpp"
 #include "string.hpp"
 
-#include <ofstream>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <string>
@@ -40,7 +40,7 @@ namespace msa { namespace log {
 	{
 		std::vector<LogStream *> streams;
 		Level level;
-	}
+	};
 
 	static int create_log_context(LogContext **ctx);
 	static int dispose_log_context(LogContext *ctx);
@@ -61,7 +61,7 @@ namespace msa { namespace log {
 			LEVEL_NAMES["TRACE"] = Level::TRACE;
 			LEVEL_NAMES["DEBUG"] = Level::DEBUG;
 			LEVEL_NAMES["INFO"] = Level::INFO;
-			LEVEL_NAMES["WARNING"] = Level::WARNING;
+			LEVEL_NAMES["WARN"] = Level::WARN;
 			LEVEL_NAMES["ERROR"] = Level::ERROR;
 		}
 		if (FORMAT_NAMES.empty())
@@ -74,7 +74,7 @@ namespace msa { namespace log {
 			STREAM_TYPE_NAMES["FILE"] = StreamType::FILE;
 		}
 
-		create_log_context(hdl->log);
+		create_log_context(&hdl->log);
 
 		// first check config for global level
 		std::string gl_level_str = config.get_or("GLOBAL_LEVEL", "INFO");
@@ -94,7 +94,7 @@ namespace msa { namespace log {
 			const std::vector<std::string> fmts = config.has("FORMAT") ? config.get_all("FORMAT") : std::vector<std::string>();
 			const std::vector<std::string> outputs = config.has("OUTPUT") ? config.get_all("OUTPUT") : std::vector<std::string>();
 
-			for (size_t i = 0; i < types.size() && i < locs.size())
+			for (size_t i = 0; i < types.size() && i < locs.size(); i++)
 			{
 				std::string type_str = types[i];
 				std::string location = locs[i];
@@ -128,13 +128,14 @@ namespace msa { namespace log {
 				}
 				else if (fmt == Format::XML)
 				{
-					output = XML_OUTPUT_STRING;
+					output = XML_FORMAT_STRING;
 				}
 				
 				stream_id id = create_stream(hdl, type, location, fmt, output);
 				set_stream_level(hdl, id, lev);
 			}
 		}
+		return 0;
 	}
 
 	extern int quit(msa::Handle hdl)
@@ -169,10 +170,10 @@ namespace msa { namespace log {
 		else
 		{
 			dispose_log_stream(s);
-			throw std::invalid_argument("unknown log stream type: " + std::to_string(s->type);
+			throw std::invalid_argument("unknown log stream type: " + std::to_string(s->type));
 		}
 
-		hdl->log->streams.push_back(*s);
+		hdl->log->streams.push_back(s);
 		return (stream_id) (hdl->log->streams.size() - 1);
 	}
 
@@ -267,7 +268,7 @@ namespace msa { namespace log {
 		
 		for (size_t i = 0; i < ctx->streams.size(); i++)
 		{
-			LogStream *stream = ctx->streams.get(i);
+			LogStream *stream = ctx->streams.at(i);
 			if (level >= stream->level)
 			{
 				write(stream, msg_ctx);
@@ -297,8 +298,8 @@ namespace msa { namespace log {
 		struct tm *time_info = gmtime(&ctx.time);
 		const char *timestr = asctime(time_info);
 		const char *lev_str = level_to_str(ctx.level);
-		sprintf(buffer, stream->output_string_format, timestr, lev_str, ctx.msg.c_str());
-		stream->out << buffer << std::endl;
+		sprintf(buffer, stream->output_format_string.c_str(), timestr, lev_str, ctx.msg->c_str());
+		*(stream->out) << buffer << std::endl;
 	}
 
 	static void write_text(LogStream *stream, const MessageContext &ctx)
@@ -307,8 +308,8 @@ namespace msa { namespace log {
 		struct tm *time_info = localtime(&ctx.time);
 		const char *timestr = asctime(time_info);
 		const char *lev_str = level_to_str(ctx.level);
-		sprintf(buffer, stream->output_string_format, timestr, lev_str, ctx.msg.c_str());
-		stream->out << buffer << std::endl;
+		sprintf(buffer, stream->output_format_string.c_str(), timestr, lev_str, ctx.msg->c_str());
+		*(stream->out) << buffer << std::endl;
 	}
 
 	static const char *level_to_str(Level lev)

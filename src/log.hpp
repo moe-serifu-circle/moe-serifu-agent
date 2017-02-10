@@ -10,7 +10,7 @@
 namespace msa { namespace log {
 
 	typedef enum stream_type_type { FILE } StreamType;
-	typedef enum level_type { TRACE, DEBUG, INFO, WARNING, ERROR } Level;
+	typedef enum level_type { TRACE, DEBUG, INFO, WARN, ERROR } Level;
 	typedef enum format_type { TEXT, XML } Format;
 	typedef size_t stream_id;
 

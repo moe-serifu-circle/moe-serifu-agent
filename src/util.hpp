@@ -12,5 +12,6 @@
 namespace msa { namespace util {
 	
 	extern void sleep_milli(int millisec);
+	extern bool check_stdin_ready();
 
 } }

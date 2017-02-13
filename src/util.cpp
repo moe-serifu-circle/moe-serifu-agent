@@ -6,4 +6,9 @@ namespace msa { namespace util {
 		msa::platform::sleep(millisec);
 	}
 
+	extern bool check_stdin_ready()
+	{
+		return msa::platform::select_stdin();
+	}
+
 } }

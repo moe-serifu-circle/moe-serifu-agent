@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <cstdio>
 
+#include <sys/select.h>
+
 // Bionic is an extremely limited implementation of libc, and it is missing many functions. This
 // file adds those functions to the std namespace, which will begin to pollute it, but as the
 // function does not currently exist that's acceptable for now.
@@ -250,6 +252,18 @@ namespace msa { namespace platform {
 		struct timespec t;
 		t.tv_nsec = (uint64_t) millisec * UINT64_C(1000000000);
 		nanosleep(&t, NULL);
+	}
+	
+	static inline bool select_stdin()
+	{
+		static fd_set fds;
+		static struct timeval tv;
+		tv.tv_sec = 0;
+		tv.tv_usec = 100;
+		FD_ZERO(&fds);
+		FD_SET(0, &fds);
+		select(1, &fds, NULL, NULL, &tv);
+		return FD_ISSET(0, &fds);
 	}
 
 } }

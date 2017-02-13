@@ -1,5 +1,6 @@
 #include "input.hpp"
 #include "event/dispatch.hpp"
+#include "util.hpp"
 
 #include <map>
 #include <string>
@@ -10,10 +11,17 @@
 
 namespace msa { namespace input {
 
-	typedef InputChunk *(*InputHandler)(msa::Handle, InputDevice *);
+	typedef InputChunk *(*GetInputFunc)(msa::Handle, InputDevice *);
+	typedef bool (*CheckReadyFunc)(msa::Handle, InputDevice *);
+
+	typedef struct input_handler
+	{
+		GetInputFunc get_input;
+		CheckReadyFunc is_ready;
+	} InputHandler;
 
 	static std::map<std::string, InputType> INPUT_TYPE_NAMES;
-	static std::map<std::string, InputHandler> INPUT_HANDLER_NAMES;
+	static std::map<std::string, InputHandler *> INPUT_HANDLER_NAMES;
 
 	struct input_chunk_type
 	{
@@ -37,7 +45,7 @@ namespace msa { namespace input {
 	{
 		std::map<std::string, InputDevice *> devices;
 		std::vector<std::string> active;
-		std::map<InputType, InputHandler> handlers;
+		std::map<InputType, InputHandler *> handlers;
 	};
 
 	typedef struct it_args_type
@@ -52,6 +60,7 @@ namespace msa { namespace input {
 	static int dispose_input_context(InputContext *ctx);
 
 	static InputChunk *get_tty_input(msa::Handle hdl, InputDevice *dev);
+	static bool tty_ready(msa::Handle hdl, InputDevice *dev);
 
 	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
@@ -68,7 +77,7 @@ namespace msa { namespace input {
 		}
 		if (INPUT_HANDLER_NAMES.empty())
 		{
-			INPUT_HANDLER_NAMES["get_tty_input"] = get_tty_input;
+			INPUT_HANDLER_NAMES["get_tty_input"] = new InputHandler {get_tty_input, tty_ready};
 		}
 
 		// now create the resource
@@ -99,7 +108,7 @@ namespace msa { namespace input {
 					throw std::invalid_argument("'" + handler_str + "' is not a valid handler");
 				}
 				InputType type = INPUT_TYPE_NAMES[type_str];
-				InputHandler handler = INPUT_HANDLER_NAMES[handler_str];
+				InputHandler *handler = INPUT_HANDLER_NAMES[handler_str];
 				hdl->input->handlers[type] = handler;
 				add_input_device(hdl, type, &id);
 				enable_input_device(hdl, type_str + ":" + id);
@@ -274,11 +283,14 @@ namespace msa { namespace input {
 			disable_input_device(hdl, dev->id);
 			throw std::logic_error("no handler for input device type " + std::to_string(dev->type));
 		}
-		InputHandler input_handler = hdl->input->handlers[dev->type];
+		InputHandler *input_handler = hdl->input->handlers[dev->type];
 		while (dev->running)
 		{
-			InputChunk *chunk = input_handler(hdl, dev);
-			msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, chunk);
+			if (input_handler->is_ready(hdl, dev))
+			{
+				InputChunk *chunk = input_handler->get_input(hdl, dev);
+				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, chunk);
+			}
 		}
 		return NULL;
 	}
@@ -290,6 +302,11 @@ namespace msa { namespace input {
 		InputChunk *ch = new InputChunk;
 		ch->chars = input;
 		return ch;
+	}
+
+	static bool tty_ready(msa::Handle UNUSED(hdl), InputDevice *UNUSED(dev))
+	{
+		return msa::util::check_stdin_ready();
 	}
 
 	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const UNUSED(sync))

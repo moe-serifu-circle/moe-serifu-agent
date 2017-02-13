@@ -179,6 +179,7 @@ namespace msa { namespace input {
 		ita->dev = dev;
 		ita->hdl = hdl;
 		dev->running = (pthread_create(&dev->thread, NULL, it_start, ita) == 0);
+		pthread_setname_np(dev->thread, "input");
 		if (dev->running)
 		{
 			hdl->input->active.push_back(dev->id);

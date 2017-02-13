@@ -54,6 +54,7 @@ namespace msa { namespace event {
 		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
 
 		create_status = pthread_create(&hdl->event->edt, NULL, edt_start, hdl);
+		pthread_setname_np(hdl->event->edt, "edt");
 		if (create_status != 0)
 		{
 			pthread_mutex_destroy(&hdl->event->queue_mutex);
@@ -238,6 +239,7 @@ namespace msa { namespace event {
 		create_handler_sync(&new_ctx->sync);
 		hdl->event->current_handler = new_ctx;
 		new_ctx->running = (pthread_create(&new_ctx->thread, NULL, event_start, hdl) == 0);
+		pthread_setname_np(new_ctx->thread, "handler");
 	}
 
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e)

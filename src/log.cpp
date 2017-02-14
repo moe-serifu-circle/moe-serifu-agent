@@ -1,30 +1,34 @@
 #include "log.hpp"
 #include "string.hpp"
+#include "util.hpp"
 
 #include <fstream>
 #include <vector>
 #include <map>
 #include <string>
 #include <stdexcept>
+#include <queue>
 
 #include <ctime>
 #include <cstdio>
+#include <pthread.h>
 
 namespace msa { namespace log {
 
 	static std::map<std::string, Level> LEVEL_NAMES;
 	static std::map<std::string, Format> FORMAT_NAMES;
 	static std::map<std::string, StreamType> STREAM_TYPE_NAMES;
-	static std::string XML_FORMAT_STRING = "<entry><time>%1$s</time><level>%2$s</level><message>%3$s</message></entry>";
+	static std::string XML_FORMAT_STRING = "<entry><time>%1$s</time><thread>%2$s</thread><level>%3$s</level><message>%4$s</message></entry>";
 
 	typedef int (*CloseHandler)(std::ostream *raw_stream);
 
-	typedef struct message_context_type
+	typedef struct message_type
 	{
-		const std::string *msg;
+		const std::string *text;
 		Level level;
 		time_t time;
-	} MessageContext;
+		const std::string *thread;
+	} Message;
 
 	typedef struct log_stream_type
 	{
@@ -40,18 +44,29 @@ namespace msa { namespace log {
 	{
 		std::vector<LogStream *> streams;
 		Level level;
+		pthread_t writer_thread;
+		pthread_mutex_t queue_mutex;
+		std::queue<Message *> messages;
+		bool running;
 	};
 
 	static int create_log_context(LogContext **ctx);
 	static int dispose_log_context(LogContext *ctx);
 	static int create_log_stream(LogStream **stream);
 	static int dispose_log_stream(LogStream *stream);
+	static int create_message(Message **msg, const std::string &msg_text, Level level);
+	static int dispose_message(Message *msg);
 	static int close_ofstream(std::ostream *raw_stream);
-	static void check_and_write(msa::Handle hdl, const std::string &msg, Level level);
-	static void write(LogStream *stream, const MessageContext &ctx);
-	static void write_xml(LogStream *stream, const MessageContext &ctx);
-	static void write_text(LogStream *stream, const MessageContext &ctx);
+	static void check_and_push(msa::Handle hdl, const std::string &msg_text, Level level);
+	static void push_msg(msa::Handle hdl, Message *msg);
 	static const char *level_to_str(Level lev);
+	
+	static void *writer_start(void *args);
+	static Message *writer_poll_msg(msa::Handle hdl);
+	static void writer_write_to_streams(msa::Handle hdl, const Message *msg);
+	static void writer_write(LogStream *stream, const Message *ctx);
+	static void writer_write_xml(LogStream *stream, const Message *ctx);
+	static void writer_write_text(LogStream *stream, const Message *ctx);
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -135,11 +150,22 @@ namespace msa { namespace log {
 				set_stream_level(hdl, id, lev);
 			}
 		}
+
+		// spawn the thread
+		hdl->log->running = (pthread_create(&hdl->log->writer_thread, NULL, writer_start, hdl) == 0);
+		if (!hdl->log->running)
+		{
+			return 1;
+		}
+		pthread_setname_np(hdl->log->writer_thread, "log-writer");
+
 		return 0;
 	}
 
 	extern int quit(msa::Handle hdl)
 	{
+		hdl->log->running = false;
+		pthread_join(hdl->log->writer_thread, NULL);
 		dispose_log_context(hdl->log);
 		return 0;
 	}
@@ -199,7 +225,7 @@ namespace msa { namespace log {
 
 	extern void trace(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_write(hdl, msg, Level::TRACE);
+		check_and_push(hdl, msg, Level::TRACE);
 	}
 
 	extern void trace(msa::Handle hdl, const char *msg)
@@ -210,7 +236,7 @@ namespace msa { namespace log {
 
 	extern void debug(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_write(hdl, msg, Level::DEBUG);
+		check_and_push(hdl, msg, Level::DEBUG);
 	}
 
 	extern void debug(msa::Handle hdl, const char *msg)
@@ -221,7 +247,7 @@ namespace msa { namespace log {
 
 	extern void info(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_write(hdl, msg, Level::INFO);
+		check_and_push(hdl, msg, Level::INFO);
 	}
 
 	extern void info(msa::Handle hdl, const char *msg)
@@ -232,7 +258,7 @@ namespace msa { namespace log {
 
 	extern void warn(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_write(hdl, msg, Level::WARN);
+		check_and_push(hdl, msg, Level::WARN);
 	}
 
 	extern void warn(msa::Handle hdl, const char *msg)
@@ -243,7 +269,7 @@ namespace msa { namespace log {
 
 	extern void error(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_write(hdl, msg, Level::ERROR);
+		check_and_push(hdl, msg, Level::ERROR);
 	}
 
 	extern void error(msa::Handle hdl, const char *msg)
@@ -252,64 +278,20 @@ namespace msa { namespace log {
 		error(hdl, msg_str);
 	}
 
-	static void check_and_write(msa::Handle hdl, const std::string &msg, Level level)
+	static void check_and_push(msa::Handle hdl, const std::string &msg_text, Level level)
 	{
 		LogContext *ctx = hdl->log;
 		// check if we should ignore the message from the global level
 		if (level < ctx->level) {
 			return;
 		}
-
-		// create the context
-		MessageContext msg_ctx;
-		msg_ctx.msg = &msg;
-		msg_ctx.level = level;
-		time(&msg_ctx.time);
 		
-		for (size_t i = 0; i < ctx->streams.size(); i++)
+		Message *msg;
+		if (create_message(&msg, msg_text, level) != 0)
 		{
-			LogStream *stream = ctx->streams.at(i);
-			if (level >= stream->level)
-			{
-				write(stream, msg_ctx);
-			}
+			throw std::runtime_error("could not create log message");
 		}
-	}
-
-	static void write(LogStream *stream, const MessageContext &ctx)
-	{
-		if (stream->format == Format::XML)
-		{
-			write_xml(stream, ctx);
-		}
-		else if (stream->format == Format::TEXT)
-		{
-			write_text(stream, ctx);
-		}
-		else
-		{
-			throw std::logic_error("bad log stream format");
-		}
-	}
-
-	static void write_xml(LogStream *stream, const MessageContext &ctx)
-	{
-		static char buffer[512];
-		struct tm *time_info = gmtime(&ctx.time);
-		const char *timestr = asctime(time_info);
-		const char *lev_str = level_to_str(ctx.level);
-		sprintf(buffer, stream->output_format_string.c_str(), timestr, lev_str, ctx.msg->c_str());
-		*(stream->out) << buffer << std::endl;
-	}
-
-	static void write_text(LogStream *stream, const MessageContext &ctx)
-	{
-		static char buffer[512];
-		struct tm *time_info = localtime(&ctx.time);
-		const char *timestr = asctime(time_info);
-		const char *lev_str = level_to_str(ctx.level);
-		sprintf(buffer, stream->output_format_string.c_str(), timestr, lev_str, ctx.msg->c_str());
-		*(stream->out) << buffer << std::endl;
+		push_msg(hdl, msg);
 	}
 
 	static const char *level_to_str(Level lev)
@@ -343,12 +325,15 @@ namespace msa { namespace log {
 	static int create_log_context(LogContext **ctx)
 	{
 		LogContext *log = new LogContext;
+		log->running = false;
+		log->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 		*ctx = log;
 		return 0;
 	}
 
 	static int dispose_log_context(LogContext *ctx)
 	{
+		pthread_mutex_destroy(&ctx->queue_mutex);
 		while (!ctx->streams.empty())
 		{
 			LogStream *stream = *(ctx->streams.begin());
@@ -388,6 +373,35 @@ namespace msa { namespace log {
 		return 0;
 	}
 
+	static int create_message(Message **msg, const std::string &msg_text, Level level)
+	{
+		Message *m = new Message;
+		time(&m->time);
+		m->text = new std::string(msg_text);
+		m->level = level;
+
+		// get the calling thread's name
+		char buf[16];
+		if (pthread_getname_np(pthread_self(), buf, 16) != 0)
+		{
+			delete m->text;
+			delete m;
+			return 1;
+		}
+		m->thread = new std::string(buf);
+
+		*msg = m;
+		return 0;
+	}
+
+	static int dispose_message(Message *msg)
+	{
+		delete msg->thread;
+		delete msg->text;
+		delete msg;
+		return 0;
+	}
+
 	static int close_ofstream(std::ostream *raw_stream)
 	{
 		std::ofstream *file = static_cast<std::ofstream *>(raw_stream);
@@ -402,6 +416,105 @@ namespace msa { namespace log {
 			return 1;
 		}
 		return 0;
+	}
+
+	static void push_msg(msa::Handle hdl, Message *msg)
+	{
+		// do not allow any messages after shutdown
+		if (!hdl->log->running)
+		{
+			throw std::logic_error("cannot write to log when log module is not running");
+		}
+		pthread_mutex_lock(&hdl->log->queue_mutex);
+		hdl->log->messages.push(msg);
+		pthread_mutex_unlock(&hdl->log->queue_mutex);
+	}
+
+	static void *writer_start(void *args)
+	{
+		msa::Handle hdl = (msa::Handle) args;
+		// run util shutdown, and then keep running until the message queue is empty
+		while (hdl->log->running || !hdl->log->messages.empty())
+		{
+			Message *msg = writer_poll_msg(hdl);
+			if (msg != NULL)
+			{
+				writer_write_to_streams(hdl, msg);
+				dispose_message(msg);
+			}
+			else
+			{
+				msa::util::sleep_milli(5);
+			}
+		}
+		return NULL;
+	}
+
+	static Message *writer_poll_msg(msa::Handle hdl)
+	{
+		Message *msg = NULL;
+		pthread_mutex_lock(&hdl->log->queue_mutex);
+		if (!hdl->log->messages.empty())
+		{
+			msg = hdl->log->messages.front();
+			hdl->log->messages.pop();
+		}
+		pthread_mutex_unlock(&hdl->log->queue_mutex);
+		return msg;
+	}
+
+	static void writer_write_to_streams(msa::Handle hdl, const Message *msg)
+	{
+		for (size_t i = 0; i < hdl->log->streams.size(); i++)
+		{
+			LogStream *stream = hdl->log->streams.at(i);
+			if (msg->level >= stream->level)
+			{
+				writer_write(stream, msg);
+			}
+		}
+	}
+
+	static void writer_write(LogStream *stream, const Message *msg)
+	{
+		if (stream->format == Format::XML)
+		{
+			writer_write_xml(stream, msg);
+		}
+		else if (stream->format == Format::TEXT)
+		{
+			writer_write_text(stream, msg);
+		}
+		else
+		{
+			throw std::logic_error("bad log stream format");
+		}
+	}
+
+	static void writer_write_xml(LogStream *stream, const Message *msg)
+	{
+		static char buffer[512];
+		struct tm *time_info = gmtime(&msg->time);
+		const char *time_str = asctime(time_info);
+		const char *lev_str = level_to_str(msg->level);
+		const char *thread_str = msg->thread->c_str();
+		const char *text_str = msg->text->c_str();
+		const char *format = stream->output_format_string.c_str();
+		sprintf(buffer, format, time_str, thread_str, lev_str, text_str);
+		*(stream->out) << buffer << std::endl;
+	}
+
+	static void writer_write_text(LogStream *stream, const Message *msg)
+	{
+		static char buffer[512];
+		struct tm *time_info = localtime(&msg->time);
+		const char *time_str = asctime(time_info);
+		const char *lev_str = level_to_str(msg->level);
+		const char *thread_str = msg->thread->c_str();
+		const char *text_str = msg->text->c_str();
+		const char *format = stream->output_format_string.c_str();
+		sprintf(buffer, format, time_str, thread_str, lev_str, text_str);
+		*(stream->out) << buffer << std::endl;
 	}
 
 } }

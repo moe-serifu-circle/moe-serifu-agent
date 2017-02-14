@@ -14,7 +14,7 @@ DEP_INCS=$(patsubst %,$(SDIR)/%,$(DEP_INC_PATHS))
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 DEP_OBJS_DEBUG=$(patsubst %,$(TDIR)/$(ODIR)/%,$(DEP_TARGETS))
 
-.PHONY: clean directories test
+.PHONY: clean directories test all
 
 all: directories moe-serifu
 

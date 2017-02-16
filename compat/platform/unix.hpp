@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include <sys/select.h>
+#include <pthread.h>
 
 namespace msa { namespace platform {
 
@@ -30,6 +31,22 @@ namespace msa { namespace platform {
 		FD_SET(0, &fds);
 		select(1, &fds, NULL, NULL, &tv);
 		return FD_ISSET(0, &fds);
+	}
+
+	namespace thread {
+
+		typedef pthread_t Thread;
+
+		static inline int set_name(Thread tid, const char *name)
+		{
+
+		}
+
+		static inline int get_name(Thread tid, char *name, size_t len)
+		{
+			
+		}
+
 	}
 
 } }

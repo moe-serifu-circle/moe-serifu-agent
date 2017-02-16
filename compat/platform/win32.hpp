@@ -7,6 +7,9 @@ extern "C" {
 	#include <windows.h>
 }
 
+#include <map>
+#include <cstring>
+
 namespace msa { namespace platform {
 
 	static inline void sleep(int millisec)
@@ -18,6 +21,30 @@ namespace msa { namespace platform {
 	{
 		HANDLE stdin = GetStandardHandle(STD_INPUT_HANDLE);
 		return (WaitForSingleObject(stdin, 0) == WAIT_OBJECT_0);
+	}
+
+	namespace thread {
+
+		typedef DWORD Thread;
+		typedef struct attr_type Attributes;
+		typedef struct mutex_type Mutex;
+		typedef struct mutex_attr_type MutexAttributes;
+		
+		extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg);
+		extern int join(Thread thread, void **value_ptr);
+		extern int set_name(Thread thread, const char *name);
+		extern int get_name(Thread tid, char *name, size_t len);
+		
+		extern int attr_init(Attributes *attr);
+		extern int attr_set_detach(Attributes *attr, bool detach);
+		extern int attr_get_detach(const Attributes *attr, bool *detach);
+		extern int attr_destroy(Attributes *attr);
+		
+		extern int mutex_init(Mutex *mutex, const MutexAttributes *attr);
+		extern int mutex_destoy(Mutex *mutex);
+		extern int mutex_lock(Mutex *mutex);
+		extern int mutex_unlock(Mutex *mutex);
+
 	}
 
 } }

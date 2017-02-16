@@ -12,6 +12,8 @@
 
 #include <sys/select.h>
 
+#include <pthread.h>
+
 // Bionic is an extremely limited implementation of libc, and it is missing many functions. This
 // file adds those functions to the std namespace, which will begin to pollute it, but as the
 // function does not currently exist that's acceptable for now.
@@ -264,6 +266,21 @@ namespace msa { namespace platform {
 		FD_SET(0, &fds);
 		select(1, &fds, NULL, NULL, &tv);
 		return FD_ISSET(0, &fds);
+	}
+
+	namespace thread {
+		
+		typedef pthread_t Thread;
+
+		set_name(Thread tid, const char *name)
+		{
+
+		}
+
+		get_name(Thread tid, char name, size_t len)
+		{
+
+		}
 	}
 
 } }

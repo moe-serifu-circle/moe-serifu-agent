@@ -156,7 +156,8 @@ namespace msa { namespace platform {
 		
 		extern int attr_destroy(Attributes *attr)
 		{
-			delete attr;
+			// do nothing
+			return 0;
 		}
 		
 		extern int mutex_init(Mutex *mutex, const MutexAttributes *attr)

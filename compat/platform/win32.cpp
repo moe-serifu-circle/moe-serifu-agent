@@ -111,8 +111,9 @@ namespace msa { namespace platform {
 			return 0;
 		}
 
-		extern int set_name(Thread tid, const char *name)
+		extern int set_name(Thread thread, const char *name)
 		{
+			Thread tid = thread;
 			if (__info.find(tid) == __info.end())
 			{
 				return 1;
@@ -121,8 +122,9 @@ namespace msa { namespace platform {
 			__info[tid]->name[15] = '\0';
 		}
 
-		extern int get_name(Thread tid, char *name, size_t len)
+		extern int get_name(Thread thread, char *name, size_t len)
 		{
+			Thread tid = thread;
 			if (__info.find(tid) == __info.end())
 			{
 				return 1;

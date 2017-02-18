@@ -36,7 +36,7 @@ namespace msa { namespace platform {
 		extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg);
 		extern int join(Thread thread, void **value_ptr);
 		extern int set_name(Thread thread, const char *name);
-		extern int get_name(Thread tid, char *name, size_t len);
+		extern int get_name(Thread thread, char *name, size_t len);
 		extern Thread self();
 		
 		extern int attr_init(Attributes *attr);

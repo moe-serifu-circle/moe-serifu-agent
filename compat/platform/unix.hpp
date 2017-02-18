@@ -54,12 +54,12 @@ namespace msa { namespace platform {
 		
 		static inline int set_name(Thread thread, const char *name)
 		{
-			return pthread_setname_np(tid, name);
+			return pthread_setname_np(thread, name);
 		}
 		
-		static inline int get_name(Thread tid, char *name, size_t len)
+		static inline int get_name(Thread thread, char *name, size_t len)
 		{
-			return pthread_getname_np(tid, name, len);
+			return pthread_getname_np(thread, name, len);
 		}
 
 		static inline Thread self()

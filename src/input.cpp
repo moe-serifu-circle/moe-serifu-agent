@@ -7,7 +7,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
-#include <pthread.h>
 
 namespace msa { namespace input {
 
@@ -32,7 +31,7 @@ namespace msa { namespace input {
 	{
 		std::string id;
 		InputType type;
-		pthread_t thread;
+		msa::platform::thread::Thread thread;
 		bool running;
 		union
 		{
@@ -187,8 +186,14 @@ namespace msa { namespace input {
 		InputThreadArgs *ita = new InputThreadArgs;
 		ita->dev = dev;
 		ita->hdl = hdl;
-		dev->running = (pthread_create(&dev->thread, NULL, it_start, ita) == 0);
-		pthread_setname_np(dev->thread, "input");
+
+		msa::platform::thread::Attributes attr;
+		msa::platform::thread::attr_init(&attr);
+		msa::platform::thread::attr_set_detach(&attr, true);
+		dev->running = (msa::platform::thread::create(&dev->thread, &attr, it_start, ita) == 0);
+		msa::platform::thread::set_name(dev->thread, "input");
+		msa::platform::thread::attr_destroy(&attr);
+		
 		if (dev->running)
 		{
 			hdl->input->active.push_back(dev->id);

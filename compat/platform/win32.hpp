@@ -9,6 +9,7 @@ extern "C" {
 
 #include <map>
 #include <cstring>
+#include <ctime>
 
 namespace msa { namespace platform {
 
@@ -29,6 +30,9 @@ namespace msa { namespace platform {
 		typedef struct attr_type Attributes;
 		typedef struct mutex_type Mutex;
 		typedef struct mutex_attr_type MutexAttributes;
+		typedef struct cond_type Cond;
+		typedef struct cond_attr_type CondAttributes;
+		
 		
 		extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg);
 		extern int join(Thread thread, void **value_ptr);
@@ -44,6 +48,12 @@ namespace msa { namespace platform {
 		extern int mutex_destoy(Mutex *mutex);
 		extern int mutex_lock(Mutex *mutex);
 		extern int mutex_unlock(Mutex *mutex);
+
+		extern int cond_init(Cond *cond, const CondAttributes *attr);
+		extern int cond_destroy(Cond *cond);
+		extern int cond_wait(Cond *cond, Mutex *mutex);
+		extern int cond_broadcast(Cond *cond);
+		extern int cond_signal(Cond *cond);
 
 	}
 

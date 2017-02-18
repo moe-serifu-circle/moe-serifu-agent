@@ -1,5 +1,6 @@
-
 #include <map>
+#include <queue>
+#include <unordered_set>
 
 namespace msa { namespace platform {
 
@@ -8,21 +9,37 @@ namespace msa { namespace platform {
 		typedef struct attr_type {
 			LPSECURITY_ATTRIBUTES sec,
 			bool detach;
-		} Attributes;
+		};
 		
 		typedef struct mutex_type
 		{
 			HANDLE handle;
-		} Mutex;
+			MutexAttributes *attr;
+		};
 
 		typedef struct mutex_attr_type
 		{
 			void *placeholder;
-		} MutexAttributes;
+		};
+
+		typedef struct cond_type
+		{
+			Mutex *external_mutex;
+			Mutex *internal_mutex;
+			std::queue<Thread> wait_queue;
+			std::unordered_set<Thread> threads;
+			CondAttributes *attr;
+		};
+
+		typedef struct cond_attr_type
+		{
+			void *placeholder;
+		};
 		
 		typedef struct thread_info_type
 		{
 			HANDLE handle;
+			volatile bool waiting_on_cond;
 			char *name;
 			bool joinable;
 		} ThreadInfo;
@@ -71,7 +88,7 @@ namespace msa { namespace platform {
 			{
 				delete tra;
 				ReleaseMutex(start_mutex);
-				CloseHandle(start_Mutex);
+				CloseHandle(start_mutex);
 				return 1;
 			}
 			__create_info(*thread, thread_handle, joinable);
@@ -89,7 +106,7 @@ namespace msa { namespace platform {
 			{
 				*value_ptr = __ret_values[thread];
 			}
-			__ret_values,erase(thread);
+			__ret_values.erase(thread);
 			__destroy_info(thread);
 			return 0;
 		}
@@ -98,21 +115,19 @@ namespace msa { namespace platform {
 		{
 			if (__info.find(tid) == __info.end())
 			{
-				__info[tid] = new ThreadInfo;
-				__info[tid]->name
+				return 1;
 			}
-			__names[tid] = new char[16];
-			strncpy(__names[tid], name, 15);
-			__names[tid][15] = '\0';
+			strncpy(__info[tid]->name, name, 15);
+			__info[tid]->name[15] = '\0';
 		}
 
 		extern int get_name(Thread tid, char *name, size_t len)
 		{
-			if (__names.find(tid) == __names.end())
+			if (__info.find(tid) == __info.end())
 			{
-				set_name(tid, "(not set)");
+				return 1;
 			}
-			strncpy(name, __names[tid], len);
+			strncpy(name, __info[tid]->names, len);
 		}
 		
 		extern int attr_init(Attributes *attr)
@@ -146,11 +161,18 @@ namespace msa { namespace platform {
 			{
 		 		return 1;
 			}
+			mutex->attr = new MutexAttributes;
+			mutex->attr->placeholder = NULL;
+			if (attr != NULL)
+			{
+				mutex->attr->placeholder = attr->placeholder;
+			}
 			return 0;
 		}
 		
 		extern int mutex_destoy(Mutex *mutex)
 		{
+			delete mutex->attr;
 			CloseHandle(mutex->handle);
 		}
 
@@ -166,6 +188,113 @@ namespace msa { namespace platform {
 		extern int mutex_unlock(Mutex *mutex)
 		{
 			MutexRelease(mutex->handle);
+			return 0;
+		}
+		
+		extern int cond_init(Cond *cond, const CondAttributes *attr)
+		{
+			cond->attr = new CondAttributes;
+			cond->attr->placeholder = NULL;
+			if (attr != NULL)
+			{
+				cond->attr->placeholder = attr->placeholder;
+			}
+			cond->external_mutex = NULL;
+			cond->internal_mutex = new Mutex;
+			if (mutex_init(cond->internal_mutex) != 0)
+			{
+				return 1;
+			}
+			cond->wait_queue = std::queue<Thread>();
+			cond->threads = std::unordered_map<Thread>();
+			return 0;
+		}
+		
+		extern int cond_destroy(Cond *cond)
+		{
+			mutex_lock(cond->internal_mutex);
+			while (!cond->wait_queue.empty())
+			{
+				Thread tid = cond->wait_queue.front();
+				cond->wait_queue.pop();
+				if (__info.find(tid) != __info.end() && cond->threads.count(tid) == 1)
+				{
+					__info[tid]->waiting_on_cond = false;
+				}
+				cond->threads.erase(tid);
+			}
+			mutex_unlock(cond->internal_mutex);
+			mutex_destory(cond->internal_mutex);
+			delete cond->internal_mutex;
+			delete cond->attr;
+			return 0;
+		}
+		
+		extern int cond_wait(Cond *cond, Mutex *mutex)
+		{
+			if (cond->external_mutex != NULL)
+			{
+				if (cond->external_mutex != mutex)
+				{
+					return 1;
+				}
+			}
+			cond->external_mutex = mutex;
+			Thread tid = GetCurrentThreadId();
+
+			mutex_lock(cond->internal_mutex);
+			__info[tid]->waiting_on_cond = true;
+			cond->threads.insert(tid);
+			cond->wait_queue.push(tid);
+			mutex_unlock(cond->internal_mutex);
+
+			if (!mutex_unlock(cond->mutex))
+			{
+				return 1;
+			}
+			// set up done, wait for cond now
+			while (__info[tid]->waiting_on_cond)
+			{
+				Sleep(5);
+			}
+			// we aren't waiting, so return
+			if (!mutex_lock(cond->external_mutex))
+			{
+				return 1;
+			}
+			return 0;
+		}
+		
+		extern int cond_broadcast(Cond *cond);
+		{
+			while (!cond->wait_queue.empty())
+			{
+				int status = cond_signal(cond);
+				if (status != 0)
+				{
+					return status;
+				}
+			}
+			return 0;
+		}
+		
+		extern int cond_signal(Cond *cond)
+		{
+			mutex_lock(cond->internal_mutex);
+			Thread tid = 0;
+			do {
+				if (cond->wait_queue.empty())
+				{
+					mutex_unlock(cond->internal_mutex);
+					return 1;
+				}
+				tid = cond->wait_queue.front();
+				cond->wait_queue.pop();
+			} while (cond->threads.count(tid) != 1);
+			
+			cond->threads.erase(tid);
+			__info[tid]->waiting_on_cond = false;
+			mutex_unlock(cond->internal_mutex);
 		}
 		
 		static DWORD __run(void *arg)
@@ -207,6 +336,7 @@ namespace msa { namespace platform {
 			__info[thread]->name = new char[16];
 			__info[thread]->handle = thread_handle;
 			__info[thread]->joinable = joinable;
+			__info[thread]->waiting_on_cond = false;
 		}
 
 		static void __destory_info(Thread thread)

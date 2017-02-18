@@ -61,6 +61,11 @@ namespace msa { namespace platform {
 		{
 			return pthread_getname_np(tid, name, len);
 		}
+
+		static inline Thread self()
+		{
+			return pthread_self();
+		}
 		
 		static inline int attr_init(Attributes *attr)
 		{

@@ -11,6 +11,7 @@
 #include <cstdio>
 
 #include <sys/select.h>
+#include <sys/prctl.h>
 
 #include <pthread.h>
 
@@ -299,6 +300,11 @@ namespace msa { namespace platform {
 				return 1;
 			}
 			return prctl(PR_GET_NAME, name);
+		}
+
+		static inline Thread self()
+		{
+			return pthread_self();
 		}
 		
 		static inline int attr_init(Attributes *attr)

@@ -129,6 +129,11 @@ namespace msa { namespace platform {
 			}
 			strncpy(name, __info[tid]->names, len);
 		}
+
+		extern Thread self()
+		{
+			return GetCurrentThreadId();
+		}
 		
 		extern int attr_init(Attributes *attr)
 		{

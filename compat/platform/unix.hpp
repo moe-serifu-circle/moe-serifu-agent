@@ -88,7 +88,7 @@ namespace msa { namespace platform {
 		
 		static inline int attr_destroy(Attributes *attr)
 		{
-			return pthread_attr_destory(attr);
+			return pthread_attr_destroy(attr);
 		}		
 		
 		static inline int mutex_init(Mutex *mutex, const MutexAttributes *attr)
@@ -96,9 +96,9 @@ namespace msa { namespace platform {
 			return pthread_mutex_init(mutex, attr);
 		}
 		
-		static inline int mutex_destoy(Mutex *mutex)
+		static inline int mutex_destroy(Mutex *mutex)
 		{
-			return pthread_mutex_destory(mutex);
+			return pthread_mutex_destroy(mutex);
 		}
 		
 		static inline int mutex_lock(Mutex *mutex)
@@ -118,7 +118,7 @@ namespace msa { namespace platform {
 		
 		static inline int cond_destroy(Cond *cond)
 		{
-			return pthread_cond_destory(cond);
+			return pthread_cond_destroy(cond);
 		}
 		
 		static inline int cond_wait(Cond *cond, Mutex *mutex)

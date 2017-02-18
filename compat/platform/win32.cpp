@@ -176,7 +176,7 @@ namespace msa { namespace platform {
 			return 0;
 		}
 		
-		extern int mutex_destoy(Mutex *mutex)
+		extern int mutex_destroy(Mutex *mutex)
 		{
 			delete mutex->attr;
 			CloseHandle(mutex->handle);

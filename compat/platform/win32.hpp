@@ -45,7 +45,7 @@ namespace msa { namespace platform {
 		extern int attr_destroy(Attributes *attr);
 		
 		extern int mutex_init(Mutex *mutex, const MutexAttributes *attr);
-		extern int mutex_destoy(Mutex *mutex);
+		extern int mutex_destroy(Mutex *mutex);
 		extern int mutex_lock(Mutex *mutex);
 		extern int mutex_unlock(Mutex *mutex);
 

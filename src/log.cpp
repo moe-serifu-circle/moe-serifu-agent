@@ -12,6 +12,8 @@
 #include <ctime>
 #include <cstdio>
 
+#include "platform/thread/thread.hpp"
+
 namespace msa { namespace log {
 
 	static std::map<std::string, Level> LEVEL_NAMES;
@@ -43,8 +45,8 @@ namespace msa { namespace log {
 	{
 		std::vector<LogStream *> streams;
 		Level level;
-		msa::platform::thread::Thread writer_thread;
-		msa::platform::thread::Mutex queue_mutex;
+		msa::thread::Thread writer_thread;
+		msa::thread::Mutex queue_mutex;
 		std::queue<Message *> messages;
 		bool running;
 	};
@@ -151,12 +153,12 @@ namespace msa { namespace log {
 		}
 
 		// spawn the thread
-		hdl->log->running = (msa::platform::thread::create(&hdl->log->writer_thread, NULL, writer_start, hdl) == 0);
+		hdl->log->running = (msa::thread::create(&hdl->log->writer_thread, NULL, writer_start, hdl) == 0);
 		if (!hdl->log->running)
 		{
 			return 1;
 		}
-		msa::platform::thread::set_name(hdl->log->writer_thread, "log-writer");
+		msa::thread::set_name(hdl->log->writer_thread, "log-writer");
 
 		return 0;
 	}
@@ -164,7 +166,7 @@ namespace msa { namespace log {
 	extern int quit(msa::Handle hdl)
 	{
 		hdl->log->running = false;
-		msa::platform::thread::join(hdl->log->writer_thread, NULL);
+		msa::thread::join(hdl->log->writer_thread, NULL);
 		dispose_log_context(hdl->log);
 		return 0;
 	}
@@ -325,14 +327,14 @@ namespace msa { namespace log {
 	{
 		LogContext *log = new LogContext;
 		log->running = false;
-		msa::platform::thread::mutex_init(&log->queue_mutex, NULL);
+		msa::thread::mutex_init(&log->queue_mutex, NULL);
 		*ctx = log;
 		return 0;
 	}
 
 	static int dispose_log_context(LogContext *ctx)
 	{
-		msa::platform::thread::mutex_destroy(&ctx->queue_mutex);
+		msa::thread::mutex_destroy(&ctx->queue_mutex);
 		while (!ctx->streams.empty())
 		{
 			LogStream *stream = *(ctx->streams.begin());
@@ -381,7 +383,7 @@ namespace msa { namespace log {
 
 		// get the calling thread's name
 		char buf[16];
-		if (msa::platform::thread::get_name(msa::platform::thread::self(), buf, 16) != 0)
+		if (msa::thread::get_name(msa::thread::self(), buf, 16) != 0)
 		{
 			delete m->text;
 			delete m;
@@ -424,9 +426,9 @@ namespace msa { namespace log {
 		{
 			throw std::logic_error("cannot write to log when log module is not running");
 		}
-		msa::platform::thread::mutex_lock(&hdl->log->queue_mutex);
+		msa::thread::mutex_lock(&hdl->log->queue_mutex);
 		hdl->log->messages.push(msg);
-		msa::platform::thread::mutex_unlock(&hdl->log->queue_mutex);
+		msa::thread::mutex_unlock(&hdl->log->queue_mutex);
 	}
 
 	static void *writer_start(void *args)
@@ -452,13 +454,13 @@ namespace msa { namespace log {
 	static Message *writer_poll_msg(msa::Handle hdl)
 	{
 		Message *msg = NULL;
-		msa::platform::thread::mutex_lock(&hdl->log->queue_mutex);
+		msa::thread::mutex_lock(&hdl->log->queue_mutex);
 		if (!hdl->log->messages.empty())
 		{
 			msg = hdl->log->messages.front();
 			hdl->log->messages.pop();
 		}
-		msa::platform::thread::mutex_unlock(&hdl->log->queue_mutex);
+		msa::thread::mutex_unlock(&hdl->log->queue_mutex);
 		return msg;
 	}
 

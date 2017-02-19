@@ -6,6 +6,8 @@
 #include <stack>
 #include <map>
 
+#include "platform/thread/thread.hpp"
+
 namespace msa { namespace event {
 
 	typedef struct handler_context_type {
@@ -13,12 +15,12 @@ namespace msa { namespace event {
 		EventHandler handler_func;
 		HandlerSync *sync;
 		bool running;
-		msa::platform::thread::Thread thread;
+		msa::thread::Thread thread;
 	} HandlerContext;
 
 	struct event_dispatch_context_type {
-		msa::platform::thread::Thread edt;
-		msa::platform::thread::Mutex queue_mutex;
+		msa::thread::Thread edt;
+		msa::thread::Mutex queue_mutex;
 		HandlerContext *current_handler;
 		std::priority_queue<const Event *> queue;
 		std::map<Topic, EventHandler> handlers;
@@ -52,11 +54,11 @@ namespace msa { namespace event {
 		// read config
 		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
 
-		create_status = msa::platform::thread::create(&hdl->event->edt, NULL, edt_start, hdl);
-		msa::platform::thread::set_name(hdl->event->edt, "edt");
+		create_status = msa::thread::create(&hdl->event->edt, NULL, edt_start, hdl);
+		msa::thread::set_name(hdl->event->edt, "edt");
 		if (create_status != 0)
 		{
-			msa::platform::thread::mutex_destroy(&hdl->event->queue_mutex);
+			msa::thread::mutex_destroy(&hdl->event->queue_mutex);
 			return create_status;
        	}
 		return 0;
@@ -69,19 +71,19 @@ namespace msa { namespace event {
 			// this shouldn't happen, but if we get here, it's because
 			// the event handle was inited but the EDT was not started.
 			// We can just destroy the mutex and delete everything immediately
-			msa::platform::thread::mutex_destroy(&msa->event->queue_mutex);
+			msa::thread::mutex_destroy(&msa->event->queue_mutex);
 			dispose_event_dispatch_context(msa->event);
 		}
 		// if the quit was initiated by the current event thread,
 		// we must mark it as such so that the EDT knows not to
 		// join on it (since this thread also joins on the EDT,
 		// this would cause deadlock)
-		if (msa::platform::thread::self() == msa->event->current_handler->thread)
+		if (msa::thread::self() == msa->event->current_handler->thread)
 		{
 			set_handler_syscall_origin(msa->event->current_handler->sync);
 		}
 		msa->status = msa::Status::STOP_REQUESTED;
-		msa::platform::thread::join(msa->event->edt, NULL);
+		msa::thread::join(msa->event->edt, NULL);
 		dispose_event_dispatch_context(msa->event);
 		return 0;
 	}
@@ -105,7 +107,7 @@ namespace msa { namespace event {
 	static int create_event_dispatch_context(EventDispatchContext **event)
 	{
 		EventDispatchContext *edc = new EventDispatchContext;
-		msa::platform::thread::mutex_init(&edc->queue_mutex, NULL);
+		msa::thread::mutex_init(&edc->queue_mutex, NULL);
 		edc->current_handler = NULL;
 		*event = edc;
 		return 0;
@@ -149,7 +151,7 @@ namespace msa { namespace event {
 			ctx->interrupted.pop();
 			dispose_handler_context(intr_ctx, true);
 		}
-		msa::platform::thread::mutex_destroy(&hdl->event->queue_mutex);
+		msa::thread::mutex_destroy(&hdl->event->queue_mutex);
 		while (!hdl->event->queue.empty())
 		{
 			const Event *e = hdl->event->queue.top();
@@ -188,7 +190,7 @@ namespace msa { namespace event {
 	static const Event *edt_poll_event_queue(msa::Handle hdl)
 	{
 		const Event *e = NULL;
-		msa::platform::thread::mutex_lock(&hdl->event->queue_mutex);
+		msa::thread::mutex_lock(&hdl->event->queue_mutex);
 		if (!hdl->event->queue.empty())
 		{
 			e = hdl->event->queue.top();
@@ -210,7 +212,7 @@ namespace msa { namespace event {
 		{
 			hdl->event->queue.pop();
 		}
-		msa::platform::thread::mutex_unlock(&hdl->event->queue_mutex);
+		msa::thread::mutex_unlock(&hdl->event->queue_mutex);
 		return e;
 	}
 
@@ -237,8 +239,8 @@ namespace msa { namespace event {
 		new_ctx->handler_func = hdl->event->handlers[e->topic];
 		create_handler_sync(&new_ctx->sync);
 		hdl->event->current_handler = new_ctx;
-		new_ctx->running = (msa::platform::thread::create(&new_ctx->thread, NULL, event_start, hdl) == 0);
-		msa::platform::thread::set_name(new_ctx->thread, "handler");
+		new_ctx->running = (msa::thread::create(&new_ctx->thread, NULL, event_start, hdl) == 0);
+		msa::thread::set_name(new_ctx->thread, "handler");
 		// TODO: make handler detached at start
 	}
 
@@ -270,7 +272,7 @@ namespace msa { namespace event {
 			if (join)
 			{
 				// wait until current event runs through
-				msa::platform::thread::join(ctx->thread, NULL);
+				msa::thread::join(ctx->thread, NULL);
 			}
 		}
 		// delete event
@@ -291,9 +293,9 @@ namespace msa { namespace event {
 
 	static void push_event(msa::Handle msa, const Event *e)
 	{
-		msa::platform::thread::mutex_lock(&msa->event->queue_mutex);
+		msa::thread::mutex_lock(&msa->event->queue_mutex);
 		msa->event->queue.push(e);
-		msa::platform::thread::mutex_unlock(&msa->event->queue_mutex);
+		msa::thread::mutex_unlock(&msa->event->queue_mutex);
 	}
 
 } }

@@ -2,11 +2,14 @@ ODIR?=obj
 SDIR?=src
 
 CXX?=g++
-CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR) -include compat/compat.hpp
+CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR) -Icompat -include compat/compat.hpp
 
 DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd.o log.o
 DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
+
+OS_DEP_TARGETS=thread.o
+OS_DEP_OBJS=$(ODIR)/platform/thread.o
 
 .PHONY: clean test all debug
 
@@ -21,13 +24,15 @@ test: debug
 clean:
 	rm -f $(ODIR)/*.o
 	rm -f $(ODIR)/event/*.o
+	rm -f $(ODIR)/platform/*.o
 	rm -f moe-serifu
+
 
 # ----------------- #
 #  Binary Recipies  #
 # ----------------- #
 
-moe-serifu: $(ODIR)/main.o $(DEP_OBJS)
+moe-serifu: $(ODIR)/main.o $(DEP_OBJS) $(OS_DEP_OBJS)
 	$(CXX) -o $@ $^ $(CXXFLAGS)
 
 $(ODIR)/main.o: $(SDIR)/main.cpp $(DEP_INCS)
@@ -65,4 +70,12 @@ $(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp
 
 $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/log.cpp $(CXXFLAGS)
+
+
+# ------------------- #
+#  OS Binary Recipes  #
+# ------------------- #
+
+$(ODIR)/platform/thread.o: compat/platform/thread/thread.cpp
+	$(CXX) -c -o $@ compat/platform/thread/thread.cpp
 

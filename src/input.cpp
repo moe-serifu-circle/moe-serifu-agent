@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "platform/thread/thread.hpp"
+
 namespace msa { namespace input {
 
 	typedef InputChunk *(*GetInputFunc)(msa::Handle, InputDevice *);
@@ -31,7 +33,7 @@ namespace msa { namespace input {
 	{
 		std::string id;
 		InputType type;
-		msa::platform::thread::Thread thread;
+		msa::thread::Thread thread;
 		bool running;
 		union
 		{
@@ -187,12 +189,12 @@ namespace msa { namespace input {
 		ita->dev = dev;
 		ita->hdl = hdl;
 
-		msa::platform::thread::Attributes attr;
-		msa::platform::thread::attr_init(&attr);
-		msa::platform::thread::attr_set_detach(&attr, true);
-		dev->running = (msa::platform::thread::create(&dev->thread, &attr, it_start, ita) == 0);
-		msa::platform::thread::set_name(dev->thread, "input");
-		msa::platform::thread::attr_destroy(&attr);
+		msa::thread::Attributes attr;
+		msa::thread::attr_init(&attr);
+		msa::thread::attr_set_detach(&attr, true);
+		dev->running = (msa::thread::create(&dev->thread, &attr, it_start, ita) == 0);
+		msa::thread::set_name(dev->thread, "input");
+		msa::thread::attr_destroy(&attr);
 		
 		if (dev->running)
 		{

@@ -325,7 +325,7 @@ namespace msa { namespace log {
 	{
 		LogContext *log = new LogContext;
 		log->running = false;
-		msa::platform::thread::mutex_init(&log->queue_mutex);
+		msa::platform::thread::mutex_init(&log->queue_mutex, NULL);
 		*ctx = log;
 		return 0;
 	}

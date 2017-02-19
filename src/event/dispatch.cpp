@@ -56,7 +56,7 @@ namespace msa { namespace event {
 		msa::platform::thread::set_name(hdl->event->edt, "edt");
 		if (create_status != 0)
 		{
-			msa::platform::thread::mutex_destory(&hdl->event->queue_mutex);
+			msa::platform::thread::mutex_destroy(&hdl->event->queue_mutex);
 			return create_status;
        	}
 		return 0;
@@ -105,7 +105,7 @@ namespace msa { namespace event {
 	static int create_event_dispatch_context(EventDispatchContext **event)
 	{
 		EventDispatchContext *edc = new EventDispatchContext;
-		msa::platform::thread::mutux_init(&edc->queue_mutex, NULL);
+		msa::platform::thread::mutex_init(&edc->queue_mutex, NULL);
 		edc->current_handler = NULL;
 		*event = edc;
 		return 0;

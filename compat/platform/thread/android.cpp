@@ -26,7 +26,7 @@ namespace msa { namespace thread {
 
 	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg)
 	{
-		RunnerArgs ra = new RunnerArgs;
+		RunnerArgs *ra = new RunnerArgs;
 		ra->start_routine = start_routine;
 		ra->start_routine_arg = arg;
 		ra->start_mutex = new Mutex;
@@ -57,7 +57,7 @@ namespace msa { namespace thread {
 		__info[*thread] = info;
 		if (mutex_unlock(ra->start_mutex) != 0)
 		{
-			__info_dispose(&info);
+			__info_dispose(info);
 			mutex_destroy(ra->start_mutex);
 			delete ra->start_mutex;
 			delete ra;

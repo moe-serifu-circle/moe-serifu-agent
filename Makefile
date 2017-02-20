@@ -53,7 +53,7 @@ $(ODIR)/agent.o: $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/con
 $(ODIR)/util.o: $(SDIR)/util.cpp $(SDIR)/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/util.cpp $(CXXFLAGS)
 
-$(ODIR)/input.o: $(SDIR)/input.cpp $(SDIR)/input.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp  $(SDIR)/configuration.hpp
+$(ODIR)/input.o: $(SDIR)/input.cpp $(SDIR)/input.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp  $(SDIR)/configuration.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/input.cpp $(CXXFLAGS)
 
 $(ODIR)/event/handler.o: $(SDIR)/event/handler.cpp $(SDIR)/msa.hpp $(SDIR)/event/event.hpp

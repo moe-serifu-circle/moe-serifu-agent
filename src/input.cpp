@@ -1,6 +1,7 @@
 #include "input.hpp"
 #include "event/dispatch.hpp"
 #include "util.hpp"
+#include "log.hpp"
 
 #include <map>
 #include <string>
@@ -291,6 +292,7 @@ namespace msa { namespace input {
 			throw std::logic_error("no handler for input device type " + std::to_string(dev->type));
 		}
 		InputHandler *input_handler = hdl->input->handlers[dev->type];
+		msa::log::info(hdl, "Started reading input");
 		while (dev->running)
 		{
 			if (input_handler->is_ready(hdl, dev))
@@ -299,6 +301,7 @@ namespace msa { namespace input {
 				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, chunk);
 			}
 		}
+		msa::log::info(hdl, "Stopped reading input");
 		return NULL;
 	}
 

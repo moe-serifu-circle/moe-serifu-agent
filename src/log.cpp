@@ -11,6 +11,7 @@
 
 #include <ctime>
 #include <cstdio>
+#include <cstring>
 
 #include "platform/thread/thread.hpp"
 
@@ -61,6 +62,7 @@ namespace msa { namespace log {
 	static void check_and_push(msa::Handle hdl, const std::string &msg_text, Level level);
 	static void push_msg(msa::Handle hdl, Message *msg);
 	static const char *level_to_str(Level lev);
+	static const char *get_time_str(const struct tm *time_info);
 	
 	static void *writer_start(void *args);
 	static Message *writer_poll_msg(msa::Handle hdl);
@@ -494,28 +496,44 @@ namespace msa { namespace log {
 
 	static void writer_write_xml(LogStream *stream, const Message *msg)
 	{
-		static char buffer[512];
-		struct tm *time_info = gmtime(&msg->time);
-		const char *time_str = asctime(time_info);
+		char buffer[512];
+		struct tm *time_info = new struct tm;
+		gmtime_r(&msg->time, time_info);
+		const char *time_str = get_time_str(time_info);
 		const char *lev_str = level_to_str(msg->level);
 		const char *thread_str = msg->thread->c_str();
 		const char *text_str = msg->text->c_str();
 		const char *format = stream->output_format_string.c_str();
 		sprintf(buffer, format, time_str, thread_str, lev_str, text_str);
+		delete time_str;
 		*(stream->out) << buffer << std::endl;
 	}
 
 	static void writer_write_text(LogStream *stream, const Message *msg)
 	{
-		static char buffer[512];
-		struct tm *time_info = localtime(&msg->time);
-		const char *time_str = asctime(time_info);
+		char buffer[512];
+		struct tm *time_info = new struct tm;
+		localtime_r(&msg->time, time_info);
+		const char *time_str = get_time_str(time_info);
 		const char *lev_str = level_to_str(msg->level);
 		const char *thread_str = msg->thread->c_str();
 		const char *text_str = msg->text->c_str();
 		const char *format = stream->output_format_string.c_str();
 		sprintf(buffer, format, time_str, thread_str, lev_str, text_str);
+		delete time_str;
 		*(stream->out) << buffer << std::endl;
+	}
+
+	static const char *get_time_str(const struct tm *time_info)
+	{
+		char *buf = new char[26];
+		asctime_r(time_info, buf);
+		char *ptr = strchr(buf, '\n');
+		if (*ptr == '\n')
+		{
+			*ptr = '\0';
+		}
+		return buf;
 	}
 
 } }

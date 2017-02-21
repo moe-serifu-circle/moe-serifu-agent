@@ -505,7 +505,7 @@ namespace msa { namespace log {
 		const char *text_str = msg->text->c_str();
 		const char *format = stream->output_format_string.c_str();
 		sprintf(buffer, format, time_str, thread_str, lev_str, text_str);
-		delete time_str;
+		delete[] time_str;
 		*(stream->out) << buffer << std::endl;
 	}
 
@@ -520,7 +520,7 @@ namespace msa { namespace log {
 		const char *text_str = msg->text->c_str();
 		const char *format = stream->output_format_string.c_str();
 		sprintf(buffer, format, time_str, thread_str, lev_str, text_str);
-		delete time_str;
+		delete[] time_str;
 		*(stream->out) << buffer << std::endl;
 	}
 

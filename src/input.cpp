@@ -200,6 +200,11 @@ namespace msa { namespace input {
 		if (dev->running)
 		{
 			hdl->input->active.push_back(dev->id);
+			msa::log::info(hdl, "Enabled input device " + dev->id);
+		}
+		else
+		{
+			msa::log::warn(hdl, "Could not enable input device " + dev->id);
 		}
 	}
 
@@ -218,6 +223,7 @@ namespace msa { namespace input {
 		}
 		hdl->input->devices[id]->running = false;
 		act.erase(std::find(act.begin(), act.end(), id));
+		msa::log::info(hdl, "Disabled input device " + id);
 	}
 
 	static void create_input_device(InputDevice **dev_ptr, InputType type, const void *id)
@@ -292,7 +298,7 @@ namespace msa { namespace input {
 			throw std::logic_error("no handler for input device type " + std::to_string(dev->type));
 		}
 		InputHandler *input_handler = hdl->input->handlers[dev->type];
-		msa::log::info(hdl, "Started reading input");
+		msa::log::info(hdl, "Started reading from input device " + dev->id);
 		while (dev->running)
 		{
 			if (input_handler->is_ready(hdl, dev))
@@ -301,7 +307,6 @@ namespace msa { namespace input {
 				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, chunk);
 			}
 		}
-		msa::log::info(hdl, "Stopped reading input");
 		return NULL;
 	}
 

@@ -2,6 +2,18 @@
 
 namespace msa { namespace thread {
 
+	extern int init()
+	{
+		// nothing to do here
+		return 0;
+	}
+
+	extern int quit()
+	{
+		// nothing to do here
+		return 0;
+	}
+
 	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg)
 	{
 		return pthread_create(thread, attr, start_routine, arg);

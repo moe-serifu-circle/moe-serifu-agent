@@ -60,6 +60,27 @@ namespace msa { namespace thread {
 	static std::map<Thread, Info *> __info;
 	static std::map<Thread, void *> __ret_values;
 
+	extern int init()
+	{
+		// create info for the main thread
+		if (__info.find(self()) == __info.end())
+		{
+			__create_info(self(), GetCurrentThread(), false);
+			set_name(self(), "main");
+		}
+		return 0;
+	}
+
+	extern int quit()
+	{
+		// delete info for the main thread
+		if (__info.find(self()) != __info.end())
+		{
+			__destroy_info(self());
+		}
+		return 0;
+	}
+
 	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg)
 	{
 		LPSECURITY_ATTRIBUTES sec = NULL;
@@ -345,6 +366,7 @@ namespace msa { namespace thread {
 	{
 		__info[thread] = new Info;
 		__info[thread]->name = new char[16];
+		__info[thread]->name[0] = '\0';
 		__info[thread]->handle = thread_handle;
 		__info[thread]->joinable = joinable;
 		__info[thread]->waiting_on_cond = false;

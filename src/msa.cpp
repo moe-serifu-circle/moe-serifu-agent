@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "platform/thread/thread.hpp"
+
 namespace msa {
 
 	static const msa::config::Section &get_module_section(msa::config::Config *conf, const char *name);
@@ -16,6 +18,7 @@ namespace msa {
 
 	extern int init(Handle *msa, const char *config_path)
 	{
+		msa::thread::init();
 		// load config first
 		msa::config::Config *conf = msa::config::load(config_path);
 		if (conf == NULL)
@@ -164,6 +167,7 @@ namespace msa {
 			msa->log = NULL;
 		}
 
+		msa::thread::quit();
 		return MSA_SUCCESS;
 	}
 

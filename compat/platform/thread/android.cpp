@@ -24,6 +24,32 @@ namespace msa { namespace thread {
 	static void __info_create(Info **info);
 	static void *__run(void *arg);
 
+	extern int init()
+	{
+		Thread tid = self();
+		// create info for the main thread
+		if (__info.find(tid) == __info.end())
+		{
+			Info *info;
+			__info_create(&info);
+			__info[tid] = info;
+			set_name(tid, "main");
+		}
+		return 0;
+	}
+
+	extern int quit()
+	{
+		Thread tid = self();
+		// delete info for the main thread
+		if (__info.find(tid) != __info.end())
+		{
+			__info_dispose(__info[tid]);
+			__info.erase(tid);
+		}
+		return 0;
+	}
+
 	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg)
 	{
 		RunnerArgs *ra = new RunnerArgs;
@@ -180,6 +206,7 @@ namespace msa { namespace thread {
 
 		Info *info = __info[self()];
 		__info_dispose(info);
+		__info.erase(self());
 		
 		return retval;
 	}
@@ -188,6 +215,7 @@ namespace msa { namespace thread {
 	{
 		Info *info = new Info;
 		info->name = new char[16];
+		info->name[0] = '\0';
 		*info_ptr = info;
 	}
 

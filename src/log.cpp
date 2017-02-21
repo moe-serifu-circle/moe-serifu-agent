@@ -168,6 +168,7 @@ namespace msa { namespace log {
 	{
 		hdl->log->running = false;
 		msa::thread::join(hdl->log->writer_thread, NULL);
+		printf("EXIT JOIN\n");
 		dispose_log_context(hdl->log);
 		return 0;
 	}
@@ -442,14 +443,17 @@ namespace msa { namespace log {
 			Message *msg = writer_poll_msg(hdl);
 			if (msg != NULL)
 			{
+				printf("SOMETHING\n");
 				writer_write_to_streams(hdl, msg);
 				dispose_message(msg);
 			}
 			else
 			{
+				printf("NOTHING\n");
 				msa::util::sleep_milli(5);
 			}
 		}
+		printf("EXIT MAIN WRITER LOOP\n");
 		msa::thread::mutex_lock(&hdl->log->queue_mutex);
 		// empty everything remaining
 		while (!hdl->log->messages.empty())

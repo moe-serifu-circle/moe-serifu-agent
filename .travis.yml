@@ -12,7 +12,6 @@ before_install:
 install:
 - sudo apt-get install -qq g++-4.8
 - export CXX="g++-4.8"
-- export TDIR="testing"
 
 # try to build the normal bin and the testing bin
-script: make && make $TDIR/moe-serifu
+script: make && make clean && make debug

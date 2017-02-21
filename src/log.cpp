@@ -456,7 +456,7 @@ namespace msa { namespace log {
 			else
 			{
 				printf("NOTHING\n");
-				msa::util::sleep_milli(5);
+				msa::util::sleep_milli(999);
 			}
 		}
 		printf("EXIT MAIN WRITER LOOP\n");
@@ -527,6 +527,7 @@ namespace msa { namespace log {
 		const char *format = stream->output_format_string.c_str();
 		sprintf(buffer, format, time_str, thread_str, lev_str, text_str);
 		delete[] time_str;
+		delete time_info;
 		*(stream->out) << buffer << std::endl;
 	}
 
@@ -542,6 +543,7 @@ namespace msa { namespace log {
 		const char *format = stream->output_format_string.c_str();
 		sprintf(buffer, format, time_str, thread_str, lev_str, text_str);
 		delete[] time_str;
+		delete time_info;
 		*(stream->out) << buffer << std::endl;
 	}
 

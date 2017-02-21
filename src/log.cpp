@@ -437,6 +437,12 @@ namespace msa { namespace log {
 	static void *writer_start(void *args)
 	{
 		msa::Handle hdl = (msa::Handle) args;
+		// wait until running set
+		while (!hdl->log->running)
+		{
+			// busy wait
+			msa::util::sleep_milli(10);
+		}
 		// run util shutdown, and then keep running until the message queue is empty
 		while (hdl->log->running)
 		{

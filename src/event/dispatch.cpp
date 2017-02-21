@@ -41,7 +41,7 @@ namespace msa { namespace event {
 	static void edt_interrupt_handler(msa::Handle hdl);
 	static void edt_spawn_handler(msa::Handle hdl, const Event *e);
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e);
-	static void dispose_handler_context(HandlerContext *ctx, bool join);
+	static void dispose_handler_context(HandlerContext *ctx, bool wait);
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -76,7 +76,7 @@ namespace msa { namespace event {
 		}
 		// if the quit was initiated by the current event thread,
 		// we must mark it as such so that the EDT knows not to
-		// join on it (since this thread also joins on the EDT,
+		// wait on it (since this thread also joins on the EDT,
 		// this would cause deadlock)
 		if (msa::thread::self() == msa->event->current_handler->thread)
 		{
@@ -142,8 +142,8 @@ namespace msa { namespace event {
 			// if the syscall that caused the EDT to enter cleanup
 			// is from the current event handler, do not wait for it
 			// to complete before freeing its resources
-			bool join = !handler_syscall_origin(ctx->current_handler->sync);
-			dispose_handler_context(ctx->current_handler, join);
+			bool wait = !handler_syscall_origin(ctx->current_handler->sync);
+			dispose_handler_context(ctx->current_handler, wait);
 		}
 		while (!ctx->interrupted.empty())
 		{
@@ -239,9 +239,14 @@ namespace msa { namespace event {
 		new_ctx->handler_func = hdl->event->handlers[e->topic];
 		create_handler_sync(&new_ctx->sync);
 		hdl->event->current_handler = new_ctx;
-		new_ctx->running = (msa::thread::create(&new_ctx->thread, NULL, event_start, hdl) == 0);
+		
+		msa::thread::Attributes *attr = new msa::thread::Attributes;
+		msa::thread::attr_init(attr);
+		msa::thread::set_detach(attr, true);
+		new_ctx->running = (msa::thread::create(&new_ctx->thread, attr, event_start, hdl) == 0);
 		msa::thread::set_name(new_ctx->thread, "handler");
-		// TODO: make handler detached at start
+		msa::thread::attr_destroy(attr);
+		delete attr;
 	}
 
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e)
@@ -261,7 +266,7 @@ namespace msa { namespace event {
 		}
 	}
 
-	static void dispose_handler_context(HandlerContext *ctx, bool join)
+	static void dispose_handler_context(HandlerContext *ctx, bool wait)
 	{
 		if (ctx->running)
 		{
@@ -269,10 +274,13 @@ namespace msa { namespace event {
 			{
 				resume_handler(ctx->sync);
 			}
-			if (join)
+			if (wait)
 			{
 				// wait until current event runs through
-				msa::thread::join(ctx->thread, NULL);
+				while (ctx->running)
+				{
+					msa::util::sleep_milli(10);
+				}
 			}
 		}
 		// delete event

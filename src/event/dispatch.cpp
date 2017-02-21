@@ -242,7 +242,7 @@ namespace msa { namespace event {
 		
 		msa::thread::Attributes *attr = new msa::thread::Attributes;
 		msa::thread::attr_init(attr);
-		msa::thread::set_detach(attr, true);
+		msa::thread::attr_set_detach(attr, true);
 		new_ctx->running = (msa::thread::create(&new_ctx->thread, attr, event_start, hdl) == 0);
 		msa::thread::set_name(new_ctx->thread, "handler");
 		msa::thread::attr_destroy(attr);

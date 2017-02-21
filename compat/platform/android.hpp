@@ -250,8 +250,8 @@ namespace msa { namespace platform {
 	static inline void sleep(int millisec)
 	{
 		struct timespec t;
-		t.tv_sec = 0;
-		t.tv_nsec = (uint64_t) millisec * UINT64_C(1000000000);
+		t.tv_sec = millisec / 1000;
+		t.tv_nsec = (uint64_t) (millisec % 1000) * UINT64_C(1000000000);
 		nanosleep(&t, NULL);
 	}
 	

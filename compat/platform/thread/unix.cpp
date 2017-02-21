@@ -19,7 +19,7 @@ namespace msa { namespace thread {
 		int status = pthread_create(thread, attr, start_routine, arg);
 		if (status = 0 && name != NULL)
 		{
-			set_name(thread, name);
+			set_name(*thread, name);
 		}
 		return status;
 	}

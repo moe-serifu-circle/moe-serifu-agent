@@ -14,9 +14,14 @@ namespace msa { namespace thread {
 		return 0;
 	}
 
-	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg)
+	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg, const char *name)
 	{
-		return pthread_create(thread, attr, start_routine, arg);
+		int status = pthread_create(thread, attr, start_routine, arg);
+		if (status = 0 && name != NULL)
+		{
+			set_name(thread, name);
+		}
+		return status;
 	}
 	
 	extern int join(Thread thread, void **value_ptr)

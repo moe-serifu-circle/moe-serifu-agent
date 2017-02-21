@@ -5,7 +5,6 @@
 #include "event/dispatch.hpp"
 #include "configuration.hpp"
 #include "log.hpp"
-#include "util.hpp"
 
 #include <string>
 
@@ -158,9 +157,7 @@ namespace msa {
 		msa::log::trace(msa, "Stopped event module");
 
 		msa::log::info(msa, "Moe Serifu Agent primary modules shutdown cleanly");
-
-		// pause here, allow log module to flush
-		msa::util::sleep_milli(20);
+		
 		if (msa->log != NULL)
 		{
 			status = msa::log::quit(msa);

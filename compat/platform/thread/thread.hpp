@@ -13,7 +13,7 @@ namespace msa { namespace thread {
 	
 	extern int init();
 	extern int quit();
-	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg);
+	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg, const char *name);
 	extern int join(Thread thread, void **value_ptr);
 	extern int set_name(Thread thread, const char *name);
 	extern int get_name(Thread thread, char *name, size_t len);

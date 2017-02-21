@@ -16,6 +16,7 @@ namespace msa { namespace thread {
 		void *(*start_routine)(void *);
 		void *start_routine_arg;
 		Mutex *start_mutex;
+		const char *name;
 	} RunnerArgs;
 
 	static std::map<Thread, Info *> __info;
@@ -50,12 +51,13 @@ namespace msa { namespace thread {
 		return 0;
 	}
 
-	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg)
+	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg, const char *name)
 	{
 		RunnerArgs *ra = new RunnerArgs;
 		ra->start_routine = start_routine;
 		ra->start_routine_arg = arg;
 		ra->start_mutex = new Mutex;
+		ra->name = name;
 		if (mutex_init(ra->start_mutex, NULL) != 0)
 		{
 			delete ra->start_mutex;
@@ -196,9 +198,14 @@ namespace msa { namespace thread {
 		void *(*start_routine)(void *) = ra->start_routine;
 		void *start_routine_arg = ra->start_routine_arg;
 		Mutex *start_mutex = ra->start_mutex;
+		const char *name = ra->name;
 		delete ra;
 		
 		mutex_lock(start_mutex);
+		if (name != NULL)
+		{
+			set_name(self(), name);
+		}
 		void *retval = start_routine(start_routine_arg);
 		mutex_unlock(start_mutex);
 		mutex_destroy(start_mutex);

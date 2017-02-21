@@ -155,12 +155,11 @@ namespace msa { namespace log {
 		}
 
 		// spawn the thread
-		hdl->log->running = (msa::thread::create(&hdl->log->writer_thread, NULL, writer_start, hdl) == 0);
+		hdl->log->running = (msa::thread::create(&hdl->log->writer_thread, NULL, writer_start, hdl, "log-writer") == 0);
 		if (!hdl->log->running)
 		{
 			return 1;
 		}
-		msa::thread::set_name(hdl->log->writer_thread, "log-writer");
 
 		return 0;
 	}
@@ -429,6 +428,7 @@ namespace msa { namespace log {
 			throw std::logic_error("cannot write to log when log module is not running");
 		}
 		msa::thread::mutex_lock(&hdl->log->queue_mutex);
+		printf("Pushed msg %s\n", msg->text->c_str());
 		hdl->log->messages.push(msg);
 		msa::thread::mutex_unlock(&hdl->log->queue_mutex);
 	}
@@ -437,7 +437,7 @@ namespace msa { namespace log {
 	{
 		msa::Handle hdl = (msa::Handle) args;
 		// run util shutdown, and then keep running until the message queue is empty
-		while (hdl->log->running || !hdl->log->messages.empty())
+		while (hdl->log->running)
 		{
 			Message *msg = writer_poll_msg(hdl);
 			if (msg != NULL)
@@ -450,6 +450,17 @@ namespace msa { namespace log {
 				msa::util::sleep_milli(5);
 			}
 		}
+		msa::thread::mutex_lock(&hdl->log->queue_mutex);
+		// empty everything remaining
+		while (!hdl->log->messages.empty())
+		{
+			printf("Dumping remaining msg\n");
+			Message *rem_msg = hdl->log->messages.front();
+			hdl->log->messages.pop();
+			writer_write_to_streams(hdl, rem_msg);
+			dispose_message(rem_msg);
+		}
+		msa::thread::mutex_unlock(&hdl->log->queue_mutex);
 		return NULL;
 	}
 

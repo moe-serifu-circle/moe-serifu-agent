@@ -193,8 +193,7 @@ namespace msa { namespace input {
 		msa::thread::Attributes attr;
 		msa::thread::attr_init(&attr);
 		msa::thread::attr_set_detach(&attr, true);
-		dev->running = (msa::thread::create(&dev->thread, &attr, it_start, ita) == 0);
-		msa::thread::set_name(dev->thread, "input");
+		dev->running = (msa::thread::create(&dev->thread, &attr, it_start, ita, "input") == 0);
 		msa::thread::attr_destroy(&attr);
 		
 		if (dev->running)

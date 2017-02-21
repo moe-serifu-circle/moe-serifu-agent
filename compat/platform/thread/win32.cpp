@@ -51,6 +51,7 @@ namespace msa { namespace thread {
 		void *start_routine_arg;
 		void *(*start_routine)(void *);
 		HANDLE start_mutex;
+		const char *name;
 	} RunnerArgs;
 		
 	static DWORD __run(void *arg);
@@ -81,7 +82,7 @@ namespace msa { namespace thread {
 		return 0;
 	}
 
-	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg)
+	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg, const char *name)
 	{
 		LPSECURITY_ATTRIBUTES sec = NULL;
 		bool joinable = false;
@@ -105,6 +106,7 @@ namespace msa { namespace thread {
 		ra->arg = arg;
 		ra->start_routine = start_routine;
 		ra->start_mutex = start_mutex;
+		ra->name = name;
 		
 		HANDLE thread_handle = CreateThread(sec, 0, __run, ra, 0, thread);
 		if (thread_handle == NULL)
@@ -345,8 +347,13 @@ namespace msa { namespace thread {
 		// pull out the args we need, drop them on the stack and free the passed in arg
 		void *(*start_routine)(void *) = ra->start_routine;
 		void *start_routine_arg = ra->start_routine_arg;
+		const char *name = ra->name;
 		delete ra;
 
+		if (name != NULL)
+		{
+			set_name(self(), name);
+		}
 		// execute the actual requested function
 		void *ret_val = start_routine(start_routine_arg);
 

@@ -54,8 +54,7 @@ namespace msa { namespace event {
 		// read config
 		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
 
-		create_status = msa::thread::create(&hdl->event->edt, NULL, edt_start, hdl);
-		msa::thread::set_name(hdl->event->edt, "edt");
+		create_status = msa::thread::create(&hdl->event->edt, NULL, edt_start, hdl, "edt");
 		if (create_status != 0)
 		{
 			msa::thread::mutex_destroy(&hdl->event->queue_mutex);
@@ -243,8 +242,7 @@ namespace msa { namespace event {
 		msa::thread::Attributes *attr = new msa::thread::Attributes;
 		msa::thread::attr_init(attr);
 		msa::thread::attr_set_detach(attr, true);
-		new_ctx->running = (msa::thread::create(&new_ctx->thread, attr, event_start, hdl) == 0);
-		msa::thread::set_name(new_ctx->thread, "handler");
+		new_ctx->running = (msa::thread::create(&new_ctx->thread, attr, event_start, hdl, "handler") == 0);
 		msa::thread::attr_destroy(attr);
 		delete attr;
 	}

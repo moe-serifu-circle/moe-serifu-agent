@@ -65,7 +65,7 @@ $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 $(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS)
 
-$(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp
+$(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS)
 
 $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/util.hpp

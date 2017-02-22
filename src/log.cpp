@@ -239,7 +239,7 @@ namespace msa { namespace log {
 	{
 		// first check for global level
 		std::string gl_level_str = config.get_or("GLOBAL_LEVEL", "INFO");
-		msa::util::to_upper(gl_level_str);
+		msa::string::to_upper(gl_level_str);
 		if (LEVEL_NAMES.find(gl_level_str) == LEVEL_NAMES.end())
 		{
 			throw std::invalid_argument("'" + gl_level_str + "' is not a valid log level");
@@ -264,10 +264,10 @@ namespace msa { namespace log {
 				std::string fmt_str = fmts.size() > i ? fmts[i] : "xml";
 				std::string open_mode_str = open_modes.size() > i ? open_modes[i] : "append";
 				
-				msa::util::to_upper(type_str);
-				msa::util::to_upper(lev_str);
-				msa::util::to_upper(fmt_str);
-				msa::util::to_upper(open_mode_str);
+				msa::string::to_upper(type_str);
+				msa::string::to_upper(lev_str);
+				msa::string::to_upper(fmt_str);
+				msa::string::to_upper(open_mode_str);
 				
 				if (FORMAT_NAMES.find(fmt_str) == FORMAT_NAMES.end())
 				{

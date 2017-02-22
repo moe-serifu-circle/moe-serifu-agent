@@ -37,7 +37,7 @@ namespace msa { namespace cmd {
 		
 		// check config to see if we should do an announce event		
 		std::string do_anc = config.get_or("ANNOUNCE", "false");
-		msa::util::to_upper(do_anc);
+		msa::string::to_upper(do_anc);
 		if (do_anc == "TRUE" || do_anc == "YES" || do_anc == "1")
 		{	
 			msa::event::generate(hdl, msa::event::Topic::COMMAND_ANNOUNCE, NULL);

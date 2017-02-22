@@ -1,7 +1,7 @@
 #include "string.hpp"
 #include <cctype>
 
-namespace msa { namespace util {
+namespace msa { namespace string {
 
 	const String default_ws = " \t\r\n";
 

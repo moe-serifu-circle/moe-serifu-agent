@@ -96,7 +96,7 @@ namespace msa { namespace config {
 		while (!getline(config_file, line).eof())
 		{
 			remove_comments(line);
-			msa::util::trim(line);
+			msa::string::trim(line);
 			if (line != "")
 			{
 				// parsing is all-or-nothing, but try to parse the whole thing
@@ -145,7 +145,7 @@ namespace msa { namespace config {
 	static void read_section_header(Config *config, std::string &section_name, const std::string &line)
 	{
 		section_name = line.substr(1, line.size() - 2);
-		msa::util::to_upper(section_name);
+		msa::string::to_upper(section_name);
 		check_is_identifier(section_name);
 		(*config)[section_name] = Section(section_name);
 	}
@@ -156,8 +156,8 @@ namespace msa { namespace config {
 		size_t split_at = line.find('=');
 		std::string key = line.substr(0, split_at);
 		std::string val = line.substr(split_at + 1);
-		msa::util::trim(key);
-		msa::util::trim(val);
+		msa::string::trim(key);
+		msa::string::trim(val);
 		
 		// check if there is an index
 		int index = -1;
@@ -165,7 +165,7 @@ namespace msa { namespace config {
 		if (bracket_pos != std::string::npos && key.back() == ']')
 		{
 			std::string idx_str = key.substr(bracket_pos + 1, key.size() - bracket_pos - 2);
-			msa::util::trim(idx_str);
+			msa::string::trim(idx_str);
 			// make sure we have ONLY digits
 			if (idx_str.find_first_not_of("1234567890") != std::string::npos)
 			{
@@ -173,7 +173,7 @@ namespace msa { namespace config {
 			}
 			index = std::stoi(idx_str);
 			key = key.substr(0, bracket_pos);
-			msa::util::trim(key);
+			msa::string::trim(key);
 		}
 
 		// sanity check on the key
@@ -181,7 +181,7 @@ namespace msa { namespace config {
 		{
 			throw std::invalid_argument("key cannot be blank");
 		}
-		msa::util::to_upper(key);
+		msa::string::to_upper(key);
 		// confirm key format
 		check_is_identifier(key);
 		

@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace msa { namespace util {
+namespace msa { namespace string {
 
 	typedef std::string String;
 

@@ -456,11 +456,11 @@ namespace msa { namespace log {
 			else
 			{
 				printf("NOTHING\n");
-				msa::util::sleep_milli(999);
+				msa::util::sleep_milli(500);
 			}
 		}
 		printf("EXIT MAIN WRITER LOOP\n");
-		msa::thread::mutex_lock(&hdl->log->queue_mutex);
+		/*msa::thread::mutex_lock(&hdl->log->queue_mutex);
 		// empty everything remaining
 		while (!hdl->log->messages.empty())
 		{
@@ -470,7 +470,7 @@ namespace msa { namespace log {
 			writer_write_to_streams(hdl, rem_msg);
 			dispose_message(rem_msg);
 		}
-		msa::thread::mutex_unlock(&hdl->log->queue_mutex);
+		msa::thread::mutex_unlock(&hdl->log->queue_mutex);*/
 		return NULL;
 	}
 

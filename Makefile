@@ -72,6 +72,7 @@ $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/configuration.hpp $(SDIR)
 	$(CXX) -c -o $@ $(SDIR)/log.cpp $(CXXFLAGS)
 
 
+
 # ------------------- #
 #  OS Binary Recipes  #
 # ------------------- #

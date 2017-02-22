@@ -167,11 +167,7 @@ namespace msa { namespace log {
 	extern int quit(msa::Handle hdl)
 	{
 		hdl->log->running = false;
-		char why[16];
-		msa::thread::get_name(msa::thread::self(), why, 16);
-		printf("%s: WORLD IS LIES\n", why);
 		msa::thread::join(hdl->log->writer_thread, NULL);
-		printf("EXIT JOIN\n");
 		dispose_log_context(hdl->log);
 		return 0;
 	}
@@ -432,7 +428,6 @@ namespace msa { namespace log {
 			throw std::logic_error("cannot write to log when log module is not running");
 		}
 		msa::thread::mutex_lock(&hdl->log->queue_mutex);
-		printf("Pushed msg %s\n", msg->text->c_str());
 		hdl->log->messages.push(msg);
 		msa::thread::mutex_unlock(&hdl->log->queue_mutex);
 	}
@@ -452,22 +447,18 @@ namespace msa { namespace log {
 			Message *msg = writer_poll_msg(hdl);
 			if (msg != NULL)
 			{
-				printf("SOMETHING\n");
 				writer_write_to_streams(hdl, msg);
 				dispose_message(msg);
 			}
 			else
 			{
-				printf("NOTHING\n");
-				msa::util::sleep_milli(500);
+				msa::util::sleep_milli(5);
 			}
 		}
-		printf("EXIT MAIN WRITER LOOP\n");
 		msa::thread::mutex_lock(&hdl->log->queue_mutex);
 		// empty everything remaining
 		while (!hdl->log->messages.empty())
 		{
-			printf("Dumping remaining msg\n");
 			Message *rem_msg = hdl->log->messages.front();
 			hdl->log->messages.pop();
 			writer_write_to_streams(hdl, rem_msg);

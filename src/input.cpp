@@ -56,6 +56,9 @@ namespace msa { namespace input {
 		InputDevice *dev;
 	} InputThreadArgs;
 
+	static int init_static_resources();
+	static int destroy_static_resources();
+	static void read_config(msa::Handle hdl, const msa::config::Section &config);
 	static void create_input_device(InputDevice **dev, InputType type, const void *device_id);
 	static void dispose_input_device(InputDevice *device);
 	static int create_input_context(InputContext **ctx);
@@ -70,52 +73,13 @@ namespace msa { namespace input {
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
-		// init the static resources
-		if (INPUT_TYPE_NAMES.empty())
-		{
-			INPUT_TYPE_NAMES["UDP"] = InputType::UDP;
-			INPUT_TYPE_NAMES["TCP"] = InputType::TCP;
-			INPUT_TYPE_NAMES["TTY"] = InputType::TTY;
-		}
-		if (INPUT_HANDLER_NAMES.empty())
-		{
-			INPUT_HANDLER_NAMES["get_tty_input"] = new InputHandler {get_tty_input, tty_ready};
-		}
-
-		// now create the resource
+		init_static_resources();
 		int stat = create_input_context(&hdl->input);
 		if (stat != 0)
 		{
 			return 1;
 		}
-		
-		// read the config
-		if (config.has("TYPE") && config.has("ID") && config.has("HANDLER"))
-		{
-			// for each of the configs, read it in
-			const std::vector<std::string> types = config.get_all("TYPE");
-			const std::vector<std::string> ids = config.get_all("ID");
-			const std::vector<std::string> handlers = config.get_all("HANDLER");
-			for (size_t i = 0; i < types.size() && i < ids.size() && i < handlers.size(); i++)
-			{
-				std::string id = ids[i];
-				std::string type_str = types[i];
-				std::string handler_str = handlers[i];
-				if (INPUT_TYPE_NAMES.find(type_str) == INPUT_TYPE_NAMES.end())
-				{
-					throw std::invalid_argument("'" + type_str + "' is not a valid input type");
-				}
-				if (INPUT_HANDLER_NAMES.find(handler_str) == INPUT_HANDLER_NAMES.end())
-				{
-					throw std::invalid_argument("'" + handler_str + "' is not a valid handler");
-				}
-				InputType type = INPUT_TYPE_NAMES[type_str];
-				InputHandler *handler = INPUT_HANDLER_NAMES[handler_str];
-				hdl->input->handlers[type] = handler;
-				add_input_device(hdl, type, &id);
-				enable_input_device(hdl, type_str + ":" + id);
-			}
-		}
+		read_config(hdl, config);
 		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 		return 0;
 	}
@@ -127,6 +91,7 @@ namespace msa { namespace input {
 		{
 			hdl->input = NULL;
 		}
+		destroy_static_resources(); // TODO: This will make it so only one instance of MSA can run at once!
 		return status;
 	}
 	
@@ -223,6 +188,62 @@ namespace msa { namespace input {
 		hdl->input->devices[id]->running = false;
 		act.erase(std::find(act.begin(), act.end(), id));
 		msa::log::info(hdl, "Disabled input device " + id);
+	}
+
+	static int init_static_resources()
+	{
+		if (INPUT_TYPE_NAMES.empty())
+		{
+			INPUT_TYPE_NAMES["UDP"] = InputType::UDP;
+			INPUT_TYPE_NAMES["TCP"] = InputType::TCP;
+			INPUT_TYPE_NAMES["TTY"] = InputType::TTY;
+		}
+		if (INPUT_HANDLER_NAMES.empty())
+		{
+			INPUT_HANDLER_NAMES["get_tty_input"] = new InputHandler {get_tty_input, tty_ready};
+		}
+		return 0;
+	}
+
+	static int destroy_static_resources()
+	{
+		std::map<std::string, InputHandler *>::iterator it;
+		for (it = INPUT_HANDLER_NAMES.begin(); it != INPUT_HANDLER_NAMES.end(); it++)
+		{
+			delete it->second;
+		}
+		INPUT_HANDLER_NAMES.clear();
+		return 0;
+	}
+
+	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	{
+		if (config.has("TYPE") && config.has("ID") && config.has("HANDLER"))
+		{
+			// for each of the configs, read it in
+			const std::vector<std::string> types = config.get_all("TYPE");
+			const std::vector<std::string> ids = config.get_all("ID");
+			const std::vector<std::string> handlers = config.get_all("HANDLER");
+			for (size_t i = 0; i < types.size() && i < ids.size() && i < handlers.size(); i++)
+			{
+				std::string id = ids[i];
+				std::string type_str = types[i];
+				std::string handler_str = handlers[i];
+				if (INPUT_TYPE_NAMES.find(type_str) == INPUT_TYPE_NAMES.end())
+				{
+					throw std::invalid_argument("'" + type_str + "' is not a valid input type");
+				}
+				if (INPUT_HANDLER_NAMES.find(handler_str) == INPUT_HANDLER_NAMES.end())
+				{
+					throw std::invalid_argument("'" + handler_str + "' is not a valid handler");
+				}
+				InputType type = INPUT_TYPE_NAMES[type_str];
+				InputHandler *handler = INPUT_HANDLER_NAMES[handler_str];
+				hdl->input->handlers[type] = handler;
+				add_input_device(hdl, type, &id);
+				enable_input_device(hdl, type_str + ":" + id);
+			}
+		}
 	}
 
 	static void create_input_device(InputDevice **dev_ptr, InputType type, const void *id)

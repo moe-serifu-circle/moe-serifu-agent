@@ -167,6 +167,9 @@ namespace msa { namespace log {
 	extern int quit(msa::Handle hdl)
 	{
 		hdl->log->running = false;
+		char why[16];
+		msa::thread::get_name(msa::thread::self(), why, 16);
+		printf("%s: WORLD IS LIES\n", why);
 		msa::thread::join(hdl->log->writer_thread, NULL);
 		printf("EXIT JOIN\n");
 		dispose_log_context(hdl->log);
@@ -460,7 +463,7 @@ namespace msa { namespace log {
 			}
 		}
 		printf("EXIT MAIN WRITER LOOP\n");
-		/*msa::thread::mutex_lock(&hdl->log->queue_mutex);
+		msa::thread::mutex_lock(&hdl->log->queue_mutex);
 		// empty everything remaining
 		while (!hdl->log->messages.empty())
 		{
@@ -470,7 +473,7 @@ namespace msa { namespace log {
 			writer_write_to_streams(hdl, rem_msg);
 			dispose_message(rem_msg);
 		}
-		msa::thread::mutex_unlock(&hdl->log->queue_mutex);*/
+		msa::thread::mutex_unlock(&hdl->log->queue_mutex);
 		return NULL;
 	}
 

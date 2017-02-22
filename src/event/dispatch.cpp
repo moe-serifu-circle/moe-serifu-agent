@@ -157,7 +157,6 @@ namespace msa { namespace event {
 			hdl->event->queue.pop();
 			delete e;
 		}
-		hdl->status = msa::Status::STOPPED;
 	}
 
 	static void edt_run(msa::Handle hdl) {

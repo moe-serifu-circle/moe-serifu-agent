@@ -168,6 +168,7 @@ namespace msa {
 			msa->log = NULL;
 		}
 		
+		msa->status = msa::Status::STOPPED;
 		msa::thread::quit();
 		return MSA_SUCCESS;
 	}

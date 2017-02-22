@@ -81,17 +81,18 @@ namespace msa { namespace cmd {
 	static void exit_func(msa::Handle hdl, const msa::event::Event *const UNUSED(e), msa::event::HandlerSync *const UNUSED(sync))
 	{
 		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
-		const char *name = a->name.c_str();
-		printf("%s: \"Right away master, I will terminate my EDT for you now!\"\n", name);
+		// copy the name because it can be overwritten on quit
+		std::string name(a->name);
+		printf("%s: \"Right away master, I will terminate my EDT for you now!\"\n", name.c_str());
 		int status = msa::quit(hdl);
-		printf("%s: \"Environment Status: %d\"\n", name, hdl->status);
+		printf("%s: \"Environment Status: %d\"\n", name.c_str(), hdl->status);
 		if (status == 0)
 		{
-			printf("%s: \"System shutdown.\"\n", name);
+			printf("%s: \"System shutdown.\"\n", name.c_str());
 		}
 		else
 		{
-			printf("%s: \"Warning! could not quit: %d\"\n", name, status);
+			printf("%s: \"Warning! could not quit: %d\"\n", name.c_str(), status);
 		}
 	}
 

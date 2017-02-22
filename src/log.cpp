@@ -19,6 +19,7 @@ namespace msa { namespace log {
 
 	static std::map<std::string, Level> LEVEL_NAMES;
 	static std::map<std::string, Format> FORMAT_NAMES;
+	static std::map<std::string, OpenMode> OPEN_MODE_NAMES;
 	static std::map<std::string, StreamType> STREAM_TYPE_NAMES;
 	static std::string XML_FORMAT_STRING = "<entry><time>%1$s</time><thread>%2$s</thread><level>%3$s</level><message>%4$s</message></entry>";
 
@@ -40,6 +41,7 @@ namespace msa { namespace log {
 		CloseHandler close_handler;
 		Level level;
 		Format format;
+		OpenMode open_mode;
 	} LogStream;
 
 	struct log_context_type
@@ -52,6 +54,8 @@ namespace msa { namespace log {
 		bool running;
 	};
 
+	static int init_static_resources();
+	static void read_config(msa::Handle hdl, const msa::config::Section &config);
 	static int create_log_context(LogContext **ctx);
 	static int dispose_log_context(LogContext *ctx);
 	static int create_log_stream(LogStream **stream);
@@ -73,87 +77,9 @@ namespace msa { namespace log {
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
-		// init static resources
-		if (LEVEL_NAMES.empty())
-		{
-			LEVEL_NAMES["TRACE"] = Level::TRACE;
-			LEVEL_NAMES["DEBUG"] = Level::DEBUG;
-			LEVEL_NAMES["INFO"] = Level::INFO;
-			LEVEL_NAMES["WARN"] = Level::WARN;
-			LEVEL_NAMES["ERROR"] = Level::ERROR;
-		}
-		if (FORMAT_NAMES.empty())
-		{
-			FORMAT_NAMES["TEXT"] = Format::TEXT;
-			FORMAT_NAMES["XML"] = Format::XML;
-		}
-		if (STREAM_TYPE_NAMES.empty())
-		{
-			STREAM_TYPE_NAMES["FILE"] = StreamType::FILE;
-		}
-
+		init_static_resources();
 		create_log_context(&hdl->log);
-
-		// first check config for global level
-		std::string gl_level_str = config.get_or("GLOBAL_LEVEL", "INFO");
-		msa::util::to_upper(gl_level_str);
-		if (LEVEL_NAMES.find(gl_level_str) == LEVEL_NAMES.end())
-		{
-			throw std::invalid_argument("'" + gl_level_str + "' is not a valid log level");
-		}
-		hdl->log->level = LEVEL_NAMES[gl_level_str];
-		
-		// now check config for individual streams
-		if (config.has("TYPE") && config.has("LOCATION"))
-		{
-			const std::vector<std::string> types = config.get_all("TYPE");
-			const std::vector<std::string> locs = config.get_all("LOCATION");
-			const std::vector<std::string> levs = config.has("LEVEL") ? config.get_all("LEVEL") : std::vector<std::string>();
-			const std::vector<std::string> fmts = config.has("FORMAT") ? config.get_all("FORMAT") : std::vector<std::string>();
-			const std::vector<std::string> outputs = config.has("OUTPUT") ? config.get_all("OUTPUT") : std::vector<std::string>();
-
-			for (size_t i = 0; i < types.size() && i < locs.size(); i++)
-			{
-				std::string type_str = types[i];
-				std::string location = locs[i];
-				std::string lev_str = levs.size() > i ? levs[i] : "info";
-				std::string fmt_str = fmts.size() > i ? fmts[i] : "xml";
-				msa::util::to_upper(type_str);
-				msa::util::to_upper(lev_str);
-				msa::util::to_upper(fmt_str);
-				if (FORMAT_NAMES.find(fmt_str) == FORMAT_NAMES.end())
-				{
-					throw std::invalid_argument("'" + fmt_str + "' is not a valid log format");
-				}
-				if (LEVEL_NAMES.find(lev_str) == LEVEL_NAMES.end())
-				{
-					throw std::invalid_argument("'" + lev_str + "' is not a valid log level");
-				}
-				if (STREAM_TYPE_NAMES.find(type_str) == STREAM_TYPE_NAMES.end())
-				{
-					throw std::invalid_argument("'" + type_str + "' is not a valid log stream type");
-				}
-				StreamType type = STREAM_TYPE_NAMES[type_str];
-				Level lev = LEVEL_NAMES[lev_str];
-				Format fmt = FORMAT_NAMES[fmt_str];
-				std::string output;
-				if (fmt == Format::TEXT)
-				{
-					if (outputs.size() <= i) {
-						throw std::invalid_argument("TEXT log format requires OUTPUT parameter");
-					}
-					output = outputs.at(i);
-				}
-				else if (fmt == Format::XML)
-				{
-					output = XML_FORMAT_STRING;
-				}
-				
-				stream_id id = create_stream(hdl, type, location, fmt, output);
-				set_stream_level(hdl, id, lev);
-			}
-		}
-
+		read_config(hdl, config);
 		// spawn the thread
 		hdl->log->running = (msa::thread::create(&hdl->log->writer_thread, NULL, writer_start, hdl, "log-writer") == 0);
 		if (!hdl->log->running)
@@ -172,7 +98,7 @@ namespace msa { namespace log {
 		return 0;
 	}
 
-	extern stream_id create_stream(msa::Handle hdl, StreamType type, const std::string &location, Format fmt, const std::string &output_format_string)
+	extern stream_id create_stream(msa::Handle hdl, StreamType type, const std::string &location, Format fmt, const std::string &output_format_string, OpenMode open_mode)
 	{
 		LogStream *s;
 		if (create_log_stream(&s) != 0)
@@ -187,7 +113,9 @@ namespace msa { namespace log {
 		{
 			std::ofstream *file = new std::ofstream;
 			file->exceptions(std::ofstream::failbit | std::ofstream::badbit);
-			file->open(location, std::ofstream::out | std::ofstream::app);
+			std::ofstream::openmode mode = std::ofstream::out;
+			mode |= (open_mode == OpenMode::APPEND) ? std::ofstream::app : std::ofstream::trunc;
+			file->open(location, mode);
 			if (!file->is_open())
 			{
 				throw std::logic_error("could not open log stream file");
@@ -278,6 +206,108 @@ namespace msa { namespace log {
 	{
 		std::string msg_str = std::string(msg);
 		error(hdl, msg_str);
+	}
+
+	static int init_static_resources()
+	{
+		if (LEVEL_NAMES.empty())
+		{
+			LEVEL_NAMES["TRACE"] = Level::TRACE;
+			LEVEL_NAMES["DEBUG"] = Level::DEBUG;
+			LEVEL_NAMES["INFO"] = Level::INFO;
+			LEVEL_NAMES["WARN"] = Level::WARN;
+			LEVEL_NAMES["ERROR"] = Level::ERROR;
+		}
+		if (FORMAT_NAMES.empty())
+		{
+			FORMAT_NAMES["TEXT"] = Format::TEXT;
+			FORMAT_NAMES["XML"] = Format::XML;
+		}
+		if (STREAM_TYPE_NAMES.empty())
+		{
+			STREAM_TYPE_NAMES["FILE"] = StreamType::FILE;
+		}
+		if (OPEN_MODE_NAMES.empty())
+		{
+			OPEN_MODE_NAMES["OVERWRITE"] = OpenMode::OVERWRITE;
+			OPEN_MODE_NAMES["APPEND"] = OpenMode::APPEND;
+		}
+		return 0;
+	}
+	
+	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	{
+		// first check for global level
+		std::string gl_level_str = config.get_or("GLOBAL_LEVEL", "INFO");
+		msa::util::to_upper(gl_level_str);
+		if (LEVEL_NAMES.find(gl_level_str) == LEVEL_NAMES.end())
+		{
+			throw std::invalid_argument("'" + gl_level_str + "' is not a valid log level");
+		}
+		hdl->log->level = LEVEL_NAMES[gl_level_str];
+		
+		// now check config for individual streams
+		if (config.has("TYPE") && config.has("LOCATION"))
+		{
+			const std::vector<std::string> types = config.get_all("TYPE");
+			const std::vector<std::string> locs = config.get_all("LOCATION");
+			const std::vector<std::string> levs = config.has("LEVEL") ? config.get_all("LEVEL") : std::vector<std::string>();
+			const std::vector<std::string> fmts = config.has("FORMAT") ? config.get_all("FORMAT") : std::vector<std::string>();
+			const std::vector<std::string> outputs = config.has("OUTPUT") ? config.get_all("OUTPUT") : std::vector<std::string>();
+			const std::vector<std::string> open_modes = config.has("OPEN_MODE") ? config.get_all("OPEN_MODE") : std::vector<std::string>();
+
+			for (size_t i = 0; i < types.size() && i < locs.size(); i++)
+			{
+				std::string type_str = types[i];
+				std::string location = locs[i];
+				std::string lev_str = levs.size() > i ? levs[i] : "info";
+				std::string fmt_str = fmts.size() > i ? fmts[i] : "xml";
+				std::string open_mode_str = open_modes.size() > i ? open_modes[i] : "append";
+				
+				msa::util::to_upper(type_str);
+				msa::util::to_upper(lev_str);
+				msa::util::to_upper(fmt_str);
+				msa::util::to_upper(open_mode_str);
+				
+				if (FORMAT_NAMES.find(fmt_str) == FORMAT_NAMES.end())
+				{
+					throw std::invalid_argument("'" + fmt_str + "' is not a valid log format");
+				}
+				if (LEVEL_NAMES.find(lev_str) == LEVEL_NAMES.end())
+				{
+					throw std::invalid_argument("'" + lev_str + "' is not a valid log level");
+				}
+				if (STREAM_TYPE_NAMES.find(type_str) == STREAM_TYPE_NAMES.end())
+				{
+					throw std::invalid_argument("'" + type_str + "' is not a valid log stream type");
+				}
+				if (OPEN_MODE_NAMES.find(open_mode_str) == OPEN_MODE_NAMES.end())
+				{
+					throw std::invalid_argument("'" + open_mode_str + "' is not a valid log open mode");
+				}
+
+				StreamType type = STREAM_TYPE_NAMES[type_str];
+				Level lev = LEVEL_NAMES[lev_str];
+				Format fmt = FORMAT_NAMES[fmt_str];
+				OpenMode open_mode = OPEN_MODE_NAMES[open_mode_str];
+
+				std::string output;
+				if (fmt == Format::TEXT)
+				{
+					if (outputs.size() <= i) {
+						throw std::invalid_argument("TEXT log format requires OUTPUT parameter");
+					}
+					output = outputs.at(i);
+				}
+				else if (fmt == Format::XML)
+				{
+					output = XML_FORMAT_STRING;
+				}
+				
+				stream_id id = create_stream(hdl, type, location, fmt, output, open_mode);
+				set_stream_level(hdl, id, lev);
+			}
+		}
 	}
 
 	static void check_and_push(msa::Handle hdl, const std::string &msg_text, Level level)

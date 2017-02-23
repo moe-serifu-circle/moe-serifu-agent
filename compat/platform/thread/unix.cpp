@@ -2,24 +2,92 @@
 
 namespace msa { namespace thread {
 
+	// holds thread-local information
+	typedef struct info_type
+	{
+		char *name;
+	} Info;
+
+	typedef struct runner_arg_type
+	{
+		void *(*start_routine)(void *);
+		void *start_routine_arg;
+		Mutex *start_mutex;
+		const char *name;
+	} RunnerArgs;
+
+	static std::map<Thread, Info *> __info;
+
+	static void __info_dispose(Info *info);
+	static void __info_create(Info **info);
+	static void *__run(void *arg);
+
 	extern int init()
 	{
-		// nothing to do here
+		Thread tid = self();
+		// create info for the main thread
+		if (__info.find(tid) == __info.end())
+		{
+			Info *info;
+			__info_create(&info);
+			__info[tid] = info;
+			set_name(tid, "main");
+		}
 		return 0;
 	}
 
 	extern int quit()
 	{
-		// nothing to do here
+		Thread tid = self();
+		// delete info for the main thread
+		if (__info.find(tid) != __info.end())
+		{
+			__info_dispose(__info[tid]);
+			__info.erase(tid);
+		}
 		return 0;
 	}
 
 	extern int create(Thread *thread, const Attributes *attr, void *(*start_routine)(void *), void *arg, const char *name)
 	{
-		int status = pthread_create(thread, attr, start_routine, arg);
-		if (status = 0 && name != NULL)
+		RunnerArgs *ra = new RunnerArgs;
+		ra->start_routine = start_routine;
+		ra->start_routine_arg = arg;
+		ra->start_mutex = new Mutex;
+		ra->name = name;
+		if (mutex_init(ra->start_mutex, NULL) != 0)
 		{
-			set_name(*thread, name);
+			delete ra->start_mutex;
+			delete ra;
+			return -1;
+		}
+		
+		if (mutex_lock(ra->start_mutex) != 0)
+		{
+			mutex_destroy(ra->start_mutex);
+			delete ra->start_mutex;
+			delete ra;
+			return -1;
+		}
+		int status = pthread_create(thread, attr, __run, ra);
+		if (status != 0)
+		{
+			mutex_unlock(ra->start_mutex);
+			mutex_destroy(ra->start_mutex);
+			delete ra->start_mutex;
+			delete ra;
+			return status;
+		}
+		Info *info;
+		__info_create(&info);
+		__info[*thread] = info;
+		if (mutex_unlock(ra->start_mutex) != 0)
+		{
+			__info_dispose(info);
+			mutex_destroy(ra->start_mutex);
+			delete ra->start_mutex;
+			delete ra;
+			return -1;
 		}
 		return status;
 	}
@@ -31,12 +99,21 @@ namespace msa { namespace thread {
 		
 	extern int set_name(Thread thread, const char *name)
 	{
-		return pthread_setname_np(thread, name);
+		int status = pthread_setname_np(thread, name);
+		if (status != 0)
+		{
+			return status;
+		}
+		strncpy(__info[thread]->name, name, 15);
+		__info[thread]->name[15] = '\0';
+		return status;
 	}
 		
 	extern int get_name(Thread thread, char *name, size_t len)
 	{
-		return pthread_getname_np(thread, name, len);
+		strncpy(name, __info[thread]->name, len - 1);
+		name[len - 1] = '\0';
+		return 0;
 	}
 
 	extern Thread self()
@@ -111,5 +188,45 @@ namespace msa { namespace thread {
 	extern int cond_signal(Cond *cond)
 	{
 		return pthread_cond_signal(cond);
+	}	
+
+	static void *__run(void *arg)
+	{
+		RunnerArgs *ra = (RunnerArgs *) arg;
+		void *(*start_routine)(void *) = ra->start_routine;
+		void *start_routine_arg = ra->start_routine_arg;
+		Mutex *start_mutex = ra->start_mutex;
+		const char *name = ra->name;
+		delete ra;
+		
+		mutex_lock(start_mutex);
+		if (name != NULL)
+		{
+			set_name(self(), name);
+		}
+		void *retval = start_routine(start_routine_arg);
+		mutex_unlock(start_mutex);
+		mutex_destroy(start_mutex);
+		delete start_mutex;
+
+		Info *info = __info[self()];
+		__info_dispose(info);
+		__info.erase(self());
+		
+		return retval;
+	}
+
+	static void __info_create(Info **info_ptr)
+	{
+		Info *info = new Info;
+		info->name = new char[16];
+		info->name[0] = '\0';
+		*info_ptr = info;
+	}
+
+	static void __info_dispose(Info *info)
+	{
+		delete[] info->name;
+		delete info;
 	}
 } }

@@ -36,6 +36,7 @@ namespace msa { namespace input {
 		InputType type;
 		msa::thread::Thread thread;
 		bool running;
+		bool reap_in_runner;
 		union
 		{
 			uint16_t port;
@@ -69,7 +70,11 @@ namespace msa { namespace input {
 
 	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
+	// input thread funcs
 	static void *it_start(void *hdl);
+	static InputHandler *it_get_handler(msa::Handle hdl, InputDevice *dev);
+	static void it_read_input(msa::Handle hdl, InputDevice *dev, InputHandler *input_handler);
+	static void it_cleanup(msa::Handle hdl, InputDevice *dev);
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -114,14 +119,19 @@ namespace msa { namespace input {
 		{
 			throw std::logic_error("input device " + id + " does not exist");
 		}
-		std::vector<std::string> &act = hdl->input->active;
-		if (std::find(act.begin(), act.end(), id) != act.end())
+		InputDevice *dev = hdl->input->devices[id];
+		if (dev->running)
 		{
+			// mark it as collectable by the calling thread
+			dev->reap_in_runner = true;
 			disable_input_device(hdl, id);
 		}
-		InputDevice *dev = hdl->input->devices[id];
+		else
+		{
+			// no input_thread to take care of it, delete it ourselves
+			dispose_input_device(dev);
+		}
 		hdl->input->devices.erase(id);
-		dispose_input_device(dev);
 	}
 
 	extern void get_input_devices(msa::Handle hdl, std::vector<std::string> *list)
@@ -250,6 +260,7 @@ namespace msa { namespace input {
 	{
 		InputDevice *dev = new InputDevice;
 		dev->running = false;
+		dev->reap_in_runner = false;
 		dev->type = type;
 		switch (dev->type)
 		{
@@ -298,7 +309,19 @@ namespace msa { namespace input {
 		it_type iter = ctx->devices.begin();
 		while (iter != ctx->devices.end())
 		{
-			dispose_input_device(iter->second);
+			InputDevice *dev = iter->second;
+			if (dev->running)
+			{
+				// let input_thread take care of deleting it
+				dev->reap_in_runner = true;
+				dev->running = false;
+				std::vector<std::string> &act = ctx->active;
+				act.erase(std::find(act.begin(), act.end(), dev->id));
+			}
+			else
+			{
+				dispose_input_device(iter->second);
+			}
 			iter = ctx->devices.erase(iter);
 		}
 		delete ctx;
@@ -311,14 +334,31 @@ namespace msa { namespace input {
 		msa::Handle hdl = ita->hdl;
 		InputDevice *dev = ita->dev;
 		delete ita;
+		
+		InputHandler *input_handler = it_get_handler(hdl, dev);
+
+		msa::log::info(hdl, "Started reading from input device " + dev->id);
+		it_read_input(hdl, dev, input_handler);
+		msa::log::info(hdl, "Stopped reading from input device " + dev->id);
+
+		it_cleanup(hdl, dev);
+		
+		return NULL;
+	}
+
+	static InputHandler *it_get_handler(msa::Handle hdl, InputDevice *dev)
+	{
 		if (hdl->input->handlers.find(dev->type) == hdl->input->handlers.end())
 		{
 			dev->running = false;
 			disable_input_device(hdl, dev->id);
 			throw std::logic_error("no handler for input device type " + std::to_string(dev->type));
 		}
-		InputHandler *input_handler = hdl->input->handlers[dev->type];
-		msa::log::info(hdl, "Started reading from input device " + dev->id);
+		return hdl->input->handlers[dev->type];
+	}
+
+	static void it_read_input(msa::Handle hdl, InputDevice *dev, InputHandler *input_handler)
+	{
 		while (dev->running)
 		{
 			if (input_handler->is_ready(hdl, dev))
@@ -327,7 +367,15 @@ namespace msa { namespace input {
 				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, chunk);
 			}
 		}
-		return NULL;
+	}
+
+	static void it_cleanup(msa::Handle hdl, InputDevice *dev)
+	{
+		if (dev->reap_in_runner)
+		{
+			msa::log::info(hdl, "Freeing input device " + dev->id);
+			dispose_input_device(dev);
+		}
 	}
 
 	static InputChunk *get_tty_input(msa::Handle UNUSED(hdl), InputDevice *UNUSED(dev))

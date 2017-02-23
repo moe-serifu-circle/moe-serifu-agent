@@ -1,5 +1,8 @@
 // unix threading. uses pthreads implementation
 
+#include <map>
+#include <cstring>
+
 namespace msa { namespace thread {
 
 	// holds thread-local information

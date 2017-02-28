@@ -12,12 +12,19 @@
 #define MSA_ERR_CONFIG 4
 #define MSA_ERR_CMD 5
 #define MSA_ERR_LOG 6
+#define MSA_ERR_OUTPUT 7
 
 namespace msa {
 
 	namespace input {
 
 		typedef struct input_context_type InputContext;
+
+	}
+
+	namespace output {
+
+		typedef struct output_context_type OutputContext;
 
 	}
 
@@ -52,6 +59,7 @@ namespace msa {
 		Status status;
 		msa::event::EventDispatchContext *event;
 		msa::input::InputContext *input;
+		msa::output::OutputContext *output;
 		msa::agent::AgentContext *agent;
 		msa::cmd::CommandContext *cmd;
 		msa::log::LogContext *log;

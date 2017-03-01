@@ -22,8 +22,8 @@ namespace msa { namespace output {
 	extern void add_device(msa::Handle hdl, InputType type, void *device_id);
 	extern void get_devices(msa::Handle hdl, std::vector<const std::string> *list);
 	extern void remove_device(msa::Handle hdl, const std::string &id);
-	extern void switch_to_device(msa::Handle hdl, const std::string &id);
-	extern void get_current_device(msa::Handle hdl, std::string &id);
+	extern void switch_device(msa::Handle hdl, const std::string &id);
+	extern void get_active_device(msa::Handle hdl, std::string &id);
 	
 	extern void create_chunk(Chunk **chunk, const std::string &text);
 	extern void dispose_chunk(Chunk *chunk);

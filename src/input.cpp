@@ -293,6 +293,10 @@ namespace msa { namespace input {
 		{
 			dev->running = false;
 		}
+		if (dev->type == InputType::TTY)
+		{
+			delete dev->device_name;
+		}
 		delete dev;
 	}
 

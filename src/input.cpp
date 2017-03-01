@@ -104,11 +104,11 @@ namespace msa { namespace input {
 	{
 		Device *dev;
 		create_device(&dev, type, device_id);
-		std::string id = dev->id;
+		const std::string &id = dev->id;
 		if (hdl->input->devices.find(id) != hdl->input->devices.end())
 		{
 			dispose_device(dev);
-			throw std::logic_error("input device " + id + " already exists");
+			throw std::logic_error("input device already exists: " + id);
 		}
 		hdl->input->devices[id] = dev;
 	}
@@ -117,7 +117,7 @@ namespace msa { namespace input {
 	{
 		if (hdl->input->devices.find(id) == hdl->input->devices.end())
 		{
-			throw std::logic_error("input device " + id + " does not exist");
+			throw std::logic_error("input device does not exist: " + id);
 		}
 		Device *dev = hdl->input->devices[id];
 		if (dev->running)
@@ -157,7 +157,7 @@ namespace msa { namespace input {
 		if (hdl->input->devices.find(id) == hdl->input->devices.end())
 		{
 			// device does not exist
-			throw std::logic_error("input device " + id + " does not exist");
+			throw std::logic_error("input device does not exist: " + id);
 		}
 		// checks are done, we know it exists and is disabled
 		Device *dev = hdl->input->devices[id];
@@ -193,7 +193,7 @@ namespace msa { namespace input {
 		if (hdl->input->devices.find(id) == hdl->input->devices.end())
 		{
 			// device does not exist
-			throw std::logic_error("input device " + id + " does not exist");
+			throw std::logic_error("input device does not exist: " + id);
 		}
 		hdl->input->devices[id]->running = false;
 		act.erase(std::find(act.begin(), act.end(), id));

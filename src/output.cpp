@@ -6,7 +6,7 @@
 
 namespace msa { namespace output {
 
-	typedef void (*OutputHandler)(Chunk *ch, Device *dev);
+	typedef void (*OutputHandlerFunc)(Chunk *ch, Device *dev);
 
 	struct chunk_type
 	{
@@ -32,6 +32,8 @@ namespace msa { namespace output {
 		std::string active;
 		bool running;
 	};
+	
+	std::map<OutputType, std::map<std::string, OutputHandlerFunc>> handlers;
 
 	static int create_output_context(OutputContext **ctx);
 	static int dispose_output_context(OutputContext *ctx);
@@ -51,7 +53,7 @@ namespace msa { namespace output {
 
 	extern int quit(msa::Handle hdl)
 	{
-		if (!dispose_output_context(&hdl->output))
+		if (!dispose_output_context(hdl->output))
 		{
 			return -1;
 		}
@@ -193,12 +195,10 @@ namespace msa { namespace output {
 
 	static int dispose_output_context(OutputContext *ctx)
 	{
-		msa::thread::mutex_lock(output->usage_mutex); // now no one can change the active one
 		Device *dev = ctx->devices[ctx->active];
 		dev->active = false;
 		dispose_device(dev);
 		ctx->active = "";
-		msa::thread::mutex_unlock(output->usage_mutex);
 		msa::thread::mutex_destroy(output->mod_mutex);
 		delete ctx;
 	}

@@ -15,6 +15,10 @@ namespace msa { namespace output {
 
 	typedef struct device_type Device;
 
+	typedef void (*OutputHandlerFunc)(msa::Handle hdl, Chunk *ch, Device *dev);
+
+	typedef struct output_handler_type OutputHandler;
+
 	extern int init(msa::Handle hdl, const msa::config::Section &config);
 	extern int quit(msa::Handle hdl);
 	
@@ -27,6 +31,13 @@ namespace msa { namespace output {
 	
 	extern void create_chunk(Chunk **chunk, const std::string &text);
 	extern void dispose_chunk(Chunk *chunk);
+
+	extern void create_handler(OutputHandler **handler, const std::string &name, OutputHandlerFunc func);
+	extern void dispose_handler(OutputHandler *handler);
+	extern const std::string &get_handler_name(const OutputHandler *handler);
+	
+	extern void register_handler(msa::Handle hdl, OutputType type, const OutputHandler *handler);
+	extern void unregister_handler(msa::Handle hdl, OutputType type, const OutputHandler *handler);
 
 } }
 

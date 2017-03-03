@@ -5,6 +5,7 @@
 #include "event/dispatch.hpp"
 #include "configuration.hpp"
 #include "log.hpp"
+#include "output.hpp"
 
 #include <string>
 
@@ -30,6 +31,7 @@ namespace msa {
 		hdl->status = Status::CREATED;
 		hdl->event = NULL;
 		hdl->input = NULL;
+		hdl->output = NULL;
 		hdl->agent = NULL;
 		hdl->cmd = NULL;
 		hdl->log = NULL;
@@ -44,6 +46,18 @@ namespace msa {
 			dispose(hdl);
 			return MSA_ERR_LOG;
 		}
+
+		msa::config::Section output_conf = get_module_section(conf, "OUTPUT");
+		ret = msa::output::init(hdl, output_conf);
+		if (ret != 0)
+		{
+			msa::log::error(hdl, "Failed to start output module");
+			msa::log::debug(hdl, "msa::output::init() returned " + std::to_string(ret));
+			quit(hdl);
+			dispose(hdl);
+			return MSA_ERR_OUTPUT;
+		}
+		msa::log::trace(hdl, "Started output module");
 		
 		msa::config::Section event_conf = get_module_section(conf, "EVENT");
 		ret = msa::event::init(hdl, event_conf);
@@ -155,6 +169,19 @@ namespace msa {
 			msa->event = NULL;
 		}
 		msa::log::trace(msa, "Stopped event module");
+		
+		if (msa->output != NULL)
+		{
+			status = msa::output::quit(msa);
+			if (status != 0)
+			{
+				msa::log::error(msa, "Failed to stop output module");
+				msa::log::debug(msa, "msa::output::quit() returned " + std::to_string(status));
+				return MSA_ERR_OUTPUT;
+			}
+			msa->output = NULL;
+		}
+		msa::log::trace(msa, "Stopped output module");
 
 		msa::log::info(msa, "Moe Serifu Agent primary modules shutdown cleanly");
 		
@@ -194,6 +221,11 @@ namespace msa {
 		if (msa->cmd != NULL)
 		{
 			return MSA_ERR_CMD;
+		}
+
+		if (msa->output != NULL)
+		{
+			return MSA_ERR_OUTPUT;
 		}
 
 		if (msa->log != NULL)

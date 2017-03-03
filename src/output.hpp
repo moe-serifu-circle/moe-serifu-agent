@@ -23,6 +23,7 @@ namespace msa { namespace output {
 	extern int quit(msa::Handle hdl);
 	
 	extern void write(msa::Handle hdl, const Chunk *chunk);
+	extern void write_text(msa::Handle hdl, const std::string &text);
 	extern void add_device(msa::Handle hdl, OutputType type, void *device_id);
 	extern void get_devices(msa::Handle hdl, std::vector<std::string> *list);
 	extern void remove_device(msa::Handle hdl, const std::string &id);

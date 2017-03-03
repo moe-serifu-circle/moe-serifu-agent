@@ -275,7 +275,7 @@ namespace msa { namespace input {
 				break;
 
 			case InputType::TTY:
-				dev->device_name = static_cast<const std::string *>(id);
+				dev->device_name = new std::string(*static_cast<const std::string *>(id));
 				dev->id = "TTY:" + *dev->device_name;
 				break;
 

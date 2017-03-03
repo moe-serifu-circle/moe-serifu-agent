@@ -15,7 +15,7 @@ namespace msa { namespace output {
 
 	typedef struct device_type Device;
 
-	typedef void (*OutputHandlerFunc)(msa::Handle hdl, Chunk *ch, Device *dev);
+	typedef void (*OutputHandlerFunc)(msa::Handle hdl, const Chunk *ch, Device *dev);
 
 	typedef struct output_handler_type OutputHandler;
 
@@ -23,8 +23,8 @@ namespace msa { namespace output {
 	extern int quit(msa::Handle hdl);
 	
 	extern void write(msa::Handle hdl, const Chunk *chunk);
-	extern void add_device(msa::Handle hdl, InputType type, void *device_id);
-	extern void get_devices(msa::Handle hdl, std::vector<const std::string> *list);
+	extern void add_device(msa::Handle hdl, OutputType type, void *device_id);
+	extern void get_devices(msa::Handle hdl, std::vector<std::string> *list);
 	extern void remove_device(msa::Handle hdl, const std::string &id);
 	extern void switch_device(msa::Handle hdl, const std::string &id);
 	extern void get_active_device(msa::Handle hdl, std::string &id);

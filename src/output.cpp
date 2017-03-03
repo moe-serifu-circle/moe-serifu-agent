@@ -4,6 +4,9 @@
 
 #include <map>
 #include <stdexcept>
+#include <algorithm>
+
+#include "platform/thread/thread.hpp"
 
 namespace msa { namespace output {
 	
@@ -24,7 +27,7 @@ namespace msa { namespace output {
 		union
 		{
 			uint16_t port;
-			const std::string device_name;
+			const std::string *device_name;
 		};
 	};
 
@@ -44,20 +47,21 @@ namespace msa { namespace output {
 	};
 
 	static std::map<std::string, OutputType> OUTPUT_TYPE_NAMES;
+	static OutputHandler *default_stdout_handler = NULL;
 
-	static void print_to_stdout(msa::Handle hdl, Chunk *chunk, Device *dev);
+	static void print_to_stdout(msa::Handle hdl, const Chunk *chunk, Device *dev);
 
 	static int create_output_context(OutputContext **ctx);
 	static int dispose_output_context(OutputContext *ctx);
 	static int create_device(Device **dev_ptr, OutputType type, const OutputHandler *handler, const void *id);
 	static int dispose_device(Device *dev);
 	static bool handler_is_registered(msa::Handle hdl, OutputType type, const std::string &name);
-	static void read_config(msa::Handle hdl, msa::config::Section &config);
+	static void read_config(msa::Handle hdl, const msa::config::Section &config);
 	static void switch_to_next_device(msa::Handle hdl, const std::vector<std::string> &bad_ids);
 	static void switch_device_internal(msa::Handle hdl, const std::string &id);
 	static void create_default_handlers(msa::Handle hdl);
 	static void dispose_default_handlers(msa::Handle hdl);
-	static void init_static_resources();
+	static int init_static_resources();
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -116,7 +120,7 @@ namespace msa { namespace output {
 
 	extern void add_device(msa::Handle hdl, OutputType type, const std::string &handler_id, void *device_id)
 	{
-		OutputContex *ctx = hdl->output;
+		OutputContext *ctx = hdl->output;
 		msa::thread::mutex_lock(ctx->state_mutex);
 		if (!handler_is_registered(hdl, type, handler_id))
 		{
@@ -130,7 +134,7 @@ namespace msa { namespace output {
 		{
 			dispose_device(dev);
 			msa::thread::mutex_unlock(ctx->state_mutex);
-			throw std::invalid_argument("output device already exists: " + std::to_string(dev->id));
+			throw std::invalid_argument("output device already exists: " + dev->id);
 		}
 		ctx->devices[id] = dev;
 		if (ctx->active == "")
@@ -138,13 +142,13 @@ namespace msa { namespace output {
 			switch_device_internal(hdl, id);
 		}
 		msa::thread::mutex_unlock(ctx->state_mutex);
-		msa::log::info("Added output device " + id);
+		msa::log::info(hdl, "Added output device " + id);
 	}
 	
-	extern void get_devices(msa::Handle hdl, std::vector<const std::string> *list)
+	extern void get_devices(msa::Handle hdl, std::vector<std::string> *list)
 	{
+		OutputContext *ctx = hdl->output;
 		msa::thread::mutex_lock(hdl->output->state_mutex);
-		std::map<std::string, Device *> *devs = *hdl->output->devices;
 		std::map<std::string, Device *>::const_iterator iter;
 		for (iter = ctx->devices.begin(); iter != ctx->devices.end(); iter++)
 		{
@@ -282,8 +286,8 @@ namespace msa { namespace output {
 				active_dev = ctx->devices[ctx->active];
 			}
 		}
+		ctx->handlers[type].erase(handler->name);
 		msa::thread::mutex_unlock(ctx->state_mutex);
-		ctx->handlers[type].erase(name);
 	}
 	
 	static void read_config(msa::Handle hdl, const msa::config::Section &config)
@@ -293,7 +297,7 @@ namespace msa { namespace output {
 			const std::vector<std::string> types = config.get_all("TYPE");
 			const std::vector<std::string> handlers = config.get_all("HANDLER");
 			const std::vector<std::string> ids = config.get_all("ID");
-			for (size_t i = 0; i < types.size() && i < handlers.size() && i < ids.size())
+			for (size_t i = 0; i < types.size() && i < handlers.size() && i < ids.size(); i++)
 			{
 				std::string type_str = types[i];
 				std::string handler_str = handlers[i];
@@ -313,11 +317,11 @@ namespace msa { namespace output {
 				if (type == OutputType::UDP || type == OutputType::TCP)
 				{
 					port = (uint16_t) std::stoi(id_str);
-					id = *port;
+					id = &port;
 				}
 				else
 				{
-					id = *id_str;
+					id = &id_str;
 				}
 				add_device(hdl, type, handler_str, id);
 			}
@@ -330,9 +334,9 @@ namespace msa { namespace output {
 
 	static int create_output_context(OutputContext **ctx)
 	{
-		output = new OutputContext;
-		ctx->running = true;
-		ctx->active = "";
+		OutputContext *output = new OutputContext;
+		output->running = true;
+		output->active = "";
 		output->state_mutex = new msa::thread::Mutex;
 		msa::thread::mutex_init(output->state_mutex, NULL);
 		*ctx = output;
@@ -346,9 +350,10 @@ namespace msa { namespace output {
 		dev->active = false;
 		dispose_device(dev);
 		ctx->active = "";
-		msa::thread::mutex_destroy(output->state_mutex);
-		delete output->state_mutex;
+		msa::thread::mutex_destroy(ctx->state_mutex);
+		delete ctx->state_mutex;
 		delete ctx;
+		return 0;
 	}
 	
 	static int create_device(Device **dev_ptr, OutputType type, const OutputHandler *handler, const void *id)
@@ -370,7 +375,7 @@ namespace msa { namespace output {
 				break;
 
 			case OutputType::TTY:
-				dev->device_name = static_cast<const std::string *>(id);
+				dev->device_name = new std::string(*static_cast<const std::string *>(id));
 				dev->id = "TTY:" + *dev->device_name;
 				break;
 
@@ -440,29 +445,29 @@ namespace msa { namespace output {
 		ctx->devices[id]->active = true;
 	}
 
-	static void print_to_stdout(msa::Handle hdl, Chunk *ch, Device *dev)
+	static void print_to_stdout(msa::Handle UNUSED(hdl), const Chunk *ch, Device *dev)
 	{
-		if (dev->device_name != "STDOUT")
+		if (*dev->device_name != "STDOUT")
 		{
-			throw std::logic_error("cannot print to TTY terminal: " + dev->device_name);
+			throw std::logic_error("cannot print to TTY terminal: " + *dev->device_name);
 		}
 		printf("%s", ch->text->c_str());
 	}
 
 	static void create_default_handlers(msa::Handle hdl)
 	{
-		OutputHandler *stdout_handler;
-		create_handler(&stdout_handler, "print_to_stdout", print_to_stdout);
-		register_handler(hdl, OutputTypes::TTY, stdout_handler);
+		if (default_stdout_handler == NULL)
+		{
+			create_handler(&default_stdout_handler, "print_to_stdout", print_to_stdout);
+		}
+		register_handler(hdl, OutputType::TTY, default_stdout_handler);
 	}
 
 	static void dispose_default_handlers(msa::Handle hdl)
 	{
-		OutputContext *ctx = hdl->output;
-		OutputHandler *stdout_handler = ctx->handlers[OutputTypes::TTY]["print_to_stdout"];
-		unregister_handler(hdl, OutputTypes::TTY, stdout_handler);
-		dispose_handler(stdout_handler);
-	}		
+		unregister_handler(hdl, OutputType::TTY, default_stdout_handler);
+		dispose_handler(default_stdout_handler); // TODO: need to mark usage with ref count
+	}
 
 	static int init_static_resources()
 	{

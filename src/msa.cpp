@@ -128,8 +128,12 @@ namespace msa {
 				return MSA_ERR_INPUT;
 			}
 			msa->input = NULL;
+			msa::log::trace(msa, "Stopped input module");
 		}
-		msa::log::trace(msa, "Stopped input module");
+		else
+		{
+			msa::log::trace(msa, "Input module not started, no need to stop");
+		}
 
 		if (msa->agent != NULL)
 		{
@@ -141,8 +145,12 @@ namespace msa {
 				return MSA_ERR_AGENT;
 			}
 			msa->agent = NULL;
+			msa::log::trace(msa, "Stopped agent module");
 		}
-		msa::log::trace(msa, "Stopped agent module");
+		else
+		{
+			msa::log::trace(msa, "Agent module not started, no need to stop");
+		}
 
 		if (msa->cmd != NULL)
 		{
@@ -154,8 +162,12 @@ namespace msa {
 				return MSA_ERR_CMD;
 			}
 			msa->cmd = NULL;
+			msa::log::trace(msa, "Stopped command module");
 		}
-		msa::log::trace(msa, "Stopped command module");
+		else
+		{
+			msa::log::trace(msa, "Command module not started, no need to stop");
+		}
 
 		if (msa->event != NULL)
 		{
@@ -167,8 +179,12 @@ namespace msa {
 				return MSA_ERR_EVENT;
 			}
 			msa->event = NULL;
+			msa::log::trace(msa, "Stopped event module");
 		}
-		msa::log::trace(msa, "Stopped event module");
+		else
+		{
+			msa::log::trace(msa, "Event module not started, no need to stop");
+		}
 		
 		if (msa->output != NULL)
 		{
@@ -180,8 +196,12 @@ namespace msa {
 				return MSA_ERR_OUTPUT;
 			}
 			msa->output = NULL;
+			msa::log::trace(msa, "Stopped output module");
 		}
-		msa::log::trace(msa, "Stopped output module");
+		else
+		{
+			msa::log::trace(msa, "Output module not started, no need to stop");
+		}
 
 		msa::log::info(msa, "Moe Serifu Agent primary modules shutdown cleanly");
 		

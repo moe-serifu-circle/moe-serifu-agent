@@ -66,8 +66,9 @@ namespace msa { namespace output {
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
 		init_static_resources();
-		if (!create_output_context(&hdl->output))
+		if (create_output_context(&hdl->output) != 0)
 		{
+			// todo: if this happens, we get a segfault. Should shutdown clean
 			return -1;
 		}
 		create_default_handlers(hdl);
@@ -83,7 +84,7 @@ namespace msa { namespace output {
 	extern int quit(msa::Handle hdl)
 	{
 		dispose_default_handlers(hdl);
-		if (!dispose_output_context(hdl->output))
+		if (dispose_output_context(hdl->output) != 0)
 		{
 			return -1;
 		}
@@ -252,7 +253,7 @@ namespace msa { namespace output {
 			handlers[type] = std::map<std::string, const OutputHandler *>();
 		}
 		TypedHandlerMap &typed_handlers = handlers[type];
-		if (typed_handlers.find(handler->name) == typed_handlers.end())
+		if (typed_handlers.find(handler->name) != typed_handlers.end())
 		{
 			throw std::logic_error("output handler already exists: " + std::to_string(type) + "/" + handler->name);
 		}

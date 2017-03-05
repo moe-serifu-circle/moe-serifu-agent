@@ -22,12 +22,40 @@ int main(int argc, char *argv[]) {
 	int succ = msa::init(&hdl, cfg_path);
 	if (succ != MSA_SUCCESS)
 	{
-		fprintf(stderr, "\nMSA init failed");
-		if (succ == MSA_ERR_CONFIG)
+		const char *err_msg;
+		switch (succ)
 		{
-			fprintf(stderr, ": could not load config file");
+			case MSA_ERR_CONFIG:
+				err_msg = "could not load config file";
+				break;
+			case MSA_ERR_LOG:
+				err_msg = "could not init logging system";
+				break;
+			case MSA_ERR_INPUT:
+				err_msg = "could not start input system";
+				break;
+			case MSA_ERR_OUTPUT:
+				err_msg = "could not start output system";
+				break;
+			case MSA_ERR_EVENT:
+				err_msg = "could not start event dispatcher";
+				break;
+			case MSA_ERR_AGENT:
+				err_msg = "could not init agent state machine";
+				break;
+			case MSA_ERR_CMD:
+				err_msg = "could not start command hooks";
+				break;
+			default:
+				err_msg = "unknown problem";
+				break;
 		}
-		fprintf(stderr, "\n");
+		fprintf(stderr, "\nMSA init failed: (%d) - %s\n", succ, err_msg);
+		// if we got a config error or a log error, the log has not yet been started
+		if (succ != MSA_ERR_CONFIG && succ != MSA_ERR_LOG)
+		{
+			fprintf(stderr, "See log for more details\n");
+		}
 		return EXIT_FAILURE;
 	}
 	printf("Master: \"Waiting for EDT to start...\"\n");

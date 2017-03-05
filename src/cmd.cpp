@@ -3,8 +3,10 @@
 #include "string.hpp"
 #include "agent.hpp"
 #include "output.hpp"
+#include "log.hpp"
 
 #include <cstdio>
+#include <exception>
 
 namespace msa { namespace cmd {
 
@@ -13,6 +15,7 @@ namespace msa { namespace cmd {
 		bool running;
 	};
 
+	static void read_config(msa::Handle hdl, const msa::config::Section &config);
 	static int create_command_context(CommandContext **ctx);
 	static int dispose_command_context(CommandContext *ctx);
 
@@ -26,22 +29,29 @@ namespace msa { namespace cmd {
 		// need to init events before this
 		if (hdl->event == NULL)
 		{
+			msa::log::error(hdl, "Tried to init CMD module before EVENT module started");
 			return 1;
 		}
-		if (create_command_context(&hdl->cmd) != 0)
+
+		int status = create_command_context(&hdl->cmd);
+		if (status != 0)
 		{
+			msa::log::error(hdl, "Could not create event context (error " + std::to_string(status) + ")");
 			return 1;
 		}
+		
 		msa::event::subscribe(hdl, msa::event::Topic::COMMAND_ANNOUNCE, say_func);
 		msa::event::subscribe(hdl, msa::event::Topic::INVALID_COMMAND, bad_command_func);
 		msa::event::subscribe(hdl, msa::event::Topic::COMMAND_EXIT, exit_func);
 		
-		// check config to see if we should do an announce event		
-		std::string do_anc = config.get_or("ANNOUNCE", "false");
-		msa::string::to_upper(do_anc);
-		if (do_anc == "TRUE" || do_anc == "YES" || do_anc == "1")
-		{	
-			msa::event::generate(hdl, msa::event::Topic::COMMAND_ANNOUNCE, NULL);
+		// check config to see if we should do an announce event
+		try
+		{
+			read_config(hdl, config);
+		}
+		catch (const std::exception &e)
+		{
+			msa::log::error(hdl, "Could not read cmd config: " + std::string(e.what()));
 		}
 		
 		return 0;
@@ -49,14 +59,26 @@ namespace msa { namespace cmd {
 
 	extern int quit(msa::Handle hdl)
 	{
-		if (dispose_command_context(hdl->cmd) != 0)
+		int status = dispose_command_context(hdl->cmd);
+		if (dispose_command_context(hdl->cmd) != status)
 		{
+			msa::log::error(hdl, "Could not dispose command context (error " + std::to_string(status) + ")");
 			return 1;
 		}
 		msa::event::unsubscribe(hdl, msa::event::Topic::COMMAND_ANNOUNCE, say_func);
 		msa::event::unsubscribe(hdl, msa::event::Topic::INVALID_COMMAND, bad_command_func);
 		msa::event::unsubscribe(hdl, msa::event::Topic::COMMAND_EXIT, exit_func);
 		return 0;
+	}
+
+	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	{
+		std::string do_anc = config.get_or("ANNOUNCE", "false");
+		msa::string::to_upper(do_anc);
+		if (do_anc == "TRUE" || do_anc == "YES" || do_anc == "1")
+		{	
+			msa::event::generate(hdl, msa::event::Topic::COMMAND_ANNOUNCE, NULL);
+		}
 	}
 
 	static int create_command_context(CommandContext **ctx)

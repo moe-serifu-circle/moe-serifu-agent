@@ -1,6 +1,8 @@
 #ifndef MSA_HPP
 #define MSA_HPP
 
+#include "debug_macros.hpp"
+
 // DO NOT INCLUDE ANY MSA HEADER FILES HERE!
 // If you find you have to, re-think your design.
 // It will break here.

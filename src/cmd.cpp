@@ -60,7 +60,7 @@ namespace msa { namespace cmd {
 	extern int quit(msa::Handle hdl)
 	{
 		int status = dispose_command_context(hdl->cmd);
-		if (dispose_command_context(hdl->cmd) != status)
+		if (status != 0)
 		{
 			msa::log::error(hdl, "Could not dispose command context (error " + std::to_string(status) + ")");
 			return 1;

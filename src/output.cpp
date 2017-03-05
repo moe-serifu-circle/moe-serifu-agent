@@ -346,11 +346,16 @@ namespace msa { namespace output {
 
 	static int dispose_output_context(OutputContext *ctx)
 	{
-		ctx->running = false;
-		Device *dev = ctx->devices[ctx->active];
-		dev->active = false;
-		dispose_device(dev);
 		ctx->active = "";
+		ctx->running = false;
+		std::map<std::string, Device *>::iterator iter;		
+		for (iter = ctx->devices.begin(); iter != ctx->devices.end(); iter++)
+		{
+			printf("Destorying...\n");
+			iter->second->active = false;
+			dispose_device(iter->second);
+			iter = ctx->devices.erase(iter);
+		}
 		msa::thread::mutex_destroy(ctx->state_mutex);
 		delete ctx->state_mutex;
 		delete ctx;

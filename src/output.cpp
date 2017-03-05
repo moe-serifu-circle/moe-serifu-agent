@@ -92,6 +92,7 @@ namespace msa { namespace output {
 
 	extern int quit(msa::Handle hdl)
 	{
+		hdl->output->active = "";
 		dispose_default_handlers(hdl);
 		int status = dispose_output_context(hdl->output);
 		if (status != 0)
@@ -359,8 +360,9 @@ namespace msa { namespace output {
 	{
 		ctx->active = "";
 		ctx->running = false;
-		std::map<std::string, Device *>::iterator iter;		
-		for (iter = ctx->devices.begin(); iter != ctx->devices.end(); iter++)
+		std::map<std::string, Device *>::iterator iter;
+		iter = ctx->devices.begin();
+		while (iter != ctx->devices.end())
 		{
 			iter->second->active = false;
 			dispose_device(iter->second);

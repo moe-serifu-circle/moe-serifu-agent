@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 	const char *cfg_path;
 	if (argc < 2)
 	{
-		printf("no config file given, defaulting to 'msa.cfg'\n");
+		fprintf(stderr, "no config file given, defaulting to 'msa.cfg'\n");
 		cfg_path = "msa.cfg";
 	}
 	else
@@ -22,12 +22,12 @@ int main(int argc, char *argv[]) {
 	int succ = msa::init(&hdl, cfg_path);
 	if (succ != MSA_SUCCESS)
 	{
-		printf("\nMSA init failed");
+		fprintf(stderr, "\nMSA init failed");
 		if (succ == MSA_ERR_CONFIG)
 		{
-			printf(": could not load config file");
+			fprintf(stderr, ": could not load config file");
 		}
-		printf("\n");
+		fprintf(stderr, "\n");
 		return EXIT_FAILURE;
 	}
 	printf("Master: \"Waiting for EDT to start...\"\n");

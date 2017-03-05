@@ -72,7 +72,15 @@ namespace msa { namespace output {
 			return -1;
 		}
 		create_default_handlers(hdl);
-		read_config(hdl, config);
+		try
+		{
+			read_config(hdl, config);
+		}
+		catch (const std::exception &e)
+		{
+			msa::log::error(hdl, "Could not read output module config: " + std::string(e.what()));
+			return -3;
+		}
 		// has to be at least one device
 		if (hdl->output->active == "")
 		{
@@ -85,8 +93,10 @@ namespace msa { namespace output {
 	extern int quit(msa::Handle hdl)
 	{
 		dispose_default_handlers(hdl);
-		if (dispose_output_context(hdl->output) != 0)
+		int status = dispose_output_context(hdl->output);
+		if (status != 0)
 		{
+			msa::log::error(hdl, "Could not dispose output context (error " + std::to_string(status) + ")");
 			return -1;
 		}
 		return 0;

@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 				err_msg = "unknown problem";
 				break;
 		}
-		fprintf(stderr, "\nMSA init failed: (%d) - %s\n", succ, err_msg);
+		fprintf(stderr, "\nMSA init failed: error %d - %s\n", succ, err_msg);
 		// if we got a config error or a log error, the log has not yet been started
 		if (succ != MSA_ERR_CONFIG && succ != MSA_ERR_LOG)
 		{

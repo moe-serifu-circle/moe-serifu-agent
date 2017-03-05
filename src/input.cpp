@@ -82,9 +82,18 @@ namespace msa { namespace input {
 		int stat = create_input_context(&hdl->input);
 		if (stat != 0)
 		{
+			msa::log::error(hdl, "Could not create input context (error " + std::to_string(stat) + ")");
 			return 1;
 		}
-		read_config(hdl, config);
+		try
+		{
+			read_config(hdl, config);
+		}
+		catch (const std::exception &e)
+		{
+			msa::log::error(hdl, "Could not read input module config: " + std::string(e.what()));
+			return 2;
+		}
 		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 		return 0;
 	}
@@ -95,6 +104,10 @@ namespace msa { namespace input {
 		if (status == 0)
 		{
 			hdl->input = NULL;
+		}
+		else
+		{
+			msa::log::error(hdl, "Could not dispose input context (error " + std::to_string(status) + ")");
 		}
 		destroy_static_resources(); // TODO: This will make it so only one instance of MSA can run at once!
 		return status;

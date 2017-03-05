@@ -1,10 +1,13 @@
 #include "event/dispatch.hpp"
 #include "util.hpp"
+#include "log.hpp"
 
 #include <cstdio>
 #include <queue>
 #include <stack>
 #include <map>
+#include <string>
+#include <exception>
 
 #include "platform/thread/thread.hpp"
 
@@ -30,6 +33,7 @@ namespace msa { namespace event {
 
 	static int create_event_dispatch_context(EventDispatchContext **event);
 	static int dispose_event_dispatch_context(EventDispatchContext *event);
+	static void read_config(msa::Handle hdl, const msa::config::Section &config);
 	static void *event_start(void *args);
 	
 	static void push_event(msa::Handle msa, const Event *e);
@@ -48,15 +52,24 @@ namespace msa { namespace event {
 		int create_status = create_event_dispatch_context(&hdl->event);
 		if (create_status != 0)
 		{
+			msa::log::error(hdl, "Could not create event context (error " + std::to_string(create_status) + ")");
 			return create_status;
 		}
 		
 		// read config
-		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
+		try
+		{
+			read_config(hdl, config);
+		}
+		catch (const std::exception &e)
+		{
+			msa::log::error(hdl, "Could not read event config: " + std::string(e.what()));
+		}
 
 		create_status = msa::thread::create(&hdl->event->edt, NULL, edt_start, hdl, "edt");
 		if (create_status != 0)
 		{
+			msa::log::error(hdl, "Could not create event dispatch thread (error " + std::to_string(create_status) + ")");
 			msa::thread::mutex_destroy(&hdl->event->queue_mutex);
 			return create_status;
        	}
@@ -70,6 +83,7 @@ namespace msa { namespace event {
 			// this shouldn't happen, but if we get here, it's because
 			// the event handle was inited but the EDT was not started.
 			// We can just destroy the mutex and delete everything immediately
+			msa::log::warn(msa, "EDT has not yet set status to RUNNING! Killing anyways");
 			msa::thread::mutex_destroy(&msa->event->queue_mutex);
 			dispose_event_dispatch_context(msa->event);
 		}
@@ -82,7 +96,9 @@ namespace msa { namespace event {
 			set_handler_syscall_origin(msa->event->current_handler->sync);
 		}
 		msa->status = msa::Status::STOP_REQUESTED;
+		msa::log::trace(msa, "Joining on EDT");
 		msa::thread::join(msa->event->edt, NULL);
+		msa::log::trace(msa, "EDT joined");
 		dispose_event_dispatch_context(msa->event);
 		return 0;
 	}
@@ -118,6 +134,11 @@ namespace msa { namespace event {
 		// that is instead handled in the edt_cleanup function.
 		delete event;
 		return 0;
+	}
+
+	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	{
+		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
 	}
 
 	static void *edt_start(void *args)

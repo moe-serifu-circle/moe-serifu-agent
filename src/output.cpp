@@ -84,7 +84,7 @@ namespace msa { namespace output {
 		// has to be at least one device
 		if (hdl->output->active == "")
 		{
-			msa::log::error(hdl, "No valid output devices in config file");
+			msa::log::error(hdl, "No active output device");
 			return -2;
 		}
 		return 0;

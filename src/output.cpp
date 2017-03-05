@@ -68,14 +68,15 @@ namespace msa { namespace output {
 		init_static_resources();
 		if (create_output_context(&hdl->output) != 0)
 		{
-			// todo: if this happens, we get a segfault. Should shutdown clean
-			return -1;
+			msa::log::error(hdl, "Could not create output context");
+			return -1
 		}
 		create_default_handlers(hdl);
 		read_config(hdl, config);
 		// has to be at least one device
 		if (hdl->output->active == "")
 		{
+			msa::log::error(hdl, "No valid output devices in config file");
 			return -2;
 		}
 		return 0;
@@ -351,7 +352,6 @@ namespace msa { namespace output {
 		std::map<std::string, Device *>::iterator iter;		
 		for (iter = ctx->devices.begin(); iter != ctx->devices.end(); iter++)
 		{
-			printf("Destorying...\n");
 			iter->second->active = false;
 			dispose_device(iter->second);
 			iter = ctx->devices.erase(iter);

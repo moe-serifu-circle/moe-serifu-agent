@@ -69,7 +69,7 @@ namespace msa { namespace output {
 		if (create_output_context(&hdl->output) != 0)
 		{
 			msa::log::error(hdl, "Could not create output context");
-			return -1
+			return -1;
 		}
 		create_default_handlers(hdl);
 		read_config(hdl, config);

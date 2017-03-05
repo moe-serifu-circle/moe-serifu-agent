@@ -98,9 +98,7 @@ namespace msa { namespace cmd {
 	static void say_func(msa::Handle hdl, const msa::event::Event *const UNUSED(e), msa::event::HandlerSync *const UNUSED(sync))
 	{
 		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
-		char buf[100];
-		sprintf(buf, "%s: \"I'd like to announce my presence!\"\n", a->name.c_str());
-		msa::output::write_text(hdl, std::string(buf));
+		msa::output::write_text(hdl, a->name + ": \"I'd like to announce my presence!\"\n");
 	}
 
 	static void exit_func(msa::Handle hdl, const msa::event::Event *const UNUSED(e), msa::event::HandlerSync *const UNUSED(sync))
@@ -108,33 +106,20 @@ namespace msa { namespace cmd {
 		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
 		// copy the name because it can be overwritten on quit
 		std::string name(a->name);
-		char buf[100];
-		sprintf(buf, "%s: \"Right away master, I will terminate my EDT for you now!\"\n", name.c_str());
-		msa::output::write_text(hdl, std::string(buf));
-		sprintf(buf, "%s: \"I'd like to announce my presence!\"\n", a->name.c_str());
-		msa::output::write_text(hdl, std::string(buf));
+		msa::output::write_text(hdl, name + ": \"Right away master, I will terminate my EDT for you now!\"\n");
 		int status = msa::quit(hdl);
-		sprintf(buf, "%s: \"Environment Status: %d\"\n", name.c_str(), hdl->status);
-		msa::output::write_text(hdl, std::string(buf));
-		if (status == 0)
+		if (status != 0)
 		{
-			sprintf(buf, "%s: \"System shutdown.\"\n", name.c_str());
+			fprintf(stderr, "Shutdown error: %d\n", status);
 		}
-		else
-		{
-			sprintf(buf, "%s: \"Warning! could not quit: %d\"\n", name.c_str(), status);
-		}
-		msa::output::write_text(hdl, std::string(buf));
 	}
 
 	static void bad_command_func(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
 		std::string *str = static_cast<std::string *>(e->args);
-		char buf[100];
-		sprintf(buf, "%s: \"I'm sorry, Master. I don't understand the command '%s'\"\n", a->name.c_str(), str->c_str());
+		msa::output::write_text(hdl, a->name + ": \"I'm sorry, Master. I don't understand the command '" + *str + "'\"\n");
 		delete str;
-		msa::output::write_text(hdl, std::string(buf));
 	}
 
 } }

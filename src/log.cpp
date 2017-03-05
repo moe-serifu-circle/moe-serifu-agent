@@ -80,10 +80,13 @@ namespace msa { namespace log {
 		init_static_resources();
 		create_log_context(&hdl->log);
 		read_config(hdl, config);
+		hdl->log->running = true;
 		// spawn the thread
-		hdl->log->running = (msa::thread::create(&hdl->log->writer_thread, NULL, writer_start, hdl, "log-writer") == 0);
-		if (!hdl->log->running)
+		int status = msa::thread::create(&hdl->log->writer_thread, NULL, writer_start, hdl, "log-writer");
+		if (status != 0)
 		{
+			hdl->log->running = false;
+			dispose_log_context(hdl->log);
 			return 1;
 		}
 
@@ -465,12 +468,6 @@ namespace msa { namespace log {
 	static void *writer_start(void *args)
 	{
 		msa::Handle hdl = (msa::Handle) args;
-		// wait until running set
-		while (!hdl->log->running)
-		{
-			// busy wait
-			msa::util::sleep_milli(10);
-		}
 		// run util shutdown, and then keep running until the message queue is empty
 		while (hdl->log->running)
 		{

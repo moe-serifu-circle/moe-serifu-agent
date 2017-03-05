@@ -15,7 +15,7 @@ OS_DEP_OBJS=$(ODIR)/platform/thread.o
 
 all: moe-serifu
 
-debug: CXXFLAGS += -g -O0 -Werror
+debug: CXXFLAGS += -g -O0 -Werror -DDEBUG_ON
 debug: moe-serifu
 
 test: debug
@@ -38,7 +38,7 @@ moe-serifu: $(ODIR)/main.o $(DEP_OBJS) $(OS_DEP_OBJS)
 $(ODIR)/main.o: $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS)
 
-$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/cmd.hpp $(SDIR)/log.hpp
+$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/cmd.hpp $(SDIR)/log.hpp $(SDIR)/debug_macros.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS)
 
 $(ODIR)/configuration.o: $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp

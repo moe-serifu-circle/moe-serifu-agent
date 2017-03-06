@@ -13,6 +13,8 @@ namespace msa { namespace event {
 		EVENT_INTERRUPTED,
 		COMMAND_ANNOUNCE,
 		COMMAND_EXIT,
+		COMMAND_ECHO,
+		COMMAND_HELP,
 		TEXT_INPUT,
 		INVALID_COMMAND
 	} Topic;

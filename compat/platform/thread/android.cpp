@@ -16,17 +16,18 @@ namespace msa { namespace thread {
 		void *(*start_routine)(void *);
 		void *start_routine_arg;
 		Mutex *start_mutex;
-		const char *name;
 	} RunnerArgs;
 
 	static std::map<Thread, Info *> __info;
+	static Thread main_thread_id;
+	static bool inited = false;
 
 	static void __info_dispose(Info *info);
 	static void __info_create(Info **info);
 	static void *__run(void *arg);
 
 	extern int init()
-	{
+	{		
 		Thread tid = self();
 		// create info for the main thread
 		if (__info.find(tid) == __info.end())
@@ -35,18 +36,23 @@ namespace msa { namespace thread {
 			__info_create(&info);
 			__info[tid] = info;
 			set_name(tid, "main");
+			main_thread_id = tid;
+			inited = true;
 		}
 		return 0;
 	}
 
 	extern int quit()
 	{
-		Thread tid = self();
-		// delete info for the main thread
-		if (__info.find(tid) != __info.end())
+		if (inited)
 		{
-			__info_dispose(__info[tid]);
-			__info.erase(tid);
+			Thread tid = main_thread_id;
+			// delete info for the main thread
+			if (__info.find(tid) != __info.end())
+			{
+				__info_dispose(__info[tid]);
+				__info.erase(tid);
+			}
 		}
 		return 0;
 	}
@@ -57,7 +63,7 @@ namespace msa { namespace thread {
 		ra->start_routine = start_routine;
 		ra->start_routine_arg = arg;
 		ra->start_mutex = new Mutex;
-		ra->name = name;
+		
 		if (mutex_init(ra->start_mutex, NULL) != 0)
 		{
 			delete ra->start_mutex;
@@ -72,6 +78,7 @@ namespace msa { namespace thread {
 			delete ra;
 			return -1;
 		}
+		
 		int status = pthread_create(thread, attr, __run, ra);
 		if (status != 0)
 		{
@@ -81,9 +88,16 @@ namespace msa { namespace thread {
 			delete ra;
 			return status;
 		}
+		
 		Info *info;
 		__info_create(&info);
 		__info[*thread] = info;
+
+		if (name != NULL)
+		{
+			set_name(*thread, name);
+		}
+		
 		if (mutex_unlock(ra->start_mutex) != 0)
 		{
 			__info_dispose(info);
@@ -199,19 +213,15 @@ namespace msa { namespace thread {
 		void *(*start_routine)(void *) = ra->start_routine;
 		void *start_routine_arg = ra->start_routine_arg;
 		Mutex *start_mutex = ra->start_mutex;
-		const char *name = ra->name;
 		delete ra;
 		
 		mutex_lock(start_mutex);
-		if (name != NULL)
-		{
-			set_name(self(), name);
-		}
-		void *retval = start_routine(start_routine_arg);
 		mutex_unlock(start_mutex);
 		mutex_destroy(start_mutex);
 		delete start_mutex;
-
+		
+		void *retval = start_routine(start_routine_arg);
+		
 		Info *info = __info[self()];
 		__info_dispose(info);
 		__info.erase(self());

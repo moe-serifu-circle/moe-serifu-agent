@@ -51,7 +51,6 @@ namespace msa { namespace thread {
 		void *start_routine_arg;
 		void *(*start_routine)(void *);
 		HANDLE start_mutex;
-		const char *name;
 	} RunnerArgs;
 		
 	static DWORD __run(void *arg);
@@ -60,24 +59,33 @@ namespace msa { namespace thread {
 		
 	static std::map<Thread, Info *> __info;
 	static std::map<Thread, void *> __ret_values;
+	static Thread main_thread_id;
+	static bool inited = false;
 
 	extern int init()
 	{
+		Thread tid = self();
 		// create info for the main thread
-		if (__info.find(self()) == __info.end())
+		if (__info.find(tid) == __info.end())
 		{
-			__create_info(self(), GetCurrentThread(), false);
-			set_name(self(), "main");
+			__create_info(tid, GetCurrentThread(), false);
+			set_name(tid, "main");
+			main_thread_id = tid;
+			inited = true;
 		}
 		return 0;
 	}
 
 	extern int quit()
 	{
-		// delete info for the main thread
-		if (__info.find(self()) != __info.end())
+		if (inited)
 		{
-			__destroy_info(self());
+			Thread tid = main_thread_id;
+			// delete info for the main thread
+			if (__info.find(tid) != __info.end())
+			{
+				__destroy_info(tid);
+			}
 		}
 		return 0;
 	}
@@ -106,7 +114,6 @@ namespace msa { namespace thread {
 		ra->arg = arg;
 		ra->start_routine = start_routine;
 		ra->start_mutex = start_mutex;
-		ra->name = name;
 		
 		HANDLE thread_handle = CreateThread(sec, 0, __run, ra, 0, thread);
 		if (thread_handle == NULL)
@@ -116,7 +123,14 @@ namespace msa { namespace thread {
 			CloseHandle(start_mutex);
 			return 1;
 		}
+
 		__create_info(*thread, thread_handle, joinable);
+
+		if (name != NULL)
+		{
+			set_name(*thread, name);
+		}
+
 		ReleaseMutex(start_mutex);
 		return 0;
 	}
@@ -347,13 +361,8 @@ namespace msa { namespace thread {
 		// pull out the args we need, drop them on the stack and free the passed in arg
 		void *(*start_routine)(void *) = ra->start_routine;
 		void *start_routine_arg = ra->start_routine_arg;
-		const char *name = ra->name;
 		delete ra;
-
-		if (name != NULL)
-		{
-			set_name(self(), name);
-		}
+		
 		// execute the actual requested function
 		void *ret_val = start_routine(start_routine_arg);
 

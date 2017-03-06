@@ -72,9 +72,9 @@ namespace msa { namespace string {
 		String cur_token;
 		for (size_t i = 0; i < str.size(); i++)
 		{
-			if (output[i] != separator)
+			if (str[i] != separator)
 			{
-				cur_token.push_back(output[i]);
+				cur_token.push_back(str[i]);
 			}
 			else if (cur_token.size() > 0)
 			{

@@ -22,7 +22,7 @@ namespace msa { namespace cmd {
 	struct command_context_type
 	{
 		bool running;
-		static std::map<std::string, const Command *> commands;
+		std::map<std::string, const Command *> commands;
 	};
 
 	static void read_config(msa::Handle hdl, const msa::config::Section &config);
@@ -33,7 +33,8 @@ namespace msa { namespace cmd {
 	static void announce_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 	static void help_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 	static void echo_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
-	static void exit_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
+	static void kill_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
+	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
 	static void register_default_commands(msa::Handle hdl);
 	static void unregister_default_commands(msa::Handle hdl);
@@ -103,9 +104,6 @@ namespace msa { namespace cmd {
 
 	extern void dispose_handler(Command *cmd)
 	{
-		delete cmd->invoke;
-		delete cmd->desc;
-		delete cmd->usage;
 		delete cmd;
 	}
 
@@ -139,7 +137,8 @@ namespace msa { namespace cmd {
 		msa::string::to_upper(do_anc);
 		if (do_anc == "TRUE" || do_anc == "YES" || do_anc == "1")
 		{
-			msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, "announce");
+			std::string *cmd_str = new std::string("announace");
+			msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, cmd_str);
 		}
 	}
 
@@ -200,8 +199,8 @@ namespace msa { namespace cmd {
 		else
 		{
 			msa::output::write_text(hdl, a->name + ": \"Sure! I'll list the commands I know about.\"\n");
-			std::map<std::string, const *Command>::const_iterator iter;
-			for (iter = ctx->devices.begin(); iter != ctx->devices.end(); iter++)
+			std::map<std::string, const Command *>::const_iterator iter;
+			for (iter = ctx->commands.begin(); iter != ctx->commands.end(); iter++)
 			{
 				msa::output::write_text(hdl, a->name + ": \"" + iter->first + "\"\n");
 			}
@@ -212,7 +211,7 @@ namespace msa { namespace cmd {
 	static void echo_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
-		std::map<std::string>::const_iterator iter;
+		std::vector<std::string>::const_iterator iter;
 		std::string echo_string;
 		for (iter = args.begin(); iter != args.end(); iter++)
 		{
@@ -222,20 +221,20 @@ namespace msa { namespace cmd {
 				echo_string += " ";
 			}
 		}
-		msa::output_write_text(hdl, a->name + ": \"" + echo_string);
+		msa::output::write_text(hdl, a->name + ": \"" + echo_string + "\"\n");
 	}
 	
-	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *sync)
+	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
 	{
 		CommandContext *ctx = hdl->cmd;
 		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
 		std::string *str = static_cast<std::string *>(e->args);
 		std::vector<std::string> args;
-		msa::string::tokenize(str, ' ', args);
+		msa::string::tokenize(*str, ' ', args);
 		delete str;
 		// pull out command name and call the appropriate function
 		std::string cmd_name = args[0];
-		args.erase(0);
+		args.erase(args.begin());
 		msa::string::to_upper(cmd_name);
 		if (ctx->commands.find(cmd_name) == ctx->commands.end())
 		{
@@ -243,14 +242,13 @@ namespace msa { namespace cmd {
 		}
 		else
 		{
-			ctx->commands[cmd_name]->handler(hdl, cmd_name, sync);
+			ctx->commands[cmd_name]->handler(hdl, args, sync);
 		}
 	}
 
 	static void register_default_commands(msa::Handle hdl)
 	{
-		CommandContext *ctx = hdl->cmd;
-		size_t num_commands = (sizeof(default_commands) / sizeof(struct command_type);
+		size_t num_commands = (sizeof(default_commands) / sizeof(struct command_type));
 		for (size_t i = 0; i < num_commands; i++)
 		{
 			const Command *cmd = &default_commands[i];
@@ -260,8 +258,7 @@ namespace msa { namespace cmd {
 
 	static void unregister_default_commands(msa::Handle hdl)
 	{
-		CommandContext *ctx = hdl->cmd;
-		size_t num_commands = (sizeof(default_commands) / sizeof(struct command_type);
+		size_t num_commands = (sizeof(default_commands) / sizeof(struct command_type));
 		for (size_t i = 0; i < num_commands; i++)
 		{
 			const Command *cmd = &default_commands[i];

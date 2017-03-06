@@ -13,7 +13,7 @@ namespace msa { namespace cmd {
 
 	typedef struct command_type Command;
 	typedef std::vector<std::string> ArgList;
-	typedef void (*CommandHandler)(msa::Handle hdl, const ArgList &args, const msa::event::HandlerSync *sync);
+	typedef void (*CommandHandler)(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config);
 	extern int quit(msa::Handle hdl);

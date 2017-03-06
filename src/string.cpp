@@ -66,5 +66,27 @@ namespace msa { namespace string {
 		}
 		return str;
 	}
+	
+	extern void tokenize(String &str, char separator, std::vector<String> &output)
+	{
+		String cur_token;
+		for (size_t i = 0; i < str.size(); i++)
+		{
+			if (output[i] != separator)
+			{
+				cur_token.push_back(output[i]);
+			}
+			else if (cur_token.size() > 0)
+			{
+				output.push_back(cur_token);
+				cur_token = "";
+			}
+		}
+		if (cur_token.size() > 0)
+		{
+			output.push_back(cur_token);
+		}
+	}
 
 } }
+

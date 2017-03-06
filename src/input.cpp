@@ -25,11 +25,6 @@ namespace msa { namespace input {
 	static std::map<std::string, InputType> INPUT_TYPE_NAMES;
 	static std::map<std::string, InputHandler *> INPUT_HANDLER_NAMES;
 
-	struct chunk_type
-	{
-		std::string chars;
-	};
-
 	struct device_type
 	{
 		std::string id;
@@ -68,8 +63,6 @@ namespace msa { namespace input {
 	static Chunk *get_tty_input(msa::Handle hdl, Device *dev);
 	static bool tty_ready(msa::Handle hdl, Device *dev);
 
-	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
-
 	// input thread funcs
 	static void *it_start(void *hdl);
 	static InputHandler *it_get_handler(msa::Handle hdl, Device *dev);
@@ -94,7 +87,6 @@ namespace msa { namespace input {
 			msa::log::error(hdl, "Could not read input module config: " + std::string(e.what()));
 			return 2;
 		}
-		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, interpret_cmd);
 		return 0;
 	}
 
@@ -381,7 +373,9 @@ namespace msa { namespace input {
 			if (input_handler->is_ready(hdl, dev))
 			{
 				Chunk *chunk = input_handler->get_input(hdl, dev);
-				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, chunk);
+				std::string *text = new std::string(chunk->text);
+				delete chunk;
+				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, text);
 			}
 		}
 	}
@@ -400,33 +394,13 @@ namespace msa { namespace input {
 		std::string input;
 		std::cin >> input;
 		Chunk *ch = new Chunk;
-		ch->chars = input;
+		ch->text = input;
 		return ch;
 	}
 
 	static bool tty_ready(msa::Handle UNUSED(hdl), Device *UNUSED(dev))
 	{
 		return msa::util::check_stdin_ready();
-	}
-
-	static void interpret_cmd(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const UNUSED(sync))
-	{
-		Chunk *ch = static_cast<Chunk *>(e->args);
-		std::string input = ch->chars;
-		delete ch;
-		if (input == "kill")
-		{
-			msa::event::generate(hdl, msa::event::Topic::COMMAND_EXIT, NULL);
-		}
-		else if (input == "announce")
-		{
-			msa::event::generate(hdl, msa::event::Topic::COMMAND_ANNOUNCE, NULL);
-		}
-		else
-		{
-			std::string * heap_alloc_str = new std::string(input);
-			msa::event::generate(hdl, msa::event::Topic::INVALID_COMMAND, heap_alloc_str);
-		}
 	}
 
 } }

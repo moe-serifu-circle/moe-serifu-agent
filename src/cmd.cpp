@@ -42,7 +42,7 @@ namespace msa { namespace cmd {
 	static const struct command_type default_commands[] = {
 		{"KILL", "It shuts down this MSA instance", "", kill_func},
 		{"ANNOUNCE", "It echoes a simple phrase to announce existance", "", announce_func},
-		{"ECHO", "It outputs the arguments", "echo-args...", echo_func},
+		{"ECHO", "It outputs its arguments", "echo-args...", echo_func},
 		{"HELP", "With no args, it lists all commands. Otherwise, it displays the help", "[command]", help_func}
 	};
 
@@ -137,7 +137,7 @@ namespace msa { namespace cmd {
 		msa::string::to_upper(do_anc);
 		if (do_anc == "TRUE" || do_anc == "YES" || do_anc == "1")
 		{
-			std::string *cmd_str = new std::string("announace");
+			std::string *cmd_str = new std::string("announce");
 			msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, cmd_str);
 		}
 	}
@@ -185,8 +185,8 @@ namespace msa { namespace cmd {
 			msa::string::to_upper(cmd_name);
 			if (ctx->commands.find(cmd_name) == ctx->commands.end())
 			{
-				msa::output::write_text(hdl, a->name + ": \"I don't know of the command '" + cmd_name + "'.\"\n");
-				msa::output::write_text(hdl, a->name + ": \"If you do HELP with no args, I'll list the commands I know!.\"\n");
+				msa::output::write_text(hdl, a->name + ": \"I'm sorry, Master, but I don't know about the command '" + cmd_name + "'.\"\n");
+				msa::output::write_text(hdl, a->name + ": \"But if you do HELP with no args, I'll list the commands I do know!\"\n");
 			}
 			else
 			{

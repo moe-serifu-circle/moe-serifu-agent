@@ -392,7 +392,7 @@ namespace msa { namespace input {
 	static Chunk *get_tty_input(msa::Handle UNUSED(hdl), Device *UNUSED(dev))
 	{
 		std::string input;
-		std::cin >> input;
+		std::getline(std::cin, input);
 		Chunk *ch = new Chunk;
 		ch->text = input;
 		return ch;

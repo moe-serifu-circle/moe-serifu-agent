@@ -11,7 +11,10 @@ namespace msa { namespace input {
 
 	typedef enum input_type_type { TTY, TCP, UDP } InputType;
 
-	typedef struct chunk_type Chunk;
+	typedef struct chunk_type
+	{
+		std::string text;
+	} Chunk;
 
 	typedef struct device_type Device;
 

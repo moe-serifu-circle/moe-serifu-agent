@@ -16,14 +16,8 @@ namespace msa { namespace event {
 		{10},
 		//EVENT_INTERRUPTED
 		{10},
-		// COMMAND_ANNOUNCE
-		{2},
-		// COMMAND_EXIT
-		{1},
 		// TEXT_INPUT
-		{2},
-		// INVALID_COMMAND
-		{2}
+		{1},
 	};
 
 	inline bool operator<(const Event &e1, const Event &e2)

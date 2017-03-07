@@ -233,6 +233,11 @@ namespace msa { namespace cmd {
 		msa::string::tokenize(*str, ' ', args);
 		delete str;
 		// pull out command name and call the appropriate function
+		if (args.size() == 0)
+		{
+			// no command, terminate parsing
+			return;
+		}
 		std::string cmd_name = args[0];
 		args.erase(args.begin());
 		msa::string::to_upper(cmd_name);

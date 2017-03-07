@@ -2,7 +2,6 @@
 #include "event/dispatch.hpp"
 #include "string.hpp"
 #include "agent.hpp"
-#include "output.hpp"
 #include "log.hpp"
 
 #include <cstdio>
@@ -158,16 +157,12 @@ namespace msa { namespace cmd {
 
 	static void announce_func(msa::Handle hdl, const ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
 	{
-		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
-		msa::output::write_text(hdl, a->name + ": \"I'd like to announce my presence!\"\n");
+		msa::agent::say(hdl, "I'd like to announce my presence!");
 	}
 
 	static void kill_func(msa::Handle hdl, const ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
 	{
-		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
-		// copy the name because it can be overwritten on quit
-		std::string name(a->name);
-		msa::output::write_text(hdl, name + ": \"Right away master, I will terminate my EDT for you now!\"\n");
+		msa::agent::say(hdl, "Right away master, I will terminate my EDT for you now!");
 		int status = msa::quit(hdl);
 		if (status != 0)
 		{
@@ -178,44 +173,42 @@ namespace msa { namespace cmd {
 	static void help_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		CommandContext *ctx = hdl->cmd;
-		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
 		if (args.size() > 0)
 		{
 			std::string cmd_name = args[0];
 			msa::string::to_upper(cmd_name);
 			if (ctx->commands.find(cmd_name) == ctx->commands.end())
 			{
-				msa::output::write_text(hdl, a->name + ": \"I'm sorry, Master, but I don't know about the command '" + cmd_name + "'.\"\n");
-				msa::output::write_text(hdl, a->name + ": \"But if you do HELP with no args, I'll list the commands I do know!\"\n");
+				msa::agent::say(hdl, "I'm sorry, Master, but I don't know about the command '" + cmd_name + "'.");
+				msa::agent::say(hdl, "But if you do HELP with no args, I'll list the commands I do know!");
 			}
 			else
 			{
 				const Command *cmd = ctx->commands[cmd_name];
-				msa::output::write_text(hdl, a->name + ": \"Oh yeah, that's the " + cmd_name + " command!\"\n");
-				msa::output::write_text(hdl, a->name + ": \"" + cmd->desc + ".\"\n");
+				msa::agent::say(hdl, "Oh yeah, that's the " + cmd_name + " command!");
+				msa::agent::say(hdl, cmd->desc + ".");
 				std::string usage_str = "";				
 				if (cmd->usage != "")
 				{
 					usage_str = " " + cmd->usage;
 				}
-				msa::output::write_text(hdl, a->name + ": \"You can call it like this: " + cmd_name + usage_str + "\"\n");
+				msa::agent::say(hdl, "You can call it like this: " + cmd_name + usage_str);
 			}
 		}
 		else
 		{
-			msa::output::write_text(hdl, a->name + ": \"Sure! I'll list the commands I know about.\"\n");
+			msa::agent::say(hdl, "Sure! I'll list the commands I know about.");
 			std::map<std::string, const Command *>::const_iterator iter;
 			for (iter = ctx->commands.begin(); iter != ctx->commands.end(); iter++)
 			{
-				msa::output::write_text(hdl, a->name + ": \"" + iter->first + "\"\n");
+				msa::agent::say(hdl, iter->first);
 			}
-			msa::output::write_text(hdl, a->name + ": \"You can do HELP followed by the name of a command to find out more.\"\n");
+			msa::agent::say(hdl, "You can do HELP followed by the name of a command to find out more.");
 		}
 	}
 	
 	static void echo_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
 	{
-		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
 		std::vector<std::string>::const_iterator iter;
 		std::string echo_string;
 		for (iter = args.begin(); iter != args.end(); iter++)
@@ -226,13 +219,12 @@ namespace msa { namespace cmd {
 				echo_string += " ";
 			}
 		}
-		msa::output::write_text(hdl, a->name + ": \"" + echo_string + "\"\n");
+		msa::agent::say(hdl, echo_string);
 	}
 	
 	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
 	{
 		CommandContext *ctx = hdl->cmd;
-		const msa::agent::Agent *a = msa::agent::get_agent(hdl);
 		std::string *str = static_cast<std::string *>(e->args);
 		std::vector<std::string> args;
 		msa::string::tokenize(*str, ' ', args);
@@ -248,7 +240,7 @@ namespace msa { namespace cmd {
 		msa::string::to_upper(cmd_name);
 		if (ctx->commands.find(cmd_name) == ctx->commands.end())
 		{
-			msa::output::write_text(hdl, a->name + ": \"I'm sorry, Master. I don't know what you mean by '" + cmd_name + "'.\"\n");
+			msa::agent::say(hdl, "I'm sorry, Master. I don't know what you mean by '" + cmd_name + "'.");
 		}
 		else
 		{

@@ -47,7 +47,7 @@ $(ODIR)/configuration.o: $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(S
 $(ODIR)/string.o: $(SDIR)/string.cpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/string.cpp $(CXXFLAGS)
 
-$(ODIR)/agent.o: $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp
+$(ODIR)/agent.o: $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp
 	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS)
 
 $(ODIR)/util.o: $(SDIR)/util.cpp $(SDIR)/util.hpp
@@ -65,7 +65,7 @@ $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 $(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS)
 
-$(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/output.hpp $(SDIR)/log.hpp
+$(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS)
 
 $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/util.hpp

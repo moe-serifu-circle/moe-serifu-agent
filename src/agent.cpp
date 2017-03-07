@@ -1,5 +1,6 @@
 #include "agent.hpp"
 #include "log.hpp"
+#include "output.hpp"
 
 #include <string>
 #include <cstdint>
@@ -50,6 +51,12 @@ namespace msa { namespace agent {
 	extern const Agent *get_agent(msa::Handle hdl)
 	{
 		return hdl->agent->agent;
+	}
+
+	extern void say(msa::Handle hdl, const std::string &text)
+	{
+		Agent *a = hdl->agent->agent;
+		msa::output::write_text(hdl, a->name + ": \"" + text + "\"\n");
 	}
 
 	static int create_agent_context(AgentContext **ctx_ptr)

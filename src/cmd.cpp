@@ -243,7 +243,7 @@ namespace msa { namespace cmd {
 		msa::string::to_upper(cmd_name);
 		if (ctx->commands.find(cmd_name) == ctx->commands.end())
 		{
-			msa::output::write_text(hdl, a->name + ": \"I'm sorry, Master. I don't understand the command '" + cmd_name + "'.\"\n");
+			msa::output::write_text(hdl, a->name + ": \"I'm sorry, Master. I don't know what you mean by '" + cmd_name + "'.\"\n");
 		}
 		else
 		{

@@ -193,7 +193,12 @@ namespace msa { namespace cmd {
 				const Command *cmd = ctx->commands[cmd_name];
 				msa::output::write_text(hdl, a->name + ": \"Oh yeah, that's the " + cmd_name + " command!\"\n");
 				msa::output::write_text(hdl, a->name + ": \"" + cmd->desc + ".\"\n");
-				msa::output::write_text(hdl, a->name + ": \"You can call it like this: " + cmd_name + " " + cmd->usage + "\"\n");
+				std::string usage_str = "";				
+				if (cmd->usage != "")
+				{
+					usage_str = " " + cmd->usage;
+				}
+				msa::output::write_text(hdl, a->name + ": \"You can call it like this: " + cmd_name + usage_str + "\"\n");
 			}
 		}
 		else

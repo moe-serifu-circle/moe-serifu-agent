@@ -5,6 +5,7 @@
 #include "configuration.hpp"
 
 #include <string>
+#include <vector>
 
 // Moe Serifu Agent state and manipulation
 
@@ -38,6 +39,7 @@ namespace msa { namespace agent {
 	extern void register_substitution(msa::Handle hdl, const std::string &name);
 	extern void set_substitution(msa::Handle hdl, const std::string &name, const std::string &value);
 	extern void unregister_substitution(msa::Handle hdl, const std::string &name);
+	extern void get_substitutions(msa::Handle hdl, std::vector<std::string> &subs);
 	extern const Agent *get_agent(msa::Handle hdl);
 	
 } }

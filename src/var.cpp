@@ -186,6 +186,15 @@ namespace msa { namespace var {
 		size_t bad_char_pos = str.find_first_not_of(IDENTIFIER_CHARS, 0);
 		return bad_char_pos == std::string::npos;
 	}
+
+	extern void get_defined(const Expander *ex, std::vector<std::string> &vars)
+	{
+		std::map<std::string, ExpanderItem>::const_iterator iter;
+		for (iter = ex->substitutions.begin(); iter != ex->substitutions.end(); iter++)
+		{
+			vars.push_back(iter->first);
+		}
+	}
 	
 	static bool find_next_variable(const std::string &text, size_t *pos, std::string *var_text)
 	{

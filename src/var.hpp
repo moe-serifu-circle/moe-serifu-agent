@@ -2,6 +2,7 @@
 #define VAR_HPP
 
 #include <string>
+#include <vector>
 
 namespace msa { namespace var {
 
@@ -18,6 +19,7 @@ namespace msa { namespace var {
 	extern void unregister_external(Expander *ex, const std::string &var);
 	extern void expand(Expander *ex, std::string &text);
 	extern bool is_valid_identifier(const std::string &str);
+	extern void get_defined(const Expander *ex, std::vector<std::string> &vars);
 	
 } }
 

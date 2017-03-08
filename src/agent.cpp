@@ -85,6 +85,12 @@ namespace msa { namespace agent {
 		msa::var::unregister_internal(ctx->expander, name);
 	}
 
+	extern void get_substitutions(msa::Handle hdl, std::vector<std::string> &subs)
+	{
+		AgentContext *ctx = hdl->agent;
+		msa::var::get_defined(ctx->expander, subs);
+	}
+
 	static int create_agent_context(AgentContext **ctx_ptr)
 	{
 		AgentContext *ctx = new AgentContext;

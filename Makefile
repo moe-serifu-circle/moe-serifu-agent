@@ -84,5 +84,5 @@ $(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp
 # ------------------- #
 
 $(ODIR)/platform/thread.o: compat/platform/thread/thread.cpp
-	$(CXX) -c -o $@ compat/platform/thread/thread.cpp
+	$(CXX) -c -o $@ compat/platform/thread/thread.cpp $(CXXFLAGS)
 

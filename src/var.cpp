@@ -1,5 +1,4 @@
 #include "var.hpp"
-#include "string.hpp"
 
 #include <map>
 #include <stdexcept>
@@ -45,91 +44,77 @@ namespace msa { namespace var {
 	extern void register_internal(Expander *ex, const std::string &var)
 	{
 		check_name(var);
-		std::string name = std::string(var);
-		msa::string::to_upper(name);
-		if (is_registered(ex, name))
+		if (is_registered(ex, var))
 		{
-			throw std::logic_error("variable already exists: " + name);
+			throw std::logic_error("variable already exists: " + var);
 		}
-		ex->substitutions[name].external = false;
-		ex->substitutions[name].value = new std::string();
+		ex->substitutions[var].external = false;
+		ex->substitutions[var].value = new std::string();
 	}
 	
 	extern void unregister_internal(Expander *ex, const std::string &var)
 	{
-		std::string name = std::string(var);
-		msa::string::to_upper(name);
-		if (!is_registered(ex, name))
+		if (!is_registered(ex, var))
 		{
 			return;
 		}
-		if (ex->substitutions[name].external)
+		if (ex->substitutions[var].external)
 		{
-			throw std::logic_error("cannot unregister external variable: " + name);
+			throw std::logic_error("cannot unregister external variable: " + var);
 		}
-		delete ex->substitutions[name].value;
-		ex->substitutions.erase(name);
+		delete ex->substitutions[var].value;
+		ex->substitutions.erase(var);
 	}
 	
 	extern bool is_registered(const Expander *ex, const std::string &var)
 	{
-		std::string name = std::string(var);
-		msa::string::to_upper(name);
-		return ex->substitutions.find(name) != ex->substitutions.end();
+		return ex->substitutions.find(var) != ex->substitutions.end();
 	}
 	
 	extern void set_value(Expander *ex, const std::string &var, const std::string &value)
 	{
-		std::string name = std::string(var);
-		msa::string::to_upper(name);
-		if (!is_registered(ex, name))
+		if (!is_registered(ex, var))
 		{
-			throw std::logic_error("variable does not exist: " + name);
+			throw std::logic_error("variable does not exist: " + var);
 		}
-		if (ex->substitutions[name].external)
+		if (ex->substitutions[var].external)
 		{
-			throw std::logic_error("cannot set external variable: " + name);
+			throw std::logic_error("cannot set external variable: " + var);
 		}
-		*ex->substitutions[name].value = value;
+		*ex->substitutions[var].value = value;
 	}
 	
 	extern const std::string &get_value(const Expander *ex, const std::string &var)
 	{
-		std::string name = std::string(var);
-		msa::string::to_upper(name);
-		if (!is_registered(ex, name))
+		if (!is_registered(ex, var))
 		{
-			throw std::logic_error("variable does not exist: " + name);
+			throw std::logic_error("variable does not exist: " + var);
 		}
-		return *ex->substitutions.at(name).value;
+		return *ex->substitutions.at(var).value;
 	}
 	
 	extern void register_external(Expander *ex, const std::string &var, std::string *value_ptr)
 	{
 		check_name(var);
-		std::string name = std::string(var);
-		msa::string::to_upper(name);
-		if (is_registered(ex, name))
+		if (is_registered(ex, var))
 		{
-			throw std::logic_error("variable already exists: " + name);
+			throw std::logic_error("variable already exists: " + var);
 		}
-		ex->substitutions[name].external = true;
-		ex->substitutions[name].value = value_ptr;
+		ex->substitutions[var].external = true;
+		ex->substitutions[var].value = value_ptr;
 	}
 	
 	extern void unregister_external(Expander *ex, const std::string &var)
 	{
-		std::string name = std::string(var);
-		msa::string::to_upper(name);
-		if (!is_registered(ex, name))
+		if (!is_registered(ex, var))
 		{
 			return;
 		}
-		if (!ex->substitutions[name].external)
+		if (!ex->substitutions[var].external)
 		{
-			throw std::logic_error("variable is not external: " + name);
+			throw std::logic_error("variable is not external: " + var);
 		}
-		ex->substitutions.erase(name);
+		ex->substitutions.erase(var);
 	}
 	
 	extern void expand(Expander *ex, std::string &text)

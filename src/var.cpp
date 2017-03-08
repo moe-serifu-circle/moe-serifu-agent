@@ -167,7 +167,7 @@ namespace msa { namespace var {
 		while (!found && *pos != std::string::npos)
 		{
 			*pos = text.find('$', *pos);
-			if (*pos == text.size() - 1)
+			if (*pos >= text.size() - 1)
 			{
 				*pos = std::string::npos;
 			}
@@ -180,7 +180,10 @@ namespace msa { namespace var {
 					*var_text = text.substr(*pos, (end_pos - *pos) + 1);
 					found = true;
 				}
-				(*pos)++;
+				else
+				{
+					(*pos)++;
+				}
 			}
 		}
 		return found;

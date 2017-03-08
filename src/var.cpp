@@ -146,7 +146,7 @@ namespace msa { namespace var {
 			}
 			else
 			{
-				pos++;
+				pos += var_text.size();
 			}
 		}
 	}

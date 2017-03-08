@@ -62,7 +62,7 @@ namespace msa { namespace agent {
 
 	extern void say(msa::Handle hdl, const std::string &text)
 	{
-		std::string output_text = "$NAME: \"" + text + "\"\n";
+		std::string output_text = "\\$NAME: \"" + text + "\"\n";
 		msa::var::expand(hdl->agent->expander, output_text);
 		msa::output::write_text(hdl, output_text);
 		

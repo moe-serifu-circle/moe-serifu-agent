@@ -20,6 +20,9 @@ namespace msa { namespace var {
 
 	static void check_name(const std::string &name);
 	static bool find_next_variable(const std::string &text, size_t *pos, std::string *var_text);
+	static size_t find_unescaped(const std::string &search, char needle, size_t pos);
+	static void remove_escapes(std::string &text);
+	static void expand_variables(Expander *ex, std::string &text);
 
 	extern void create_expander(Expander **expander)
 	{
@@ -119,6 +122,17 @@ namespace msa { namespace var {
 	
 	extern void expand(Expander *ex, std::string &text)
 	{
+		expand_variables(ex, text);
+		remove_escapes(text);
+	}
+
+	static void remove_escapes(std::string & UNUSED(text))
+	{
+
+	}
+	
+	static void expand_variables(Expander *ex, std::string &text)
+	{
 		size_t pos = 0;
 		std::string var_text;
 		std::string var;
@@ -151,7 +165,7 @@ namespace msa { namespace var {
 		bool found = false;
 		while (!found && *pos != std::string::npos)
 		{
-			*pos = text.find('$', *pos);
+			*pos = find_unescaped(text, '$', *pos);
 			if (*pos >= text.size() - 1)
 			{
 				*pos = std::string::npos;
@@ -172,6 +186,27 @@ namespace msa { namespace var {
 			}
 		}
 		return found;
+	}
+
+	static size_t find_unescaped(const std::string &search, char needle, size_t pos)
+	{
+		bool escaped = false;
+		for (size_t i = pos; i < search.size(); i++)
+		{
+			if (search[i] == '\\' && !escaped)
+			{
+				escaped = true;
+			}
+			else if (search[i] == needle && !escaped)
+			{
+				return i;
+			}
+			else if (escaped)
+			{
+				escaped = false;
+			}
+		}
+		return std::string::npos;
 	}
 
 	static void check_name(const std::string &name)

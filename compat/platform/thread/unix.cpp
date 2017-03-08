@@ -209,8 +209,6 @@ namespace msa { namespace thread {
 
 	static void *__run(void *arg)
 	{
-		Thread my_tid = self();
-		
 		RunnerArgs *ra = (RunnerArgs *) arg;
 		void *(*start_routine)(void *) = ra->start_routine;
 		void *start_routine_arg = ra->start_routine_arg;

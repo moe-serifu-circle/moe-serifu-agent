@@ -4,7 +4,7 @@ SDIR?=src
 CXX?=g++
 CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR) -Icompat -include compat/compat.hpp
 
-DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd.o log.o output.o
+DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd.o log.o output.o var.o
 DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 
@@ -47,7 +47,7 @@ $(ODIR)/configuration.o: $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(S
 $(ODIR)/string.o: $(SDIR)/string.cpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/string.cpp $(CXXFLAGS)
 
-$(ODIR)/agent.o: $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp
+$(ODIR)/agent.o: $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp $(SDIR)/var.hpp
 	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS)
 
 $(ODIR)/util.o: $(SDIR)/util.cpp $(SDIR)/util.hpp
@@ -73,6 +73,9 @@ $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/configuration.hpp $(SDIR)
 
 $(ODIR)/output.o: $(SDIR)/output.cpp $(SDIR)/output.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/output.cpp $(CXXFLAGS)
+
+$(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp $(SDIR)/string.hpp
+	$(CXX) -c -o $@ $(SDIR)/var.cpp $(CXXFLAGS)
 
 
 

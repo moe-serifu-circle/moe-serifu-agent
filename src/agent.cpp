@@ -12,7 +12,7 @@ namespace msa { namespace agent {
 	struct agent_context_type
 	{
 		Agent *agent;
-		std::string address;
+		std::string user_title;
 		msa::var::Expander *expander;
 	};
 
@@ -108,20 +108,22 @@ namespace msa { namespace agent {
 	static void read_config(msa::Handle hdl, const msa::config::Section &config)
 	{
 		std::string name = std::string(config.get_or("NAME", "DEFAULT_NAME"));
+		std::string user_title = std::string(config.get_or("USER_TITLE", "Master"));
 		hdl->agent->agent = new Agent(name);
+		hdl->agent->user_title = user_title;
 	}
 
 	static void add_default_substitutions(msa::Handle hdl)
 	{
 		AgentContext *ctx = hdl->agent;
-		msa::var::register_external(ctx->expander, "MASTER_ADDRESS", &ctx->address);
+		msa::var::register_external(ctx->expander, "USER_TITLE", &ctx->user_title);
 		msa::var::register_external(ctx->expander, "AGENT_NAME", &ctx->agent->name);
 	}
 
 	static void remove_default_substitutions(msa::Handle hdl)
 	{
 		AgentContext *ctx = hdl->agent;
-		msa::var::unregister_external(ctx->expander, "MASTER_ADDRESS");
+		msa::var::unregister_external(ctx->expander, "USER_TITLE");
 		msa::var::unregister_external(ctx->expander, "AGENT_NAME");
 	}
 

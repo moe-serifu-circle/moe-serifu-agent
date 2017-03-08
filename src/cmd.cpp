@@ -162,7 +162,7 @@ namespace msa { namespace cmd {
 
 	static void kill_func(msa::Handle hdl, const ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
 	{
-		msa::agent::say(hdl, "Right away master, I will terminate my EDT for you now!");
+		msa::agent::say(hdl, "Right away, $USER_TITLE, I will terminate my EDT for you now!");
 		int status = msa::quit(hdl);
 		if (status != 0)
 		{
@@ -179,7 +179,7 @@ namespace msa { namespace cmd {
 			msa::string::to_upper(cmd_name);
 			if (ctx->commands.find(cmd_name) == ctx->commands.end())
 			{
-				msa::agent::say(hdl, "I'm sorry, Master, but I don't know about the command '" + cmd_name + "'.");
+				msa::agent::say(hdl, "I'm sorry, $USER_TITLE, but I don't know about the command '" + cmd_name + "'.");
 				msa::agent::say(hdl, "But if you do HELP with no args, I'll list the commands I do know!");
 			}
 			else
@@ -240,7 +240,7 @@ namespace msa { namespace cmd {
 		msa::string::to_upper(cmd_name);
 		if (ctx->commands.find(cmd_name) == ctx->commands.end())
 		{
-			msa::agent::say(hdl, "I'm sorry, Master. I don't know what you mean by '" + cmd_name + "'.");
+			msa::agent::say(hdl, "I'm sorry, $USER_TITLE. I don't know what you mean by '" + cmd_name + "'.");
 		}
 		else
 		{

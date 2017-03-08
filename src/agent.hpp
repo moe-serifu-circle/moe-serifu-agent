@@ -16,7 +16,7 @@ namespace msa { namespace agent {
 	typedef struct agent_type
 	{
 		// name of the agent
-		const std::string name;
+		std::string name;
 
 		// current activity
 		State state;
@@ -35,6 +35,9 @@ namespace msa { namespace agent {
 	extern int init(msa::Handle hdl, const msa::config::Section &config);
 	extern int quit(msa::Handle hdl);
 	extern void say(msa::Handle hdl, const std::string &text);
+	extern void register_substitution(msa::Handle hdl, const std::string &name);
+	extern void set_substitution(msa::Handle hdl, const std::string &name, const std::string &value);
+	extern void unregister_substitution(msa::Handle hdl, const std::string &name);
 	extern const Agent *get_agent(msa::Handle hdl);
 	
 } }

@@ -173,6 +173,7 @@ namespace msa { namespace var {
 			var = var_text.substr(1);
 			const std::string val = get_value(ex, var);
 			text.replace(pos, var_text.size(), val);
+			pos += val.size();
 		}
 	}
 	

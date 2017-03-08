@@ -58,29 +58,29 @@ int main(int argc, char *argv[]) {
 		}
 		return EXIT_FAILURE;
 	}
-	printf("Master: \"Waiting for EDT to start...\"\n");
+	printf("Waiting for EDT to start...\n");
 	while (hdl->status == msa::Status::CREATED)
 	{
 		msa::util::sleep_milli(50);
 	}
-	printf("Master: \"System is ready.\"\n");
+	printf("System is ready.\n");
 	while (hdl->status == msa::Status::RUNNING)
 	{
 		msa::util::sleep_milli(50);
 	}
-	printf("Master: \"Waiting for MSA to exit...\"\n");
+	printf("Waiting for MSA to exit...\n");
 	while (hdl->status != msa::Status::STOPPED)
 	{
 		msa::util::sleep_milli(50);
 	}
 	if (hdl->status == msa::Status::STOPPED)
 	{
-		printf("Master: \"MSA system has exited.\"\n");
+		printf("MSA system has exited.\n");
 		msa::dispose(hdl);
 	}
 	else
 	{
-		printf("Master: \"MSA state is not shutdown, but still terminating.\n");
+		printf("MSA state is not shutdown, but still terminating.\n");
 	}
 	return EXIT_SUCCESS;
 }

@@ -29,7 +29,6 @@ namespace msa { namespace cmd {
 	static int dispose_command_context(CommandContext *ctx);
 
 	// handlers
-	static void announce_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 	static void help_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 	static void echo_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 	static void kill_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
@@ -40,7 +39,6 @@ namespace msa { namespace cmd {
 	
 	static const struct command_type default_commands[] = {
 		{"KILL", "It shuts down this MSA instance", "", kill_func},
-		{"ANNOUNCE", "It echoes a simple phrase to announce existance", "", announce_func},
 		{"ECHO", "It outputs its arguments", "echo-args...", echo_func},
 		{"HELP", "With no args, it lists all commands. Otherwise, it displays the help", "[command]", help_func}
 	};
@@ -132,13 +130,9 @@ namespace msa { namespace cmd {
 
 	static void read_config(msa::Handle hdl, const msa::config::Section &config)
 	{
-		std::string do_anc = config.get_or("ANNOUNCE", "false");
-		msa::string::to_upper(do_anc);
-		if (do_anc == "TRUE" || do_anc == "YES" || do_anc == "1")
-		{
-			std::string *cmd_str = new std::string("announce");
-			msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, cmd_str);
-		}
+		std::string startup_cmd = config.get_or("STARTUP", "echo I'd like to announce my presence!");
+		std::string *cmd_str = new std::string(startup_cmd);
+		msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, cmd_str);
 	}
 
 	static int create_command_context(CommandContext **ctx)
@@ -153,11 +147,6 @@ namespace msa { namespace cmd {
 	{
 		delete ctx;
 		return 0;
-	}
-
-	static void announce_func(msa::Handle hdl, const ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
-	{
-		msa::agent::say(hdl, "I'd like to announce my presence!");
 	}
 
 	static void kill_func(msa::Handle hdl, const ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))

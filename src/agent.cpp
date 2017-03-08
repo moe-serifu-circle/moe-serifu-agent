@@ -62,10 +62,9 @@ namespace msa { namespace agent {
 
 	extern void say(msa::Handle hdl, const std::string &text)
 	{
-		std::string output_text = "\\$NAME: \"" + text + "\"\n";
+		std::string output_text = "$AGENT_NAME: \"" + text + "\"\n";
 		msa::var::expand(hdl->agent->expander, output_text);
 		msa::output::write_text(hdl, output_text);
-		
 	}
 
 	extern void register_substitution(msa::Handle hdl, const std::string &name)
@@ -115,15 +114,15 @@ namespace msa { namespace agent {
 	static void add_default_substitutions(msa::Handle hdl)
 	{
 		AgentContext *ctx = hdl->agent;
-		msa::var::register_external(ctx->expander, "ADDRESS", &ctx->address);
-		msa::var::register_external(ctx->expander, "NAME", &ctx->agent->name);
+		msa::var::register_external(ctx->expander, "MASTER_ADDRESS", &ctx->address);
+		msa::var::register_external(ctx->expander, "AGENT_NAME", &ctx->agent->name);
 	}
 
 	static void remove_default_substitutions(msa::Handle hdl)
 	{
 		AgentContext *ctx = hdl->agent;
-		msa::var::unregister_external(ctx->expander, "ADDRESS");
-		msa::var::unregister_external(ctx->expander, "NAME");
+		msa::var::unregister_external(ctx->expander, "MASTER_ADDRESS");
+		msa::var::unregister_external(ctx->expander, "AGENT_NAME");
 	}
 
 } }

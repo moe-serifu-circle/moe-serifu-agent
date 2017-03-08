@@ -19,6 +19,7 @@ namespace msa { namespace event {
 		HandlerSync *sync;
 		bool running;
 		msa::thread::Thread thread;
+		bool reap_in_handler;
 	} HandlerContext;
 
 	struct event_dispatch_context_type {
@@ -254,6 +255,7 @@ namespace msa { namespace event {
 	static void edt_spawn_handler(msa::Handle hdl, const Event *e)
 	{
 		HandlerContext *new_ctx = new HandlerContext;
+		new_ctx->reap_in_handler = false;
 		new_ctx->event = e;
 		new_ctx->handler_func = hdl->event->handlers[e->topic];
 		create_handler_sync(&new_ctx->sync);
@@ -300,12 +302,19 @@ namespace msa { namespace event {
 					msa::util::sleep_milli(10);
 				}
 			}
+			else
+			{
+				ctx->reap_in_handler = true;
+			}
 		}
-		// delete event
-		dispose(ctx->event);
-		// delete sync handler
-		dispose_handler_sync(ctx->sync);
-		delete ctx;
+		if (!ctx->reap_in_handler)
+		{
+			// delete event
+			dispose(ctx->event);
+			// delete sync handler
+			dispose_handler_sync(ctx->sync);
+			delete ctx;
+		}
 	}
 
 	void *event_start(void *args)
@@ -313,7 +322,16 @@ namespace msa { namespace event {
 		msa::Handle hdl = (msa::Handle) args;
 		HandlerContext *ctx = hdl->event->current_handler;
 		ctx->handler_func(hdl, ctx->event, ctx->sync);
-		ctx->running = false;
+		if (ctx->reap_in_handler)
+		{
+			dispose(ctx->event);
+			dispose_handler_sync(ctx->sync);
+			delete ctx;
+		}
+		else
+		{
+			ctx->running = false;
+		}
 		return NULL;
 	}
 

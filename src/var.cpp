@@ -16,6 +16,7 @@ namespace msa { namespace var {
 		std::map<std::string, ExpanderItem> substitutions;
 	};
 	
+	static const std::string UNDEFINED_VAR_VALUE = "";
 	static const std::string IDENTIFIER_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789";
 
 	static void check_name(const std::string &name);
@@ -91,7 +92,7 @@ namespace msa { namespace var {
 	{
 		if (!is_registered(ex, var))
 		{
-			throw std::logic_error("variable does not exist: " + var);
+			return UNDEFINED_VAR_VALUE;
 		}
 		return *ex->substitutions.at(var).value;
 	}
@@ -170,14 +171,8 @@ namespace msa { namespace var {
 		while (find_next_variable(text, &pos, &var_text))
 		{
 			var = var_text.substr(1);
-			if (is_registered(ex, var))
-			{
-				text.replace(pos, var_text.size(), get_value(ex, var));
-			}
-			else
-			{
-				pos += var_text.size();
-			}
+			const std::string val = get_value(ex, var);
+			text.replace(pos, var_text.size(), val);
 		}
 	}
 	

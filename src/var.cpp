@@ -158,7 +158,7 @@ namespace msa { namespace var {
 			return false;
 		}
 		size_t bad_char_pos = str.find_first_not_of(IDENTIFIER_CHARS, 0);
-		return bad_char_pos = std::string::npos;
+		return bad_char_pos == std::string::npos;
 	}
 	
 	static bool find_next_variable(const std::string &text, size_t *pos, std::string *var_text)
@@ -195,3 +195,4 @@ namespace msa { namespace var {
 	}
 
 } }
+

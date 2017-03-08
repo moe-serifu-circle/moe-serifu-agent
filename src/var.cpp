@@ -126,9 +126,40 @@ namespace msa { namespace var {
 		remove_escapes(text);
 	}
 
-	static void remove_escapes(std::string & UNUSED(text))
+	static void remove_escapes(std::string &text)
 	{
+		bool escaped = false;
+		std::string::iterator iter = text.begin();
+		while (iter != text.end())
+		{
+			if (!escaped)
+			{
+				if (*iter == '\\')
+				{
+					escaped = true;
+					iter = text.erase(iter);
+				}
+				else
+				{
+					iter++;
+				}
+			}
+			else
+			{
+				switch (*iter)
+				{
+					case '\\':
+					case '$':
+						escaped = false;
+						break;
 
+					default:
+						throw std::logic_error("bad escape sequence: \\" + *iter);
+						break;
+				}
+				iter++;
+			}
+		}
 	}
 	
 	static void expand_variables(Expander *ex, std::string &text)

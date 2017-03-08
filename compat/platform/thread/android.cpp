@@ -79,6 +79,7 @@ namespace msa { namespace thread {
 			return -1;
 		}
 		
+		Mutex *start_mutex = ra->start_mutex;
 		int status = pthread_create(thread, attr, __run, ra);
 		if (status != 0)
 		{
@@ -98,7 +99,7 @@ namespace msa { namespace thread {
 			set_name(*thread, name);
 		}
 		
-		if (mutex_unlock(ra->start_mutex) != 0)
+		if (mutex_unlock(start_mutex) != 0)
 		{
 			__info_dispose(info);
 			mutex_destroy(ra->start_mutex);

@@ -15,6 +15,7 @@
 #define MSA_ERR_CMD 5
 #define MSA_ERR_LOG 6
 #define MSA_ERR_OUTPUT 7
+#define MSA_ERR_PLUGIN 8
 
 namespace msa {
 
@@ -53,6 +54,12 @@ namespace msa {
 		typedef struct log_context_type LogContext;
 
 	}
+	
+	namespace plugin {
+	
+		typedef struct plugin_context_type PluginContext;
+		
+	}
 
 	typedef enum status_type { CREATED, RUNNING, STOP_REQUESTED, STOPPED } Status;
 
@@ -65,6 +72,7 @@ namespace msa {
 		msa::agent::AgentContext *agent;
 		msa::cmd::CommandContext *cmd;
 		msa::log::LogContext *log;
+		msa::plugin::PluginContext *plugin;
 	};
 
 	typedef struct environment_type* Handle;

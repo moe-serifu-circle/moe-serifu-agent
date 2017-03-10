@@ -3,6 +3,9 @@
 #include "log.hpp"
 
 #include <map>
+#include <exception>
+
+#include "compat/filesystem/filesystem.hpp"
 
 namespace msa { namespace plugin {
 
@@ -17,10 +20,13 @@ namespace msa { namespace plugin {
 	{
 		std::map<std::string, PluginEntry *> loaded;
 		std::map<std::string, PluginEntry *> enabled;
+		std::string autoload_dir;
 	};
 	
 	static int create_plugin_context(PluginContext **ctx_ptr);
 	static int dispose_plugin_context(PluginContext *ctx);
+	static void read_config(msa::Handle hdl, const msa::config::Section &config);
+	static void load_all(msa::Handle hdl, const std::string &dir_path);
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -29,7 +35,21 @@ namespace msa { namespace plugin {
 			msa::log::error(hdl, "Could not create plugin manager context");
 			return -1;
 		}
-		
+		try
+		{
+			read_config(hdl, config);
+		}
+		catch (std::exception &e)
+		{
+			msa::log::error(hdl, "Could not read config: " + e.what());
+			return -1;
+		}
+		// do autoloading now
+		if (hdl->plugin->autoload_dir != "")
+		{
+
+		}
+		return 0;
 	}
 	
 	extern int quit(msa::Handle hdl)
@@ -50,6 +70,7 @@ namespace msa { namespace plugin {
 	static int create_plugin_context(PluginContext **ctx_ptr)
 	{
 		PluginContext *ctx = new PluginContext;
+		ctx->autoload_dir = "";
 		*ctx_ptr = ctx;
 		return 0;
 	}
@@ -58,6 +79,18 @@ namespace msa { namespace plugin {
 	{
 		delete ctx;
 		return 0;
+	}
+
+	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	{
+		if (!config.has("DIR"))
+		{
+			msa::log::warn(hdl, "No plugin directory specified in config; plugins will not be auto-loaded");
+		}
+		else
+		{
+			hdl->plugin->autoload_dir = config["DIR"];
+		}
 	}
 
 } }

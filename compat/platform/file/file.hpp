@@ -9,6 +9,7 @@
 namespace msa { namespace file {
 
 	extern void list(const std::string &dir_path, std::vector<std::string> &files);
+	extern void join(std::string &base, const std::string &next);
 
 } }
 

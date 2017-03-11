@@ -16,6 +16,8 @@ namespace msa { namespace string {
 	extern String &to_upper(String &str);
 	extern String &to_lower(String &str);
 	extern void tokenize(String &str, char separator, std::vector<String> &output);
+	extern bool ends_with(const String &str, const String &suffix);
+	extern bool starts_with(const String &str, const String &prefix);
 
 } }
 

@@ -87,6 +87,25 @@ namespace msa { namespace string {
 			output.push_back(cur_token);
 		}
 	}
+	
+	extern bool ends_with(const String &str, const String &suffix)
+	{
+		if (str.size() < suffix.size())
+		{
+			return false;
+		}
+		size_t start_pos = str.size() - suffix.size();
+		return (str.compare(start_pos, String::npos, suffix) == 0);
+	}
+
+	extern bool starts_with(const String &str, const String &prefix)
+	{	
+		if (str.size() < suffix.size())
+		{
+			return false;
+		}
+		return (str.compare(0, preffix.size(), prefix) == 0);
+	}
 
 } }
 

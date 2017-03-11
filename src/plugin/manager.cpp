@@ -5,7 +5,7 @@
 #include <map>
 #include <exception>
 
-#include "compat/filesystem/filesystem.hpp"
+#include "compat/file/file.hpp"
 
 namespace msa { namespace plugin {
 
@@ -47,7 +47,7 @@ namespace msa { namespace plugin {
 		// do autoloading now
 		if (hdl->plugin->autoload_dir != "")
 		{
-
+			load_all(hdl, hdl->plugin->autoload_dir);
 		}
 		return 0;
 	}
@@ -62,10 +62,12 @@ namespace msa { namespace plugin {
 		return 0;
 	}
 	
-	extern void load(msa::Handle hdl, const std::string &path, std::string &id);
+	extern const std::string &load(msa::Handle hdl, const std::string &path);
 	extern void unload(msa::Handle hdl, const std::string &id);
+	extern void get_loaded(msa::Handle hdl, std::vector<std::string> &ids);
 	extern void enable(msa::Handle hdl, const std::string &id);
 	extern void disable(msa::Handle hdl, const std::string &id);
+	extern bool is_enabled(msa::Handle hdl, std::string &id);
 	
 	static int create_plugin_context(PluginContext **ctx_ptr)
 	{
@@ -90,6 +92,22 @@ namespace msa { namespace plugin {
 		else
 		{
 			hdl->plugin->autoload_dir = config["DIR"];
+		}
+	}
+
+	static void load_all(msa::Handle hdl, const std::string &dir_path)
+	{
+		std::vector<std::string> filenames;
+		msa::file::list(dir_path, filenames);
+		for (size_t i = 0; i < filesnames.size(); i++)
+		{
+			std::string fname = filenames[i];
+			if (msa::string::ends_with(fname, ".so") || msa::string::ends_with(fname, ".dll"))
+			{
+				std::string full_path = dir_path;
+				msa::file::join(full_path, fname);
+				load(full_path);
+			}
 		}
 	}
 

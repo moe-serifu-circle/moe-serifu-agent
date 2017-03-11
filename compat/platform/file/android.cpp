@@ -20,4 +20,9 @@ namespace msa { namespace file {
 		closedir(d);
 	}
 
+	extern void join(std::string &base, const std::string &next)
+	{
+		base += "/" + next;
+	}
+
 } }

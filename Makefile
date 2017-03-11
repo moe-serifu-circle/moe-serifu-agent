@@ -8,8 +8,8 @@ DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o
 DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 
-OS_DEP_TARGETS=thread.o filesystem.o
-OS_DEP_OBJS=$(patsubst %,$(ODIR)/platform/%,$(DEP_TARGETS))
+OS_DEP_TARGETS=thread.o file.o
+OS_DEP_OBJS=$(patsubst %,$(ODIR)/platform/%,$(OS_DEP_TARGETS))
 
 .PHONY: clean test all debug
 
@@ -86,5 +86,5 @@ $(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp
 $(ODIR)/platform/thread.o: compat/platform/thread/thread.cpp
 	$(CXX) -c -o $@ compat/platform/thread/thread.cpp $(CXXFLAGS)
 
-$(ODIR)/platform/filesystem.o: compat/platform/filesystem/filesystem.cpp
-	$(CXX) -c -o $@ compat/platform/thread/filesystem.cpp $(CXXFLAGS)
+$(ODIR)/platform/file.o: compat/platform/file/file.cpp
+	$(CXX) -c -o $@ compat/platform/thread/file.cpp $(CXXFLAGS)

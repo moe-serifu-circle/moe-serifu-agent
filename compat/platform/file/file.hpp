@@ -1,8 +1,10 @@
-#ifndef COMPAT_PLATFORM_FILESYSTEM_FILESYSTEM_HPP
-#define COMPAT_PLATFORM_FILESYSTEM_FILESYSTEM_HPP
+#ifndef COMPAT_PLATFORM_FILE_FILE_HPP
+#define COMPAT_PLATFORM_FILE_FILE_HPP
 
 #include <string>
 #include <vector>
+
+// functions for manipulating the filesystem in a cross-platform way
 
 namespace msa { namespace file {
 

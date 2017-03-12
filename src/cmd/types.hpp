@@ -1,3 +1,6 @@
+#ifndef CMD_TYPES_HPP
+#define CMD_TYEPS_HPP
+
 #include "event/handler.hpp"
 
 #include <vector>
@@ -22,3 +25,4 @@ namespace msa { namespace cmd {
 
 } }
 
+#endif

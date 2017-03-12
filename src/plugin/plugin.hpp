@@ -1,5 +1,5 @@
-#ifndef PLUGIN_MANAGER_HPP
-#define PLUGIN_MANAGER_HPP
+#ifndef PLUGIN_PLUGIN_HPP
+#define PLUGIN_PLUGIN_HPP
 
 #include "msa.hpp"
 #include "plugin/types.hpp"
@@ -22,3 +22,4 @@ namespace msa { namespace plugin {
 	
 } }
 
+#endif

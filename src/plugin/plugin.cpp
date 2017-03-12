@@ -3,8 +3,8 @@
 #include "log.hpp"
 #include "cmd/cmd.hpp"
 
-#include "compat/file/file.hpp"
-#include "compat/lib/lib.hpp"
+#include "platform/file/file.hpp"
+#include "platform/lib/lib.hpp"
 
 #include <map>
 #include <exception>
@@ -285,7 +285,7 @@ namespace msa { namespace plugin {
 	
 	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry)
 	{
-		std::vector<Command *> new_commands;
+		std::vector<msa::cmd::Command *> new_commands;
 		if (entry->info->add_commands_func != NULL)
 		{
 			int status = 0;

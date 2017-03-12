@@ -1,5 +1,5 @@
-#ifndef PLUGIN_PLUGIN_HPP
-#define PLUGIN_PLUGIN_HPP
+#ifndef PLUGIN_TYPES_HPP
+#define PLUGIN_TYPES_HPP
 
 // will look for a function called 'msa_plugin_getinfo()' which must be a GetInfoFunc.
 
@@ -9,11 +9,13 @@
 #include <cstdint>
 #include <vector>
 
-namespace msa { namespace plugin
+namespace msa { namespace plugin {
+
+	typedef struct info_type Info;
 
 	typedef const Info *(*GetInfoFunc)(void);
 	typedef int (*Func)(msa::Handle hdl, void *plugin_env);
-	typedef int (*AddCommmandsFunc)(msa::Handle hdl, void *plugin_env, std::vector<Command *> &new_commands);
+	typedef int (*AddCommmandsFunc)(msa::Handle hdl, void *plugin_env, std::vector<msa::cmd::Command *> &new_commands);
 	typedef int (*InitFunc)(msa::Handle hdl, void **plugin_env);
 
 	typedef struct version_type
@@ -24,10 +26,10 @@ namespace msa { namespace plugin
 		uint32_t build;
 	} Version;
 
-	typedef struct info_type
+	struct info_type
 	{
 		const char *name;
-		const char *authors[];
+		std::vector<std::string> authors;
 		size_t num_authors;
 		Version version;
 		InitFunc init_func;
@@ -48,7 +50,7 @@ namespace msa { namespace plugin
 			add_agent_props_func(NULL),
 			add_commands_func(NULL)
 			{}
-	} Info;
+	};
 
 } }
 

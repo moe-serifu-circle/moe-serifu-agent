@@ -5,7 +5,7 @@ CXX?=g++
 CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR) -Icompat -include compat/compat.hpp
 LDFLAGS?=-ldl -lpthread
 
-DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd/cmd.o log.o output.o var.o
+DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd/cmd.o log.o output.o var.o plugin/plugin.o
 DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 
@@ -68,7 +68,7 @@ $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 $(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS)
 
-$(ODIR)/cmd/cmd.o: $(SDIR)/cmd/cmd.cpp $(SDIR)/cmd/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/log.hpp
+$(ODIR)/cmd/cmd.o: $(SDIR)/cmd/cmd.cpp $(SDIR)/cmd/cmd.hpp $(SDIR)/cmd/types.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd/cmd.cpp $(CXXFLAGS)
 
 $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/util.hpp
@@ -79,6 +79,9 @@ $(ODIR)/output.o: $(SDIR)/output.cpp $(SDIR)/output.hpp $(SDIR)/msa.hpp $(SDIR)/
 
 $(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp
 	$(CXX) -c -o $@ $(SDIR)/var.cpp $(CXXFLAGS)
+
+$(ODIR)/plugin/plugin.o: $(SDIR)/plugin/plugin.cpp $(SDIR)/plugin/plugin.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/plugin/types.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp 
+	$(CXX) -c -o $@ $(SDIR)/plugin/plugin.cpp $(CXXFLAGS)
 
 
 

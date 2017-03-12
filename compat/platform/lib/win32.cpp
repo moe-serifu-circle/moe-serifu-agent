@@ -1,6 +1,4 @@
-#include <dlfcn.h>
-
-#include "comapt/file/file.hpp"
+#include "platform/file/file.hpp"
 
 namespace msa { namespace lib {
 

@@ -20,15 +20,15 @@ namespace msa { namespace file {
 		const std::string sep = dir_separator();
 		while (path.substr(path.size() - sep.size()) == sep)
 		{
-			for (size_t i = 0; i < dir_sep.size(); i++)
+			for (size_t i = 0; i < sep.size(); i++)
 			{
 				path.erase(path.size() - 1);
 			}
 		}
-		size_t sep_pos = path.rfind(dir_sep);
+		size_t sep_pos = path.rfind(sep);
 		if (sep_pos != std::string::npos)
 		{
-			path = path.substr(sep_pos + dir_sep.size());
+			path = path.substr(sep_pos + sep.size());
 		}
 		if (suffix != "" && path.size() > suffix.size() && path.substr(path.size() - suffix.size()) == suffix)
 		{

@@ -1,5 +1,8 @@
 #include "windows.h"
 
+#include <stdstring>
+#include <stdexcept>
+
 namespace msa { namespace file {
 
 	static const std::string DIR_SEPARATOR = "\\";
@@ -10,14 +13,15 @@ namespace msa { namespace file {
 		join(scan_criteria, "*.*");
 		WIN32_FIND_DATA find_data;
 		HANDLE find_handle = FindFirstFile(scan_criteria.c_str(), &find_data);
-		if (find_handle != INVALID_HANDLE_VALUE)
+		if (find_handle == INVALID_HANDLE_VALUE)
 		{
-			do
-			{
-				files.push_back(find_data.cFileName);
-			} while(FindNextFile(find_handle, &find_data));
-			FindClose(find_handle);
+			throw std::logic_error("could not open dir: " + dir_path);
 		}
+		do
+		{
+			files.push_back(find_data.cFileName);
+		} while(FindNextFile(find_handle, &find_data));
+		FindClose(find_handle);
 	}
 
 	extern const std::string &dir_separator()

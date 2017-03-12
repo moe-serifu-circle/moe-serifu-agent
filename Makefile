@@ -3,6 +3,7 @@ SDIR?=src
 
 CXX?=g++
 CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR) -Icompat -include compat/compat.hpp
+LDFLAGS?=-ldl -lpthread
 
 DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd/cmd.o log.o output.o var.o
 DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
@@ -35,7 +36,7 @@ clean:
 # ----------------- #
 
 moe-serifu: $(ODIR)/main.o $(DEP_OBJS) $(OS_DEP_OBJS)
-	$(CXX) -o $@ $^ $(CXXFLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
 $(ODIR)/main.o: $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS)
@@ -91,6 +92,6 @@ $(ODIR)/platform/thread.o: compat/platform/thread/thread.cpp
 $(ODIR)/platform/file.o: compat/platform/file/file.cpp
 	$(CXX) -c -o $@ compat/platform/file/file.cpp $(CXXFLAGS)
 
-$(ODIR)/platform/file.o: compat/platform/lib/lib.cpp compat/platform/file/file.hpp
+$(ODIR)/platform/lib.o: compat/platform/lib/lib.cpp compat/platform/file/file.hpp
 	$(CXX) -c -o $@ compat/platform/lib/lib.cpp $(CXXFLAGS)
 

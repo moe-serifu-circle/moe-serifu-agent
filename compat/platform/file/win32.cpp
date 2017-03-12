@@ -2,6 +2,8 @@
 
 namespace msa { namespace file {
 
+	static const std::string DIR_SEPARATOR = "\\";
+
 	extern void list(const std::string &dir_path, std::vector<std::string> &files)
 	{
 		std::string scan_criteria = dir_path;
@@ -18,9 +20,9 @@ namespace msa { namespace file {
 		}
 	}
 
-	extern void join(std::string &base, const std::string &next)
+	extern const std::string &dir_separator()
 	{
-		base += "\\" + next;
+		return DIR_SEPARATOR;
 	}
 
 } }

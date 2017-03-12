@@ -5,6 +5,8 @@
 
 namespace msa { namespace file {
 
+	static const std::string DIR_SEPARATOR = "/";
+
 	extern void list(const std::string &dir_path, std::vector<std::string> &files)
 	{
 		DIR *d = opendir(dir_path.c_str());
@@ -20,9 +22,9 @@ namespace msa { namespace file {
 		closedir(d);
 	}
 
-	extern void join(std::string &base, const std::string &next)
+	extern const std::string &dir_separator()
 	{
-		base += "/" + next;
+		return DIR_SEPARATOR;
 	}
 
 } }

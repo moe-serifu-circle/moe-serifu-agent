@@ -87,4 +87,8 @@ $(ODIR)/platform/thread.o: compat/platform/thread/thread.cpp
 	$(CXX) -c -o $@ compat/platform/thread/thread.cpp $(CXXFLAGS)
 
 $(ODIR)/platform/file.o: compat/platform/file/file.cpp
-	$(CXX) -c -o $@ compat/platform/thread/file.cpp $(CXXFLAGS)
+	$(CXX) -c -o $@ compat/platform/file/file.cpp $(CXXFLAGS)
+
+$(ODIR)/platform/file.o: compat/platform/lib/lib.cpp compat/platform/file/file.hpp
+	$(CXX) -c -o $@ compat/platform/lib/lib.cpp $(CXXFLAGS)
+

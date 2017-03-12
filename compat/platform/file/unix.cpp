@@ -2,6 +2,7 @@
 #include <errno.h>
 
 #include <string>
+#include <stdexcept>
 
 namespace msa { namespace file {
 

@@ -100,11 +100,11 @@ namespace msa { namespace string {
 
 	extern bool starts_with(const String &str, const String &prefix)
 	{	
-		if (str.size() < suffix.size())
+		if (str.size() < prefix.size())
 		{
 			return false;
 		}
-		return (str.compare(0, preffix.size(), prefix) == 0);
+		return (str.compare(0, prefix.size(), prefix) == 0);
 	}
 
 } }

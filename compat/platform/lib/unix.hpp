@@ -4,7 +4,7 @@
 
 namespace msa { namespace lib {
 
-	typedef void * Library;
+	typedef void * Handle;
 
 } }
 

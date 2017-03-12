@@ -104,7 +104,7 @@ namespace msa { namespace plugin {
 		}
 		std::string *plugin_id = new std::string(info->name);
 		// check that we have not already loaded this plugin
-		if (ctx->loaded.find(*plugin_id) != ctx->loaded.end())
+		if (is_loaded(*plugin_id))
 		{
 			msa::log::warn(hdl, "Plugin ID is already loaded: " + *plugin_id);
 			msa::lib::close(lib);
@@ -126,7 +126,7 @@ namespace msa { namespace plugin {
 	{
 		msa::log::info("Unloading plugin with ID: " + id);
 		PluginContext *ctx = hdl->plugin;
-		if (ctx->loaded.find(id) == ctx->loaded.end())
+		if (!is_loaded(hdl, id))
 		{
 			msa::log::warn("No plugin with ID; not unloading: " + id);
 			return;
@@ -150,15 +150,102 @@ namespace msa { namespace plugin {
 		delete entry;
 		msa::log::info("Sucessfully unloaded plugin");
 	}
+
+	extern bool is_loaded(msa::Handle hdl, const std::string &id)
+	{
+		return (hdl->plugin->loaded.find(id) != hdl->plugin->loaded.end());
+	}
 	
 	extern void get_loaded(msa::Handle hdl, std::vector<std::string> &ids)
 	{
-		
+		PluginContext *ctx = hdl->plugin;
+		std::map<std::string, PluginEntry *>::const_iterator iter;
+		for (iter = ctx->loaded.begin(); iter != ctx->loaded.end(); iter++)
+		{
+			ids.push_back(iter->first);
+		}
 	}
 	
-	extern void enable(msa::Handle hdl, const std::string &id);
-	extern void disable(msa::Handle hdl, const std::string &id);
-	extern bool is_enabled(msa::Handle hdl, std::string &id);
+	extern void enable(msa::Handle hdl, const std::string &id)
+	{
+		msa::log::info(hdl, "Enabling plugin '" + id + "'");
+		PluginContext *ctx = hdl->plugin;
+		if (!is_loaded(hdl, id))
+		{
+			throw std::logic_error("Plugin not loaded: " + id);
+		}
+		if (is_enabled(hdl, id))
+		{
+			throw std::logic_error("Plugin already enabled: " + id);
+		}
+		PluginEntry *entry = ctx->loaded[id];
+		entry->local_env = NULL;
+		if (entry->info->init_func != NULL)
+		{
+			int status = 0;
+			try
+			{
+				status = entry->info->init_func(hdl, &entry->local_env);
+			}
+			catch (...)
+			{
+				msa::log::error(hdl, "Plugin '" + id + "' init_func threw an exception; plugin will be unloaded");
+				unload(hdl, id);
+				return;
+			}
+			if (status != 0)
+			{
+				msa::log::error(hdl, "Plugin '" + id + "': init function failed");
+				msa::log::debug(hdl, id + "'s init_func return code is " + std::to_string(status));
+				return;
+			}
+		}
+		else
+		{
+			msa::log::warn(hdl, "Plugin '" + id + "' does not define an init_func; skipping calling init_func");
+		}
+		ctx->enabled[id] = entry;
+		msa::log::info(hdl, "Loaded plugin with ID '" + id + "'");
+	}
+	
+	extern void disable(msa::Handle hdl, const std::string &id)
+	{
+		PluginContext *ctx = hdl->plugin;
+		if (!is_enabled(hdl, id))
+		{
+			return;
+		}
+		PluginEntry *entry = ctx->enabled[id];
+		ctx->enabled.erase(id);
+		if (entry->info->exit_func != NULL)
+		{
+			int status = 0;
+			try
+			{
+				status = entry->info->quit_func(hdl, entry->local_env);
+			}
+			catch (...)
+			{
+				msa::log::error(hdl, "Plugin '" + id + "' quit_func threw an exception; plugin will be unloaded");
+				unload(hdl, id);
+			}
+			if (status != 0)
+			{
+				msa::log::error(hdl, "Plugin '" + id + "': quit function failed");
+				msa::log::debug(hdl, id + "'s quit_func return code is " + std::to_string(status));
+				unload(hdl, id);
+			}
+		}
+		else
+		{
+			msa::log::warn(hdl, "Plugin '" + id + "' does not define a quit_func; skipping calling quit_func");
+		}
+	}
+	
+	extern bool is_enabled(msa::Handle hdl, std::string &id)
+	{
+		return (hdl->plugin->enabled.find(id) != hdl->plugin->enabled.end());
+	}
 	
 	static int create_plugin_context(PluginContext **ctx_ptr)
 	{

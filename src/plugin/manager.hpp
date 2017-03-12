@@ -18,6 +18,7 @@ namespace msa { namespace plugin {
 	extern void enable(msa::Handle hdl, const std::string &id);
 	extern void disable(msa::Handle hdl, const std::string &id);
 	extern bool is_enabled(msa::Handle hdl, std::string &id);
+	extern bool is_loaded(msa::Handle hdl, const std::string &id);
 	
 } }
 

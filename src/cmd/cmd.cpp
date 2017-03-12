@@ -1,4 +1,4 @@
-#include "cmd.hpp"
+#include "cmd/cmd.hpp"
 #include "event/dispatch.hpp"
 #include "string.hpp"
 #include "agent.hpp"
@@ -9,14 +9,6 @@
 #include <map>
 
 namespace msa { namespace cmd {
-
-	struct command_type
-	{
-		std::string invoke;
-		std::string desc;
-		std::string usage;
-		CommandHandler handler;
-	};
 
 	struct command_context_type
 	{
@@ -87,16 +79,6 @@ namespace msa { namespace cmd {
 			return 1;
 		}
 		return 0;
-	}
-
-	extern void create_command(Command **cmd_ptr, const std::string &invoke, const std::string &desc, const std::string &usage, CommandHandler handler)
-	{
-		Command *cmd = new Command;
-		cmd->invoke = std::string(invoke);
-		cmd->desc = std::string(desc);
-		cmd->usage = std::string(usage);
-		cmd->handler = handler;
-		*cmd_ptr = cmd;
 	}
 
 	extern void dispose_handler(Command *cmd)

@@ -1,12 +1,13 @@
-#include "plugin/manager.hpp"
+#include "plugin/plugin.hpp"
 
 #include "log.hpp"
-
-#include <map>
-#include <exception>
+#include "cmd/cmd.hpp"
 
 #include "compat/file/file.hpp"
 #include "compat/lib/lib.hpp"
+
+#include <map>
+#include <exception>
 
 namespace msa { namespace plugin {
 
@@ -31,6 +32,8 @@ namespace msa { namespace plugin {
 	static int dispose_plugin_context(PluginContext *ctx);
 	static void read_config(msa::Handle hdl, const msa::config::Section &config);
 	static void load_all(msa::Handle hdl, const std::string &dir_path);
+	static void call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry);
+	static void call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env);
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -206,6 +209,10 @@ namespace msa { namespace plugin {
 		}
 		ctx->enabled[id] = entry;
 		msa::log::info(hdl, "Loaded plugin with ID '" + id + "'");
+		call_plugin_func(hdl, id, "add_input_devices_func", entry->add_input_devices_func, entry->local_env) || return;
+		call_plugin_func(hdl, id, "add_output_devices_func", entry->add_output_devices_func, entry->local_env) || return;
+		call_plugin_func(hdl, id, "add_agent_props_func", entry->add_agent_props_func, entry->local_env) || return;
+		call_plugin_add_commands(hdl, entry);
 	}
 	
 	extern void disable(msa::Handle hdl, const std::string &id)
@@ -238,13 +245,76 @@ namespace msa { namespace plugin {
 		}
 		else
 		{
-			msa::log::warn(hdl, "Plugin '" + id + "' does not define a quit_func; skipping calling quit_func");
+			msa::log::info(hdl, "Plugin '" + id + "' does not define a quit_func; skipping calling quit_func");
 		}
 	}
 	
 	extern bool is_enabled(msa::Handle hdl, std::string &id)
 	{
 		return (hdl->plugin->enabled.find(id) != hdl->plugin->enabled.end());
+	}
+	
+	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env)
+	{
+		if (plugin_func != NULL)
+		{
+			int status = 0;
+			try
+			{
+				status = func(hdl, local_env);
+			}
+			catch (...)
+			{
+				msa::log::error(hdl, "Plugin '" + id + "' " + func_name + " threw an exception; plugin will be unloaded");
+				unload(hdl, id);
+				return false;
+			}
+			if (status != 0)
+			{
+				msa::log::error(hdl, "Plugin '" + id + "': " + func_name + " failed");
+				msa::log::debug(hdl, "Plugin '" + id + "': " + func_name + " return code is " + std::to_string(status));
+				return false;
+			}
+		}
+		else
+		{
+			msa::log::warn(hdl, "Plugin '" + id "' does not define " + func_name + "; skipping execution");
+		}
+		return true;
+	}
+	
+	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry)
+	{
+		std::vector<Command *> new_commands;
+		if (entry->info->add_commands_func != NULL)
+		{
+			int status = 0;
+			try
+			{
+				status = entry->info->add_commands_func(hdl, entry->info->local_env, new_commands);
+			}
+			catch (...)
+			{
+				msa::log::error(hdl, "Plugin '" + entry->id + "' add_commands_func threw an exception; plugin will be unloaded");
+				unload(hdl, id);
+				return false;
+			}
+			if (status != 0)
+			{
+				msa::log::error(hdl, "Plugin '" + entry->id + "': add_commands_func failed");
+				msa::log::debug(hdl, "Plugin '" + entry->id + "': add_commands_func return code is " + std::to_string(status));
+				return false;
+			}
+		}
+		else
+		{
+			msa::log::info(hdl, "Plugin '" + entry->id "' does not define add_commands_func; skipping execution");
+		}
+		for (size_t i = 0; i < new_commands.size(); i++)
+		{
+			msa::cmd::register_command(hdl, new_commands[i]);
+		}
+		return true;
 	}
 	
 	static int create_plugin_context(PluginContext **ctx_ptr)

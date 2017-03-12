@@ -4,7 +4,7 @@ SDIR?=src
 CXX?=g++
 CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR) -Icompat -include compat/compat.hpp
 
-DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd.o log.o output.o var.o
+DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd/cmd.o log.o output.o var.o
 DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 
@@ -23,6 +23,8 @@ test: debug
 
 clean:
 	rm -f $(ODIR)/*.o
+	rm -f $(ODIR)/cmd/*.o
+	rm -f $(ODIR)/plugin/*.o
 	rm -f $(ODIR)/event/*.o
 	rm -f $(ODIR)/platform/*.o
 	rm -f moe-serifu
@@ -38,7 +40,7 @@ moe-serifu: $(ODIR)/main.o $(DEP_OBJS) $(OS_DEP_OBJS)
 $(ODIR)/main.o: $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS)
 
-$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/cmd.hpp $(SDIR)/log.hpp $(SDIR)/debug_macros.hpp
+$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/log.hpp $(SDIR)/debug_macros.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS)
 
 $(ODIR)/configuration.o: $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
@@ -65,8 +67,8 @@ $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 $(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS)
 
-$(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/log.hpp
-	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS)
+$(ODIR)/cmd/cmd.o: $(SDIR)/cmd/cmd.cpp $(SDIR)/cmd/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/log.hpp
+	$(CXX) -c -o $@ $(SDIR)/cmd/cmd.cpp $(CXXFLAGS)
 
 $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/log.cpp $(CXXFLAGS)

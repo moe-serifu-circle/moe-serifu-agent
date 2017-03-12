@@ -1,50 +1,24 @@
-#ifndef PLUGIN_PLUGIN_HPP
-#define PLUGIN_PLUGIN_HPP
-
-// will look for a function called 'msa_plugin_getinfo()' which must be a GetInfoFunc.
+#ifndef PLUGIN_MANAGER_HPP
+#define PLUGIN_MANAGER_HPP
 
 #include "msa.hpp"
+#include "plugin/types.hpp"
 
-#include <cstdint>
+#include "configuration.hpp"
 
-namespace msa { namespace plugin
+#include <string>
 
-	typedef const Info *(*GetInfoFunc)(void);
-	typedef int (*Func)(msa::Handle hdl, void *plugin_env);
-	typedef int (*InitFunc)(msa::Handle hdl, void **plugin_env);
+namespace msa { namespace plugin {
 
-	typedef struct info_type
-	{
-		const char *name;
-		const char *authors[];
-		size_t num_authors;
-		struct
-		{
-			uint32_t major;
-			uint32_t minor;
-			uint32_t debug;
-			uint32_t build;
-		} version;
-		InitFunc init_func;
-		Func quit_func;
-		Func add_input_devices_func;
-		Func add_output_devices_func;
-		Func add_agent_props_func;
-		Func add_commands_func;
-		info_type() :
-			name(""),
-			authors(NULL),
-			num_authors(0),
-			version({0, 0, 0, 0}),
-			init_func(NULL),
-			quit_func(NULL),
-			add_input_devices_func(NULL),
-			add_output_devices_func(NULL),
-			add_agent_props_func(NULL),
-			add_commands_func(NULL)
-			{}
-	} Info;
-
+	extern int init(msa::Handle hdl, const msa::config::Section &config);
+	extern int quit(msa::Handle hdl);
+	extern const std::string &load(msa::Handle hdl, const std::string &path);
+	extern void unload(msa::Handle hdl, const std::string &id);
+	extern void get_loaded(msa::Handle hdl, std::vector<std::string> &ids);
+	extern void enable(msa::Handle hdl, const std::string &id);
+	extern void disable(msa::Handle hdl, const std::string &id);
+	extern bool is_enabled(msa::Handle hdl, std::string &id);
+	extern bool is_loaded(msa::Handle hdl, const std::string &id);
+	
 } }
 
-#endif

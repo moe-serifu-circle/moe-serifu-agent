@@ -6,14 +6,18 @@
 #include <exception>
 
 #include "compat/file/file.hpp"
+#include "compat/lib/lib.hpp"
 
 namespace msa { namespace plugin {
+
+	static const std::string BAD_PLUGIN_ID = "";
 
 	typedef struct plugin_entry_type
 	{
 		const Info *info;
 		void *local_env;
 		std::string *id;
+		msa::lib::Library *lib;
 	} PluginEntry;
 
 	struct plugin_context_type
@@ -62,9 +66,96 @@ namespace msa { namespace plugin {
 		return 0;
 	}
 	
-	extern const std::string &load(msa::Handle hdl, const std::string &path);
-	extern void unload(msa::Handle hdl, const std::string &id);
-	extern void get_loaded(msa::Handle hdl, std::vector<std::string> &ids);
+	extern const std::string &load(msa::Handle hdl, const std::string &path)
+	{
+		msa::log::info(hdl, "Loading plugin library " + path);
+		PluginContext *ctx = hdl->plugin;
+		msa::lib::Library *lib = msa::lib::open(path);
+		GetInfoFunc get_info = NULL;
+		// check that plugin has a getinfo()
+		try
+		{
+			get_info = msa::lib::get_symbol<GetInfoFunc>(lib, "msa_plugin_getinfo");
+		}
+		catch (const msa::lib::library_error &e)
+		{
+			msa::lib::close(lib);
+			msa::log::error(hdl, "Loading library failed");
+			return BAD_PLUGIN_ID;
+		}
+		const msa::plugin::Info *info = NULL;
+		// check if plugin's getinfo() throws
+		try
+		{
+			info = get_info();
+		}
+		catch (...)
+		{
+			msa::log::error(hdl, "Plugin's msa_plugin_getinfo() function threw an error");
+			msa::lib::close(lib);
+			return BAD_PLUGIN_ID;
+		}
+		// check that plugin's getinfo() returns a real pointer
+		if (info == NULL)
+		{
+			msa::log::error(hdl, "Plugin's msa_plugin_getinfo() function returned NULL");
+			msa::lib::close(lib);
+			return BAD_PLUGIN_ID;
+		}
+		std::string *plugin_id = new std::string(info->name);
+		// check that we have not already loaded this plugin
+		if (ctx->loaded.find(*plugin_id) != ctx->loaded.end())
+		{
+			msa::log::warn(hdl, "Plugin ID is already loaded: " + *plugin_id);
+			msa::lib::close(lib);
+			delete plugin_id;
+			return BAD_PLUGIN_ID;
+		}
+		// okay, we finally have a valid info table extracted from plugin. now add an entry
+		PluginEntry *entry = new PluginEntry;
+		entry->info = info;
+		entry->local_env = NULL;
+		entry->id = plugin_id;
+		entry->lib = lib;
+		ctx->loaded[*plugin_id] = entry;
+		msa::log::info(hdl, "Loaded plugin with ID: " + *plugin_id);
+		return *plugin_id;
+	}
+	
+	extern void unload(msa::Handle hdl, const std::string &id)
+	{
+		msa::log::info("Unloading plugin with ID: " + id);
+		PluginContext *ctx = hdl->plugin;
+		if (ctx->loaded.find(id) == ctx->loaded.end())
+		{
+			msa::log::warn("No plugin with ID; not unloading: " + id);
+			return;
+		}
+		if (is_enabled(hdl, id))
+		{
+			disable(hdl, id);
+		}
+		PluginEntry *entry = ctx->loaded[id];
+		try
+		{
+			msa::lib::close(entry->lib);
+		}
+		catch (const msa::lib::library_error &e)
+		{
+			msa::log::error(hdl, "Could not unload plugin library " + e.name());
+			return;
+		}
+		ctx->loaded.erase(id);
+		delete entry->id;
+		delete entry;
+		msa::log::info("Sucessfully unloaded plugin");
+	}
+	
+	extern void get_loaded(msa::Handle hdl, std::vector<std::string> &ids)
+	{
+		
+	}
+	
 	extern void enable(msa::Handle hdl, const std::string &id);
 	extern void disable(msa::Handle hdl, const std::string &id);
 	extern bool is_enabled(msa::Handle hdl, std::string &id);

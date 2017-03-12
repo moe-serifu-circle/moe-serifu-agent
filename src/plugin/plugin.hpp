@@ -1,7 +1,7 @@
 #ifndef PLUGIN_PLUGIN_HPP
 #define PLUGIN_PLUGIN_HPP
 
-// will look for a function called 'msa_plugin_getinfo()' which must be a PluginGetInfoFunc.
+// will look for a function called 'msa_plugin_getinfo()' which must be a GetInfoFunc.
 
 #include "msa.hpp"
 
@@ -9,9 +9,9 @@
 
 namespace msa { namespace plugin
 
-	typedef const msa::plugin::Info *(*PluginGetInfoFunc)();
-	typedef int (*PluginFunc)(msa::Handle hdl, void *plugin_env);
-	typedef int (*PluginInitFunc)(msa::Handle hdl, void **plugin_env);
+	typedef const Info *(*GetInfoFunc)(void);
+	typedef int (*Func)(msa::Handle hdl, void *plugin_env);
+	typedef int (*InitFunc)(msa::Handle hdl, void **plugin_env);
 
 	typedef struct info_type
 	{
@@ -25,12 +25,12 @@ namespace msa { namespace plugin
 			uint32_t debug;
 			uint32_t build;
 		} version;
-		PluginInitFunc init_func;
-		PluginFunc quit_func;
-		PluginFunc add_input_devices_func;
-		PluginFunc add_output_devices_func;
-		PluginFunc add_agent_props_func;
-		PluginFunc add_commands_func;
+		InitFunc init_func;
+		Func quit_func;
+		Func add_input_devices_func;
+		Func add_output_devices_func;
+		Func add_agent_props_func;
+		Func add_commands_func;
 		info_type() :
 			name(""),
 			authors(NULL),

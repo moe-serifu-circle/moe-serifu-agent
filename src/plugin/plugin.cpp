@@ -184,12 +184,12 @@ namespace msa { namespace plugin {
 		}
 		PluginEntry *entry = ctx->loaded[id];
 		entry->local_env = NULL;
-		if (entry->info->init_func != NULL)
+		if (entry->info->functions->init_func != NULL)
 		{
 			int status = 0;
 			try
 			{
-				status = entry->info->init_func(hdl, &entry->local_env);
+				status = entry->info->functions->init_func(hdl, &entry->local_env);
 			}
 			catch (...)
 			{
@@ -210,9 +210,10 @@ namespace msa { namespace plugin {
 		}
 		ctx->enabled[id] = entry;
 		msa::log::info(hdl, "Loaded plugin with ID '" + id + "'");
-		if (!call_plugin_func(hdl, id, "add_input_devices_func", entry->info->add_input_devices_func, entry->local_env)) return;
-		if (!call_plugin_func(hdl, id, "add_output_devices_func", entry->info->add_output_devices_func, entry->local_env)) return;
-		if (!call_plugin_func(hdl, id, "add_agent_props_func", entry->info->add_agent_props_func, entry->local_env)) return;
+		const FunctionTable *funcs = entry->info->functions;
+		if (!call_plugin_func(hdl, id, "add_input_devices_func", funcs->add_input_devices_func, entry->local_env)) return;
+		if (!call_plugin_func(hdl, id, "add_output_devices_func", funcs->add_output_devices_func, entry->local_env)) return;
+		if (!call_plugin_func(hdl, id, "add_agent_props_func", funcs->add_agent_props_func, entry->local_env)) return;
 		call_plugin_add_commands(hdl, entry);
 	}
 	
@@ -226,12 +227,12 @@ namespace msa { namespace plugin {
 		}
 		PluginEntry *entry = ctx->enabled[id];
 		ctx->enabled.erase(id);
-		if (entry->info->quit_func != NULL)
+		if (entry->info->functions->quit_func != NULL)
 		{
 			int status = 0;
 			try
 			{
-				status = entry->info->quit_func(hdl, entry->local_env);
+				status = entry->info->functions->quit_func(hdl, entry->local_env);
 			}
 			catch (...)
 			{
@@ -288,12 +289,12 @@ namespace msa { namespace plugin {
 	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry)
 	{
 		std::vector<msa::cmd::Command *> new_commands;
-		if (entry->info->add_commands_func != NULL)
+		if (entry->info->functions->add_commands_func != NULL)
 		{
 			int status = 0;
 			try
 			{
-				status = entry->info->add_commands_func(hdl, entry->local_env, new_commands);
+				status = entry->info->functions->add_commands_func(hdl, entry->local_env, new_commands);
 			}
 			catch (...)
 			{

@@ -9,7 +9,7 @@ DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o
 DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 
-OS_DEP_TARGETS=thread.o file.o
+OS_DEP_TARGETS=thread.o file.o lib.o
 OS_DEP_OBJS=$(patsubst %,$(ODIR)/platform/%,$(OS_DEP_TARGETS))
 
 .PHONY: clean test all debug
@@ -80,7 +80,7 @@ $(ODIR)/output.o: $(SDIR)/output.cpp $(SDIR)/output.hpp $(SDIR)/msa.hpp $(SDIR)/
 $(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp
 	$(CXX) -c -o $@ $(SDIR)/var.cpp $(CXXFLAGS)
 
-$(ODIR)/plugin/plugin.o: $(SDIR)/plugin/plugin.cpp $(SDIR)/plugin/plugin.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/plugin/types.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp 
+$(ODIR)/plugin/plugin.o: $(SDIR)/plugin/plugin.cpp $(SDIR)/plugin/plugin.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/plugin/types.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/plugin/plugin.cpp $(CXXFLAGS)
 
 

@@ -2,6 +2,7 @@
 
 #include "log.hpp"
 #include "cmd/cmd.hpp"
+#include "string.hpp"
 
 #include "platform/file/file.hpp"
 #include "platform/lib/lib.hpp"
@@ -32,8 +33,8 @@ namespace msa { namespace plugin {
 	static int dispose_plugin_context(PluginContext *ctx);
 	static void read_config(msa::Handle hdl, const msa::config::Section &config);
 	static void load_all(msa::Handle hdl, const std::string &dir_path);
-	static void call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry);
-	static void call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env);
+	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry);
+	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env);
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -46,9 +47,9 @@ namespace msa { namespace plugin {
 		{
 			read_config(hdl, config);
 		}
-		catch (std::exception &e)
+		catch (const std::exception &e)
 		{
-			msa::log::error(hdl, "Could not read config: " + e.what());
+			msa::log::error(hdl, "Could not read config: " + std::string(e.what()));
 			return -1;
 		}
 		// do autoloading now
@@ -107,7 +108,7 @@ namespace msa { namespace plugin {
 		}
 		std::string *plugin_id = new std::string(info->name);
 		// check that we have not already loaded this plugin
-		if (is_loaded(*plugin_id))
+		if (is_loaded(hdl, *plugin_id))
 		{
 			msa::log::warn(hdl, "Plugin ID is already loaded: " + *plugin_id);
 			msa::lib::close(lib);
@@ -127,11 +128,11 @@ namespace msa { namespace plugin {
 	
 	extern void unload(msa::Handle hdl, const std::string &id)
 	{
-		msa::log::info("Unloading plugin with ID: " + id);
+		msa::log::info(hdl, "Unloading plugin with ID: " + id);
 		PluginContext *ctx = hdl->plugin;
 		if (!is_loaded(hdl, id))
 		{
-			msa::log::warn("No plugin with ID; not unloading: " + id);
+			msa::log::warn(hdl, "No plugin with ID; not unloading: " + id);
 			return;
 		}
 		if (is_enabled(hdl, id))
@@ -151,7 +152,7 @@ namespace msa { namespace plugin {
 		ctx->loaded.erase(id);
 		delete entry->id;
 		delete entry;
-		msa::log::info("Sucessfully unloaded plugin");
+		msa::log::info(hdl, "Sucessfully unloaded plugin");
 	}
 
 	extern bool is_loaded(msa::Handle hdl, const std::string &id)
@@ -209,14 +210,15 @@ namespace msa { namespace plugin {
 		}
 		ctx->enabled[id] = entry;
 		msa::log::info(hdl, "Loaded plugin with ID '" + id + "'");
-		call_plugin_func(hdl, id, "add_input_devices_func", entry->add_input_devices_func, entry->local_env) || return;
-		call_plugin_func(hdl, id, "add_output_devices_func", entry->add_output_devices_func, entry->local_env) || return;
-		call_plugin_func(hdl, id, "add_agent_props_func", entry->add_agent_props_func, entry->local_env) || return;
+		if (!call_plugin_func(hdl, id, "add_input_devices_func", entry->info->add_input_devices_func, entry->local_env)) return;
+		if (!call_plugin_func(hdl, id, "add_output_devices_func", entry->info->add_output_devices_func, entry->local_env)) return;
+		if (!call_plugin_func(hdl, id, "add_agent_props_func", entry->info->add_agent_props_func, entry->local_env)) return;
 		call_plugin_add_commands(hdl, entry);
 	}
 	
 	extern void disable(msa::Handle hdl, const std::string &id)
 	{
+		msa::log::info(hdl, "Disabling plugin '" + id + "'...");
 		PluginContext *ctx = hdl->plugin;
 		if (!is_enabled(hdl, id))
 		{
@@ -224,7 +226,7 @@ namespace msa { namespace plugin {
 		}
 		PluginEntry *entry = ctx->enabled[id];
 		ctx->enabled.erase(id);
-		if (entry->info->exit_func != NULL)
+		if (entry->info->quit_func != NULL)
 		{
 			int status = 0;
 			try
@@ -249,14 +251,14 @@ namespace msa { namespace plugin {
 		}
 	}
 	
-	extern bool is_enabled(msa::Handle hdl, std::string &id)
+	extern bool is_enabled(msa::Handle hdl, const std::string &id)
 	{
 		return (hdl->plugin->enabled.find(id) != hdl->plugin->enabled.end());
 	}
 	
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env)
 	{
-		if (plugin_func != NULL)
+		if (func != NULL)
 		{
 			int status = 0;
 			try
@@ -278,7 +280,7 @@ namespace msa { namespace plugin {
 		}
 		else
 		{
-			msa::log::warn(hdl, "Plugin '" + id "' does not define " + func_name + "; skipping execution");
+			msa::log::warn(hdl, "Plugin '" + id + "' does not define " + func_name + "; skipping execution");
 		}
 		return true;
 	}
@@ -291,24 +293,24 @@ namespace msa { namespace plugin {
 			int status = 0;
 			try
 			{
-				status = entry->info->add_commands_func(hdl, entry->info->local_env, new_commands);
+				status = entry->info->add_commands_func(hdl, entry->local_env, new_commands);
 			}
 			catch (...)
 			{
-				msa::log::error(hdl, "Plugin '" + entry->id + "' add_commands_func threw an exception; plugin will be unloaded");
-				unload(hdl, id);
+				msa::log::error(hdl, "Plugin '" + *entry->id + "' add_commands_func threw an exception; plugin will be unloaded");
+				unload(hdl, *entry->id);
 				return false;
 			}
 			if (status != 0)
 			{
-				msa::log::error(hdl, "Plugin '" + entry->id + "': add_commands_func failed");
-				msa::log::debug(hdl, "Plugin '" + entry->id + "': add_commands_func return code is " + std::to_string(status));
+				msa::log::error(hdl, "Plugin '" + *entry->id + "': add_commands_func failed");
+				msa::log::debug(hdl, "Plugin '" + *entry->id + "': add_commands_func return code is " + std::to_string(status));
 				return false;
 			}
 		}
 		else
 		{
-			msa::log::info(hdl, "Plugin '" + entry->id "' does not define add_commands_func; skipping execution");
+			msa::log::info(hdl, "Plugin '" + *entry->id + "' does not define add_commands_func; skipping execution");
 		}
 		for (size_t i = 0; i < new_commands.size(); i++)
 		{
@@ -347,14 +349,14 @@ namespace msa { namespace plugin {
 	{
 		std::vector<std::string> filenames;
 		msa::file::list(dir_path, filenames);
-		for (size_t i = 0; i < filesnames.size(); i++)
+		for (size_t i = 0; i < filenames.size(); i++)
 		{
 			std::string fname = filenames[i];
 			if (msa::string::ends_with(fname, ".so") || msa::string::ends_with(fname, ".dll"))
 			{
 				std::string full_path = dir_path;
 				msa::file::join(full_path, fname);
-				load(full_path);
+				load(hdl, full_path);
 			}
 		}
 	}

@@ -155,7 +155,7 @@ namespace msa { namespace var {
 						break;
 
 					default:
-						throw std::logic_error("bad escape sequence: \\" + *iter);
+						throw std::logic_error(std::string("bad escape sequence: \\") + *iter);
 						break;
 				}
 				iter++;

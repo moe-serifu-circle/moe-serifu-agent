@@ -9,44 +9,45 @@ namespace dekarrin {
 
 	typedef struct env
 	{
-		msa::cmd::Command *commands;
-		size_t num_commands;
+		std::vector<msa::cmd::Command> *commands;
 	} Env;
 
 	static int init(msa::Handle hdl, void **env);
 	static int quit(msa::Handle hdl, void *env);
 	static int add_commands(msa::Handle hdl, void *plugin_env, std::vector<msa::cmd::Command *> &new_commands);
 	static void love_func(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
+	
+	static const msa::plugin::FunctionTable function_table = {init, quit, NULL, NULL, NULL, add_commands};
+	static const msa::plugin::Info plugin_info = {"example-plugin", {"dekarrin"}, msa::plugin::Version(1, 0, 0, 0), &function_table};
 
-	static const msa::plugin::Info plugin_info = {"example-plugin"/*, {"dekarrin"}, {1, 0, 0, 0}, init, quit, NULL, NULL, NULL, add_commands*/};
-
-	static int init(msa::Handle hdl, void **env)
+	static int init(msa::Handle hdl __attribute__((unused)), void **env)
 	{
 		Env *my_env = new Env;
-		my_env->commands = new msa::cmd::Command[1];
-		my_env->commands[0] = msa::cmd::Command("LOVE", "execute a test function", "", love_func);
+		my_env->commands = new std::vector<msa::cmd::Command>;
+		my_env->commands->push_back(msa::cmd::Command("LOVE", "execute a test function", "", love_func));
 		*env = my_env;
 		return 0;
 	}
 
-	static int quit(msa::Handle hdl, void *env)
+	static int quit(msa::Handle hdl __attribute__((unused)), void *env)
 	{
 		Env *my_env = (Env *) env;
-		delete[] my_env->commands;
+		delete my_env->commands;
 		delete my_env;
+		return 0;
 	}
 
-	static int add_commands(msa::Handle hdl, void *env, std::vector<msa::cmd::Command *> &new_commands)
+	static int add_commands(msa::Handle hdl __attribute__((unused)), void *env, std::vector<msa::cmd::Command *> &new_commands)
 	{
 		Env *my_env = (Env *) env;
-		for (size_t i = 0; i < 1; i++)
+		for (size_t i = 0; i < my_env->commands->size(); i++)
 		{
-			new_commands.push_back(&my_env->commands[i]);
+			new_commands.push_back(&my_env->commands->at(i));
 		}
 		return 0;
 	}
 	
-	static void love_func(msa::Handle UNUSED(hdl), const msa::cmd::ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
+	static void love_func(msa::Handle hdl __attribute__((unused)), const msa::cmd::ArgList &args __attribute__((unused)), msa::event::HandlerSync *const sync __attribute__((unused)))
 	{
 		printf("worked\n");
 	}

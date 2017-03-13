@@ -6,6 +6,8 @@
 #include "configuration.hpp"
 #include "log.hpp"
 #include "output.hpp"
+#include "string.hpp"
+#include "plugin/plugin.hpp"
 
 #include <string>
 
@@ -13,7 +15,12 @@
 
 namespace msa {
 
-	static const msa::config::Section &get_module_section(msa::config::Config *conf, const char *name);
+	typedef int (*ModQuitFunc)(Handle);
+	typedef int (*ModInitFunc)(Handle, const msa::config::Section&);
+
+	static const msa::config::Section &get_module_section(msa::config::Config *conf, const std::string &name);
+	static int init_module(Handle hdl, msa::config::Config *conf, ModInitFunc init_func, const std::string &name);
+	static int quit_module(Handle msa, void **mod, ModQuitFunc quit_func, const std::string &log_name);
 
 	static const msa::config::Section blank_section("");
 
@@ -35,80 +42,19 @@ namespace msa {
 		hdl->agent = NULL;
 		hdl->cmd = NULL;
 		hdl->log = NULL;
+		hdl->plugin = NULL;
 
-		int ret;
-
-		msa::config::Section log_conf = get_module_section(conf, "LOG");
-		ret = msa::log::init(hdl, log_conf);
-		if (ret != 0)
-		{
-			quit(hdl);
-			dispose(hdl);
-			return MSA_ERR_LOG;
-		}
-
-		msa::config::Section output_conf = get_module_section(conf, "OUTPUT");
-		ret = msa::output::init(hdl, output_conf);
-		if (ret != 0)
-		{
-			msa::log::error(hdl, "Failed to start output module");
-			msa::log::debug(hdl, "msa::output::init() returned " + std::to_string(ret));
-			quit(hdl);
-			dispose(hdl);
-			return MSA_ERR_OUTPUT;
-		}
-		msa::log::trace(hdl, "Started output module");
-		
-		msa::config::Section event_conf = get_module_section(conf, "EVENT");
-		ret = msa::event::init(hdl, event_conf);
-		if (ret != 0)
-		{
-			msa::log::error(hdl, "Failed to start event module");
-			msa::log::debug(hdl, "msa::event::init() returned " + std::to_string(ret));
-			quit(hdl);
-			dispose(hdl);
-			return MSA_ERR_EVENT;
-		}
-		msa::log::trace(hdl, "Started event module");
-		
-		msa::config::Section input_conf = get_module_section(conf, "INPUT");
-		ret = msa::input::init(hdl, input_conf);
-		if (ret != 0)
-		{
-			msa::log::error(hdl, "Failed to start input module");
-			msa::log::debug(hdl, "msa::input::init() returned " + std::to_string(ret));
-			quit(hdl);
-			dispose(hdl);
-			return MSA_ERR_INPUT;
-		}
-		msa::log::trace(hdl, "Started input module");
-
-		msa::config::Section agent_conf = get_module_section(conf, "AGENT");
-		ret = msa::agent::init(hdl, agent_conf);
-		if (ret != 0)
-		{
-			msa::log::error(hdl, "Failed to start agent module");
-			msa::log::debug(hdl, "msa::agent::init() returned " + std::to_string(ret));
-			quit(hdl);
-			dispose(hdl);
-			return MSA_ERR_AGENT;
-		}
-		msa::log::trace(hdl, "Started agent module");
-
-		msa::config::Section cmd_conf = get_module_section(conf, "CMD");
-		ret = msa::cmd::init(hdl, cmd_conf);
-		if (ret != 0)
-		{
-			msa::log::error(hdl, "Failed to start command module");
-			msa::log::debug(hdl, "msa::cmd::init() returned " + std::to_string(ret));
-			quit(hdl);
-			dispose(hdl);
-			return MSA_ERR_CMD;
-		}
-		msa::log::trace(hdl, "Started command module");
+		if (init_module(hdl, conf, msa::log::init, "Log") != 0) return MSA_ERR_LOG;
+		if (init_module(hdl, conf, msa::output::init, "Output") != 0) return MSA_ERR_OUTPUT;
+		if (init_module(hdl, conf, msa::event::init, "Event") != 0) return MSA_ERR_EVENT;
+		if (init_module(hdl, conf, msa::input::init, "Input") != 0) return MSA_ERR_INPUT;
+		if (init_module(hdl, conf, msa::agent::init, "Agent") != 0) return MSA_ERR_AGENT;
+		if (init_module(hdl, conf, msa::cmd::init, "Command") != 0) return MSA_ERR_CMD;
+		if (init_module(hdl, conf, msa::plugin::init, "Plugin") != 0) return MSA_ERR_PLUGIN;
 
 		*msa = hdl;
 		delete conf;
+		
 		msa::log::info(hdl, "Finished initializing Moe Serifu Agent");
 		return MSA_SUCCESS;
 	}
@@ -116,104 +62,17 @@ namespace msa {
 	extern int quit(Handle msa)
 	{
 		msa::log::info(msa, "Moe Serifu Agent is now shutting down...");
-		int status = 0;
-
-		if (msa->input != NULL)
-		{
-			status = msa::input::quit(msa);
-			if (status != 0)
-			{
-				msa::log::error(msa, "Failed to stop input module");
-				msa::log::debug(msa, "msa::input::quit() returned " + std::to_string(status));
-				return MSA_ERR_INPUT;
-			}
-			msa->input = NULL;
-			msa::log::trace(msa, "Stopped input module");
-		}
-		else
-		{
-			msa::log::trace(msa, "Input module not started, no need to stop");
-		}
-
-		if (msa->agent != NULL)
-		{
-			status = msa::agent::quit(msa);
-			if (status != 0)
-			{
-				msa::log::error(msa, "Failed to stop agent module");
-				msa::log::debug(msa, "msa::agent::quit() returned " + std::to_string(status));
-				return MSA_ERR_AGENT;
-			}
-			msa->agent = NULL;
-			msa::log::trace(msa, "Stopped agent module");
-		}
-		else
-		{
-			msa::log::trace(msa, "Agent module not started, no need to stop");
-		}
-
-		if (msa->cmd != NULL)
-		{
-			status = msa::cmd::quit(msa);
-			if (status != 0)
-			{
-				msa::log::error(msa, "Failed to stop command module");
-				msa::log::debug(msa, "msa::cmd::quit() returned " + std::to_string(status));
-				return MSA_ERR_CMD;
-			}
-			msa->cmd = NULL;
-			msa::log::trace(msa, "Stopped command module");
-		}
-		else
-		{
-			msa::log::trace(msa, "Command module not started, no need to stop");
-		}
-
-		if (msa->event != NULL)
-		{
-			status = msa::event::quit(msa);
-			if (status != 0)
-			{
-				msa::log::error(msa, "Failed to stop event module");
-				msa::log::debug(msa, "msa::event::quit() returned " + std::to_string(status));
-				return MSA_ERR_EVENT;
-			}
-			msa->event = NULL;
-			msa::log::trace(msa, "Stopped event module");
-		}
-		else
-		{
-			msa::log::trace(msa, "Event module not started, no need to stop");
-		}
 		
-		if (msa->output != NULL)
-		{
-			status = msa::output::quit(msa);
-			if (status != 0)
-			{
-				msa::log::error(msa, "Failed to stop output module");
-				msa::log::debug(msa, "msa::output::quit() returned " + std::to_string(status));
-				return MSA_ERR_OUTPUT;
-			}
-			msa->output = NULL;
-			msa::log::trace(msa, "Stopped output module");
-		}
-		else
-		{
-			msa::log::trace(msa, "Output module not started, no need to stop");
-		}
-
+		if (quit_module(msa, (void **) &msa->plugin, msa::plugin::quit, "Plugin") != 0) return MSA_ERR_PLUGIN;
+		if (quit_module(msa, (void **) &msa->input, msa::input::quit, "Input") != 0) return MSA_ERR_INPUT;
+		if (quit_module(msa, (void **) &msa->agent, msa::agent::quit, "Agent") != 0) return MSA_ERR_AGENT;
+		if (quit_module(msa, (void **) &msa->cmd, msa::cmd::quit, "Command") != 0) return MSA_ERR_CMD;
+		if (quit_module(msa, (void **) &msa->event, msa::event::quit, "Event") != 0) return MSA_ERR_EVENT;
+		if (quit_module(msa, (void **) &msa->output, msa::output::quit, "Output") != 0) return MSA_ERR_OUTPUT;
+		
 		msa::log::info(msa, "Moe Serifu Agent primary modules shutdown cleanly");
-		
-		if (msa->log != NULL)
-		{
-			status = msa::log::quit(msa);
-			if (status != 0)
-			{
-				return MSA_ERR_LOG;
-			}
-			msa->log = NULL;
-		}
+
+		if (quit_module(msa, (void **) &msa->log, msa::log::quit, "") != 0) return MSA_ERR_LOG;
 		
 		msa->status = msa::Status::STOPPED;
 		msa::thread::quit();
@@ -252,22 +111,81 @@ namespace msa {
 		{
 			return MSA_ERR_LOG;
 		}
+
+		if (msa->plugin != NULL)
+		{
+			return MSA_ERR_PLUGIN;
+		}
 		
 		delete msa;
 		return MSA_SUCCESS;
 	}
 
-	static const msa::config::Section &get_module_section(msa::config::Config *conf, const char *name)
+	static const msa::config::Section &get_module_section(msa::config::Config *conf, const std::string &name)
 	{
-		const std::string name_str = name;
-		if (conf->find(name_str) != conf->end())
+		if (conf->find(name) != conf->end())
 		{
-			return (*conf)[name_str];
+			return (*conf)[name];
 		}
 		else
 		{
 			return blank_section;
 		}
+	}
+	
+	static int init_module(Handle hdl, msa::config::Config *conf, ModInitFunc init_func, const std::string &name)
+	{
+		std::string lower_name = name;
+		std::string upper_name = name;
+		msa::string::to_lower(lower_name);
+		msa::string::to_upper(upper_name);
+		bool enable_failure_log = (upper_name != "LOG"); // cant log messages before log is started
+		
+		msa::config::Section section = get_module_section(conf, upper_name);
+		int ret = init_func(hdl, section);
+		if (ret != 0)
+		{
+			if (enable_failure_log)
+			{
+				msa::log::error(hdl, "Failed to start " + lower_name + " module");
+				msa::log::debug(hdl, name + " module's init() returned " + std::to_string(ret));
+			}
+			quit(hdl);
+			dispose(hdl);
+			return ret;
+		}
+		msa::log::trace(hdl, "Started " + lower_name + " module");
+		return ret;
+	}
+	
+	static int quit_module(Handle msa, void **mod, ModQuitFunc quit_func, const std::string &log_name)
+	{
+		std::string lower_name = log_name;
+		msa::string::to_lower(lower_name);
+		int status = 0;
+		if (*mod != NULL)
+		{
+			status = quit_func(msa);
+			if (status != 0)
+			{
+				if (log_name != "")
+				{
+					msa::log::error(msa, "Failed to stop " + lower_name + " module");
+					msa::log::debug(msa, log_name + " module's quit() returned " + std::to_string(status));
+				}
+				return status;
+			}
+			*mod = NULL;
+			if (log_name != "")
+			{
+				msa::log::trace(msa, "Stopped " + lower_name + " module");
+			}
+		}
+		else if (log_name != "")
+		{
+			msa::log::trace(msa, log_name + " module not started, no need to stop");
+		}
+		return status;
 	}
 
 }

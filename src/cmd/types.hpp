@@ -1,5 +1,5 @@
 #ifndef CMD_TYPES_HPP
-#define CMD_TYEPS_HPP
+#define CMD_TYPES_HPP
 
 #include "event/handler.hpp"
 

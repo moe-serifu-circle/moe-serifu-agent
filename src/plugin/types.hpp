@@ -15,7 +15,7 @@ namespace msa { namespace plugin {
 
 	typedef const Info *(*GetInfoFunc)(void);
 	typedef int (*Func)(msa::Handle hdl, void *plugin_env);
-	typedef int (*AddCommmandsFunc)(msa::Handle hdl, void *plugin_env, std::vector<msa::cmd::Command *> &new_commands);
+	typedef int (*AddCommandsFunc)(msa::Handle hdl, void *plugin_env, std::vector<msa::cmd::Command *> &new_commands);
 	typedef int (*InitFunc)(msa::Handle hdl, void **plugin_env);
 
 	typedef struct version_type
@@ -30,7 +30,6 @@ namespace msa { namespace plugin {
 	{
 		const char *name;
 		std::vector<std::string> authors;
-		size_t num_authors;
 		Version version;
 		InitFunc init_func;
 		Func quit_func;
@@ -40,8 +39,7 @@ namespace msa { namespace plugin {
 		AddCommandsFunc add_commands_func;
 		info_type() :
 			name(""),
-			authors(NULL),
-			num_authors(0),
+			authors(),
 			version({0, 0, 0, 0}),
 			init_func(NULL),
 			quit_func(NULL),

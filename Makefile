@@ -41,7 +41,7 @@ moe-serifu: $(ODIR)/main.o $(DEP_OBJS) $(OS_DEP_OBJS)
 $(ODIR)/main.o: $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS)
 
-$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/log.hpp $(SDIR)/debug_macros.hpp
+$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/log.hpp $(SDIR)/debug_macros.hpp $(SDIR)/string.hpp $(SDIR)/plugin/plugin.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS)
 
 $(ODIR)/configuration.o: $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp

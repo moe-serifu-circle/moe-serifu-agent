@@ -23,7 +23,7 @@ example.so: example.o
 	$(CXX) -o $@ example.o $(LDFLAGS)
 	
 example.o: example.cpp
-	$(CXX) -o $@ example.cpp $(CXXFLAGS)
+	$(CXX) -c -o $@ example.cpp $(CXXFLAGS)
 
 clean:
 	rm -f *.o

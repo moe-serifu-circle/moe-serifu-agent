@@ -84,7 +84,7 @@ namespace msa { namespace plugin {
 		catch (const msa::lib::library_error &e)
 		{
 			msa::lib::close(lib);
-			msa::log::error(hdl, "Loading library failed");
+			msa::log::error(hdl, "Loading library failed - could not find msa_plugin_getinfo symbol");
 			return BAD_PLUGIN_ID;
 		}
 		const msa::plugin::Info *info = NULL;

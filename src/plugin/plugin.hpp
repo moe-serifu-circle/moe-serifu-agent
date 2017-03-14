@@ -11,6 +11,10 @@
 namespace msa { namespace plugin {
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config);
+	// call setup only after entire msa system is inited
+	extern int setup(msa::Handle hdl);
+	// call setup only before entire msa system is quit
+	extern int teardown(msa::Handle hdl);
 	extern int quit(msa::Handle hdl);
 	extern const std::string &load(msa::Handle hdl, const std::string &path);
 	extern void unload(msa::Handle hdl, const std::string &id);

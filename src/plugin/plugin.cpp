@@ -2,6 +2,7 @@
 
 #include "log.hpp"
 #include "cmd/cmd.hpp"
+#include "agent.hpp"
 #include "string.hpp"
 
 #include "platform/file/file.hpp"
@@ -27,6 +28,7 @@ namespace msa { namespace plugin {
 		std::map<std::string, PluginEntry *> loaded;
 		std::map<std::string, PluginEntry *> enabled;
 		std::string autoload_dir;
+		std::vector<msa::cmd::Command *> commands;
 	};
 	
 	static int create_plugin_context(PluginContext **ctx_ptr);
@@ -35,6 +37,9 @@ namespace msa { namespace plugin {
 	static void load_all(msa::Handle hdl, const std::string &dir_path);
 	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry);
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env);
+	static void cmd_enable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
+	static void cmd_disable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
+	static void cmd_list(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -56,6 +61,26 @@ namespace msa { namespace plugin {
 		if (hdl->plugin->autoload_dir != "")
 		{
 			load_all(hdl, hdl->plugin->autoload_dir);
+		}
+		return 0;
+	}
+	
+	extern int setup(msa::Handle hdl)
+	{
+		PluginContext *ctx = hdl->plugin;
+		for (size_t i = 0; i < ctx->commands.size(); i++)
+		{
+			msa::cmd::register_command(hdl, ctx->commands[i]);
+		}
+		return 0;
+	}
+	
+	extern int teardown(msa::Handle hdl)
+	{
+		PluginContext *ctx = hdl->plugin;
+		for (size_t i = 0; i < ctx->commands.size(); i++)
+		{
+			msa::cmd::unregister_command(hdl, ctx->commands[i]);
 		}
 		return 0;
 	}
@@ -195,13 +220,13 @@ namespace msa { namespace plugin {
 			{
 				msa::log::error(hdl, "Plugin '" + id + "' init_func threw an exception; plugin will be unloaded");
 				unload(hdl, id);
-				return;
+				throw std::runtime_error("plugin unloaded; init() threw an exception");
 			}
 			if (status != 0)
 			{
 				msa::log::error(hdl, "Plugin '" + id + "': init function failed");
 				msa::log::debug(hdl, id + "'s init_func return code is " + std::to_string(status));
-				return;
+				throw std::runtime_error("plugin unloaded; init() failed with code " + std::to_string(status));
 			}
 		}
 		else
@@ -211,10 +236,22 @@ namespace msa { namespace plugin {
 		ctx->enabled[id] = entry;
 		msa::log::info(hdl, "Loaded plugin with ID '" + id + "'");
 		const FunctionTable *funcs = entry->info->functions;
-		if (!call_plugin_func(hdl, id, "add_input_devices_func", funcs->add_input_devices_func, entry->local_env)) return;
-		if (!call_plugin_func(hdl, id, "add_output_devices_func", funcs->add_output_devices_func, entry->local_env)) return;
-		if (!call_plugin_func(hdl, id, "add_agent_props_func", funcs->add_agent_props_func, entry->local_env)) return;
-		call_plugin_add_commands(hdl, entry);
+		if (!call_plugin_func(hdl, id, "add_input_devices_func", funcs->add_input_devices_func, entry->local_env))
+		{
+			throw std::runtime_error("add_input_devices() failed");
+		}
+		if (!call_plugin_func(hdl, id, "add_output_devices_func", funcs->add_output_devices_func, entry->local_env))
+		{
+			throw std::runtime_error("add_output_devices() failed");
+		}
+		if (!call_plugin_func(hdl, id, "add_agent_props_func", funcs->add_agent_props_func, entry->local_env))
+		{
+			throw std::runtime_error("add_agent_props() failed");
+		}
+		if (!call_plugin_add_commands(hdl, entry))
+		{
+			throw std::runtime_error("add_commands() failed");
+		}
 	}
 	
 	extern void disable(msa::Handle hdl, const std::string &id)
@@ -238,12 +275,15 @@ namespace msa { namespace plugin {
 			{
 				msa::log::error(hdl, "Plugin '" + id + "' quit_func threw an exception; plugin will be unloaded");
 				unload(hdl, id);
+				throw std::runtime_error("plugin unloaded; quit() threw an exception");
+				
 			}
 			if (status != 0)
 			{
 				msa::log::error(hdl, "Plugin '" + id + "': quit function failed");
 				msa::log::debug(hdl, id + "'s quit_func return code is " + std::to_string(status));
 				unload(hdl, id);
+				throw std::runtime_error("plugin unloaded; init() failed with code " + std::to_string(status));
 			}
 		}
 		else
@@ -255,6 +295,69 @@ namespace msa { namespace plugin {
 	extern bool is_enabled(msa::Handle hdl, const std::string &id)
 	{
 		return (hdl->plugin->enabled.find(id) != hdl->plugin->enabled.end());
+	}
+	
+	static void cmd_enable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	{
+		if (args.size() < 1)
+		{
+			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you want.");
+			return;
+		}
+		std::string plugin_id = args[0];
+		if (!is_loaded(hdl, plugin_id))
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
+			return;
+		}
+		if (is_enabled(hdl, plugin_id))
+		{
+			msa::agent::say(hdl, "Ooh! I already enabled that plugin for you, $USER_TITLE.");
+			return;
+		}
+		enable(hdl, plugin_id);
+		msa::agent::say(hdl, "All right, $USER_TITLE! I've now enabled the plugin called '" + plugin_id + "'.");
+	}
+	
+	static void cmd_disable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	{
+		if (args.size() < 1)
+		{
+			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you want.");
+			return;
+		}
+		std::string plugin_id = args[0];
+		if (!is_loaded(hdl, plugin_id))
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
+			return;
+		}
+		if (!is_enabled(hdl, plugin_id))
+		{
+			msa::agent::say(hdl, "Ooh! That plugin isn't enabled, $USER_TITLE.");
+			return;
+		}
+		disable(hdl, plugin_id);
+		msa::agent::say(hdl, "All right, $USER_TITLE! I've now disabled the plugin called '" + plugin_id + "'.");
+	}
+	
+	static void cmd_list(msa::Handle hdl, const msa::cmd::ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
+	{
+		std::vector<std::string> ids;
+		get_loaded(hdl, ids);
+		if (ids.empty())
+		{
+			msa::agent::say(hdl, "Hmm, I actually haven't loaded any plugins at all.");
+			return;
+		}
+		msa::agent::say(hdl, "Okay, $USER_TITLE. Here are the plugins that I've loaded:");
+		for (size_t i = 0; i < ids.size(); i++)
+		{
+			std::string enable_string = is_enabled(hdl, ids[i]) ? "(enabled)" : "(disabled)";
+			msa::agent::say(hdl, "'" + ids[i] + "' " + enable_string);
+		}
+		std::string plural = ids.size() > 1 ? "s" : "";
+		msa::agent::say(hdl, "That's " + std::to_string(ids.size()) + " plugin" + plural + " in total.");
 	}
 	
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env)
@@ -270,6 +373,7 @@ namespace msa { namespace plugin {
 			{
 				msa::log::error(hdl, "Plugin '" + id + "' " + func_name + " threw an exception; plugin will be unloaded");
 				unload(hdl, id);
+				throw std::runtime_error("plugin unloaded; " + func_name + "() threw an exception");
 				return false;
 			}
 			if (status != 0)
@@ -300,6 +404,7 @@ namespace msa { namespace plugin {
 			{
 				msa::log::error(hdl, "Plugin '" + *entry->id + "' add_commands_func threw an exception; plugin will be unloaded");
 				unload(hdl, *entry->id);
+				throw std::runtime_error("plugin unloaded; add_commands() threw an exception");
 				return false;
 			}
 			if (status != 0)
@@ -324,12 +429,19 @@ namespace msa { namespace plugin {
 	{
 		PluginContext *ctx = new PluginContext;
 		ctx->autoload_dir = "";
+		ctx->commands.push_back(new msa::cmd::Command("PLUGINDISABLE", "It turns on a plugin", "plugin-id", cmd_enable));
+		ctx->commands.push_back(new msa::cmd::Command("PLUGINENABLE", "It turns off a plugin", "plugin-id", cmd_disable));
+		ctx->commands.push_back(new msa::cmd::Command("PLUGINLIST", "It lists all of the plugins", "", cmd_list));
 		*ctx_ptr = ctx;
 		return 0;
 	}
 	
 	static int dispose_plugin_context(PluginContext *ctx)
 	{
+		for (size_t i = 0; i < ctx->commands.size(); i++)
+		{
+			delete ctx->commands[i];
+		}
 		delete ctx;
 		return 0;
 	}

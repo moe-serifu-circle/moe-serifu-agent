@@ -215,7 +215,14 @@ namespace msa { namespace cmd {
 		}
 		else
 		{
-			ctx->commands[cmd_name]->handler(hdl, args, sync);
+			try
+			{
+				ctx->commands[cmd_name]->handler(hdl, args, sync);
+			}
+			catch (const std::exception &e)
+			{
+				msa::agent::say(hdl, "Oh no! I'm sorry, but I failed: " + std::string(e.what()));
+			}
 		}
 	}
 

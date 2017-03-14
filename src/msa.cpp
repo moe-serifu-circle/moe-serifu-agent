@@ -15,12 +15,14 @@
 
 namespace msa {
 
-	typedef int (*ModQuitFunc)(Handle);
+	typedef int (*ModFunc)(Handle);
 	typedef int (*ModInitFunc)(Handle, const msa::config::Section&);
 
 	static const msa::config::Section &get_module_section(msa::config::Config *conf, const std::string &name);
 	static int init_module(Handle hdl, msa::config::Config *conf, ModInitFunc init_func, const std::string &name);
-	static int quit_module(Handle msa, void **mod, ModQuitFunc quit_func, const std::string &log_name);
+	static int setup_module(Handle hdl, ModFunc setup_func, const std::string &name);
+	static int quit_module(Handle msa, void **mod, ModFunc quit_func, const std::string &log_name);
+	static int teardown_module(Handle hdl, ModFunc teardown_func, const std::string &name);
 
 	static const msa::config::Section blank_section("");
 
@@ -51,6 +53,9 @@ namespace msa {
 		if (init_module(hdl, conf, msa::agent::init, "Agent") != 0) return MSA_ERR_AGENT;
 		if (init_module(hdl, conf, msa::cmd::init, "Command") != 0) return MSA_ERR_CMD;
 		if (init_module(hdl, conf, msa::plugin::init, "Plugin") != 0) return MSA_ERR_PLUGIN;
+		
+		// system is inited, do setup now
+		if (setup_module(hdl, msa::plugin::setup, "Plugin") != 0) return MSA_ERR_PLUGIN;
 
 		*msa = hdl;
 		delete conf;
@@ -63,6 +68,9 @@ namespace msa {
 	{
 		msa::log::info(msa, "Moe Serifu Agent is now shutting down...");
 		
+		if (teardown_module(msa, msa::plugin::teardown, "Plugin") != 0) return MSA_ERR_PLUGIN;
+		
+		// modules are torn down, now quit them
 		if (quit_module(msa, (void **) &msa->plugin, msa::plugin::quit, "Plugin") != 0) return MSA_ERR_PLUGIN;
 		if (quit_module(msa, (void **) &msa->input, msa::input::quit, "Input") != 0) return MSA_ERR_INPUT;
 		if (quit_module(msa, (void **) &msa->agent, msa::agent::quit, "Agent") != 0) return MSA_ERR_AGENT;
@@ -133,6 +141,42 @@ namespace msa {
 		}
 	}
 	
+	static int setup_module(Handle hdl, ModFunc setup_func, const std::string &name)
+	{
+		std::string lower_name = name;
+		msa::string::to_lower(lower_name);
+		
+		int ret = setup_func(hdl);
+		if (ret != 0)
+		{
+			msa::log::error(hdl, "Failed to setup " + lower_name + " module");
+			msa::log::debug(hdl, name + " module's setup() returned " + std::to_string(ret));
+			quit(hdl);
+			dispose(hdl);
+			return ret;
+		}
+		msa::log::trace(hdl, "Setup " + lower_name + " module");
+		return ret;
+	}
+	
+	static int teardown_module(Handle hdl, ModFunc teardown_func, const std::string &name)
+	{
+		std::string lower_name = name;
+		msa::string::to_lower(lower_name);
+		
+		int ret = teardown_func(hdl);
+		if (ret != 0)
+		{
+			msa::log::error(hdl, "Failed to tear down " + lower_name + " module");
+			msa::log::debug(hdl, name + " module's teardown() returned " + std::to_string(ret));
+			quit(hdl);
+			dispose(hdl);
+			return ret;
+		}
+		msa::log::trace(hdl, "Tore down " + lower_name + " module");
+		return ret;
+	}
+	
 	static int init_module(Handle hdl, msa::config::Config *conf, ModInitFunc init_func, const std::string &name)
 	{
 		std::string lower_name = name;
@@ -158,7 +202,7 @@ namespace msa {
 		return ret;
 	}
 	
-	static int quit_module(Handle msa, void **mod, ModQuitFunc quit_func, const std::string &log_name)
+	static int quit_module(Handle msa, void **mod, ModFunc quit_func, const std::string &log_name)
 	{
 		std::string lower_name = log_name;
 		msa::string::to_lower(lower_name);

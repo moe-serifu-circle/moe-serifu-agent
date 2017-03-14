@@ -9,7 +9,7 @@
 // msa::util function. It should only be defined as a macro here if it would involve code erasure
 // in some conditions, and those conditions are not compiler-specific and are not platform-specific.
 
-#ifdef DEBUG_ON
+#ifdef DEBUG
 	#define DEBUG_TEST_VAR 1
 #else
 	#define DEBUG_TEST_VAR 0

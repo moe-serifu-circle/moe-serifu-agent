@@ -9,7 +9,7 @@
 
 namespace msa { namespace output {
 
-	typedef enum { TTY, UDP, TCP } OutputType;
+	typedef enum { tty, udp, tcp } OutputType;
 
 	typedef struct chunk_type Chunk;
 

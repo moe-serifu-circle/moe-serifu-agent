@@ -209,9 +209,9 @@ namespace msa { namespace input {
 	{
 		if (INPUT_TYPE_NAMES.empty())
 		{
-			INPUT_TYPE_NAMES["UDP"] = InputType::UDP;
-			INPUT_TYPE_NAMES["TCP"] = InputType::TCP;
-			INPUT_TYPE_NAMES["TTY"] = InputType::TTY;
+			INPUT_TYPE_NAMES["UDP"] = InputType::udp;
+			INPUT_TYPE_NAMES["TCP"] = InputType::tcp;
+			INPUT_TYPE_NAMES["TTY"] = InputType::tty;
 		}
 		if (INPUT_HANDLER_NAMES.empty())
 		{
@@ -269,17 +269,17 @@ namespace msa { namespace input {
 		dev->type = type;
 		switch (dev->type)
 		{
-			case InputType::TCP:
+			case InputType::tcp:
 				dev->port = *(static_cast<const uint16_t *>(id));
 				dev->id = "TCP:" + std::to_string(dev->port);
 				break;
 
-			case InputType::UDP:
+			case InputType::udp:
 				dev->port = *(static_cast<const uint16_t *>(id));
 				dev->id = "UDP:" + std::to_string(dev->port);
 				break;
 
-			case InputType::TTY:
+			case InputType::tty:
 				dev->device_name = new std::string(*static_cast<const std::string *>(id));
 				dev->id = "TTY:" + *dev->device_name;
 				break;
@@ -298,7 +298,7 @@ namespace msa { namespace input {
 		{
 			dev->running = false;
 		}
-		if (dev->type == InputType::TTY)
+		if (dev->type == InputType::tty)
 		{
 			delete dev->device_name;
 		}
@@ -375,7 +375,7 @@ namespace msa { namespace input {
 				Chunk *chunk = input_handler->get_input(hdl, dev);
 				std::string *text = new std::string(chunk->text);
 				delete chunk;
-				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, text);
+				msa::event::generate(hdl, msa::event::Topic::text_input, text);
 			}
 		}
 	}

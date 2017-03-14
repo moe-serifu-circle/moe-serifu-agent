@@ -106,7 +106,7 @@ namespace msa { namespace output {
 	extern void write(msa::Handle hdl, const Chunk *chunk)
 	{
 		OutputContext *ctx = hdl->output;
-		if (hdl->status == msa::Status::RUNNING && ctx != NULL && ctx->running)
+		if (hdl->status == msa::Status::running && ctx != NULL && ctx->running)
 		{
 			msa::thread::mutex_lock(ctx->state_mutex);
 			Device *dev = ctx->devices[ctx->active];
@@ -327,7 +327,7 @@ namespace msa { namespace output {
 				void *id;
 				uint16_t port = 0;
 				// select what ID should point to based on type
-				if (type == OutputType::UDP || type == OutputType::TCP)
+				if (type == OutputType::udp || type == OutputType::tcp)
 				{
 					port = (uint16_t) std::stoi(id_str);
 					id = &port;
@@ -382,17 +382,17 @@ namespace msa { namespace output {
 		dev->handler = handler;
 		switch (type)
 		{
-			case OutputType::TCP:
+			case OutputType::tcp:
 				dev->port = *(static_cast<const uint16_t *>(id));
 				dev->id = "TCP:" + std::to_string(dev->port);
 				break;
 
-			case OutputType::UDP:
+			case OutputType::udp:
 				dev->port = *(static_cast<const uint16_t *>(id));
 				dev->id = "UDP:" + std::to_string(dev->port);
 				break;
 
-			case OutputType::TTY:
+			case OutputType::tty:
 				dev->device_name = new std::string(*static_cast<const std::string *>(id));
 				dev->id = "TTY:" + *dev->device_name;
 				break;
@@ -408,7 +408,7 @@ namespace msa { namespace output {
 	
 	static int dispose_device(Device *dev)
 	{
-		if (dev->type == OutputType::TTY)
+		if (dev->type == OutputType::tty)
 		{
 			delete dev->device_name;
 		}
@@ -478,12 +478,12 @@ namespace msa { namespace output {
 		{
 			create_handler(&default_stdout_handler, "print_to_stdout", print_to_stdout);
 		}
-		register_handler(hdl, OutputType::TTY, default_stdout_handler);
+		register_handler(hdl, OutputType::tty, default_stdout_handler);
 	}
 
 	static void dispose_default_handlers(msa::Handle hdl)
 	{
-		unregister_handler(hdl, OutputType::TTY, default_stdout_handler);
+		unregister_handler(hdl, OutputType::tty, default_stdout_handler);
 		dispose_handler(default_stdout_handler); // TODO: need to mark usage with ref count
 	}
 
@@ -491,9 +491,9 @@ namespace msa { namespace output {
 	{
 		if (OUTPUT_TYPE_NAMES.empty())
 		{
-			OUTPUT_TYPE_NAMES["UDP"] = OutputType::UDP;
-			OUTPUT_TYPE_NAMES["TCP"] = OutputType::TCP;
-			OUTPUT_TYPE_NAMES["TTY"] = OutputType::TTY;
+			OUTPUT_TYPE_NAMES["UDP"] = OutputType::udp;
+			OUTPUT_TYPE_NAMES["TCP"] = OutputType::tcp;
+			OUTPUT_TYPE_NAMES["TTY"] = OutputType::tty;
 		}
 		return 0;
 	}

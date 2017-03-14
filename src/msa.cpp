@@ -35,7 +35,7 @@ namespace msa {
 		}
 
 		environment_type *hdl = new environment_type;
-		hdl->status = Status::CREATED;
+		hdl->status = Status::created;
 		hdl->event = NULL;
 		hdl->input = NULL;
 		hdl->output = NULL;
@@ -74,7 +74,7 @@ namespace msa {
 
 		if (quit_module(msa, (void **) &msa->log, msa::log::quit, "") != 0) return MSA_ERR_LOG;
 		
-		msa->status = msa::Status::STOPPED;
+		msa->status = msa::Status::stopped;
 		msa::thread::quit();
 		return MSA_SUCCESS;
 	}

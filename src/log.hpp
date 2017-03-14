@@ -9,10 +9,11 @@
 
 namespace msa { namespace log {
 
-	typedef enum stream_type_type { FILE } StreamType;
-	typedef enum level_type { TRACE, DEBUG, INFO, WARN, ERROR } Level;
-	typedef enum format_type { TEXT, XML } Format;
-	typedef enum open_mode_type { OVERWRITE, APPEND } OpenMode;
+	typedef enum stream_type_type { file } StreamType;
+	// using upper case for level type because we have functions defined as these
+	typedef enum level_type { Trace, Debug, Info, Warn, Error } Level;
+	typedef enum format_type { text, xml } Format;
+	typedef enum open_mode_type { overwrite, append } OpenMode;
 	typedef size_t stream_id;
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config);

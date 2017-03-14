@@ -12,9 +12,9 @@ DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 OS_DEP_TARGETS=thread.o file.o lib.o
 OS_DEP_OBJS=$(patsubst %,$(ODIR)/platform/%,$(OS_DEP_TARGETS))
 
-.PHONY: clean test all debug
+.PHONY: clean test all debug plugins
 
-all: moe-serifu
+all: moe-serifu plugins
 
 debug: CXXFLAGS += -g -O0 -Werror -DDEBUG
 debug: moe-serifu
@@ -29,6 +29,9 @@ clean:
 	rm -f $(ODIR)/event/*.o
 	rm -f $(ODIR)/platform/*.o
 	rm -f moe-serifu
+	rm -f plugin/autoload/*.so
+	rm -f plugin/example/*.so
+	rm -f plugin/example/*.o
 
 
 # ----------------- #
@@ -84,7 +87,6 @@ $(ODIR)/plugin/plugin.o: $(SDIR)/plugin/plugin.cpp $(SDIR)/plugin/plugin.hpp $(S
 	$(CXX) -c -o $@ $(SDIR)/plugin/plugin.cpp $(CXXFLAGS)
 
 
-
 # ------------------- #
 #  OS Binary Recipes  #
 # ------------------- #
@@ -98,3 +100,18 @@ $(ODIR)/platform/file.o: compat/platform/file/file.cpp
 $(ODIR)/platform/lib.o: compat/platform/lib/lib.cpp compat/platform/file/file.hpp
 	$(CXX) -c -o $@ compat/platform/lib/lib.cpp $(CXXFLAGS)
 
+
+# --------- #
+#  Plugins  #
+# --------- #
+
+plugins: plugin/autoload/example.so
+
+plugin/autoload/example.so: plugin/example/example.so
+	cp plugin/example/example.so plugin/autoload/example.so
+
+plugin/example/example.so: plugin/example/example.o
+	$(CXX) -o $@ plugin/example/example.o -shared
+	
+plugin/example/example.o: plugin/example/example.cpp
+	$(CXX) -c -o $@ plugin/example/example.cpp -I$(SDIR) -include compat/compat.hpp -fPIC -std=c++11 -Wall -Wextra -Wpedantic

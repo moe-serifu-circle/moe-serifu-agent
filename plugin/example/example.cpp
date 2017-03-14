@@ -3,7 +3,7 @@
 #include "plugin/plugin.hpp"
 #include "cmd/types.hpp"
 
-extern const msa::plugin::Info *msa_plugin_getinfo();
+extern "C" const msa::plugin::Info *msa_plugin_getinfo();
 
 namespace dekarrin {
 
@@ -54,7 +54,7 @@ namespace dekarrin {
 
 }
 
-extern const msa::plugin::Info *msa_plugin_getinfo()
+extern "C" const msa::plugin::Info *msa_plugin_getinfo()
 {
 	return &dekarrin::plugin_info;
 }

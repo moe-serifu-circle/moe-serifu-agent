@@ -89,7 +89,7 @@ namespace msa { namespace plugin {
 	{
 		if (dispose_plugin_context(hdl->plugin) != 0)
 		{
-			msa::log::error(hdl, "Clould not dispose plugin manager context");
+			msa::log::error(hdl, "Could not dispose plugin manager context");
 			return -1;
 		}
 		return 0;
@@ -334,7 +334,7 @@ namespace msa { namespace plugin {
 		}
 		if (!is_enabled(hdl, plugin_id))
 		{
-			msa::agent::say(hdl, "Ooh! That plugin isn't enabled, $USER_TITLE.");
+			msa::agent::say(hdl, "Ooh! That plugin is already disabled, $USER_TITLE.");
 			return;
 		}
 		disable(hdl, plugin_id);
@@ -429,8 +429,8 @@ namespace msa { namespace plugin {
 	{
 		PluginContext *ctx = new PluginContext;
 		ctx->autoload_dir = "";
-		ctx->commands.push_back(new msa::cmd::Command("PLUGINDISABLE", "It turns on a plugin", "plugin-id", cmd_enable));
-		ctx->commands.push_back(new msa::cmd::Command("PLUGINENABLE", "It turns off a plugin", "plugin-id", cmd_disable));
+		ctx->commands.push_back(new msa::cmd::Command("PLUGINENABLE", "It turns on a plugin", "plugin-id", cmd_enable));
+		ctx->commands.push_back(new msa::cmd::Command("PLUGINDISABLE", "It turns off a plugin", "plugin-id", cmd_disable));
 		ctx->commands.push_back(new msa::cmd::Command("PLUGINLIST", "It lists all of the plugins", "", cmd_list));
 		*ctx_ptr = ctx;
 		return 0;

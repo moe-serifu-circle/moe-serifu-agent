@@ -87,6 +87,12 @@ namespace msa { namespace plugin {
 	
 	extern int quit(msa::Handle hdl)
 	{
+		std::vector<std::string> all_ids;
+		get_loaded(hdl, all_ids);
+		for (size_t i = 0; i < all_ids.size(); i++)
+		{
+			unload(hdl, all_ids[i]);
+		}
 		if (dispose_plugin_context(hdl->plugin) != 0)
 		{
 			msa::log::error(hdl, "Could not dispose plugin manager context");

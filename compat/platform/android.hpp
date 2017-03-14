@@ -242,6 +242,168 @@ namespace std {
 		return val;
 	}
 
+	inline static long stol(const std::string &str, size_t *pos = 0, int base = 10)
+	{
+		// first sanity check on args
+		if (base < 0 || base == 1 || base > 36)
+		{
+			throw std::invalid_argument("base must be one of {0,2,3, ... 36}");
+		}
+
+		const char *cptr = str.c_str();
+
+		// find location of first non-space char
+		size_t idx = 0;
+		while (isspace(cptr[idx]) && idx < str.size())
+		{
+			idx++;
+		}
+
+		// if we found no valid chars, throw
+		if (idx == str.size())
+		{
+			throw std::invalid_argument("no valid digits: " + str);
+		}
+			
+		// check for negative / positive
+		long neg = 1;
+		if (cptr[idx] == '-' || cptr[idx] == '+')
+		{
+			neg = (cptr[idx] == '-') ? -1 : 1;
+			idx++;
+		}
+
+		// if we are at end, throw
+		if (idx == str.size())
+		{
+			throw std::invalid_argument("no valid digits: " + str);
+		}
+		
+		// check for octal / hex prefix
+		if (cptr[idx] == '0')
+		{
+			// check that the next char is X or x before running other checks
+			bool hex_prefix = false;
+			if (idx + 1 < str.size() && (cptr[idx + 1] == 'x' || cptr[idx + 1] == 'X'))
+			{
+				hex_prefix = true;
+			}
+				// now do the base checks
+			if (base == 8 || (base == 16 && hex_prefix))
+			{
+				idx++;
+			}
+			else if (base == 16)
+			{
+				idx += 2;
+			}
+			else if (base == 0)
+			{
+				if (hex_prefix)
+				{
+					base = 16;
+					idx += 2;
+				}
+				else if (idx + 1 < str.size() && (cptr[idx + 1] >= '0' && cptr[idx + 1] <= '7'))
+				{
+					base = 8;
+					idx++;
+				}
+			}
+		} else if (base == 0) {
+			base = 10;
+		}
+		
+		// if we are at end, throw
+		if (idx == str.size())
+		{
+			throw std::invalid_argument("no valid digits: " + str);
+		}
+		
+		// okay, now actually iterate through and get the value
+		long val = 0;
+		size_t start = idx;
+		long digit_val;
+		long lbase = base;
+		long num_digits = 0;
+		for (; idx < str.size(); idx++)
+		{
+			char ch = cptr[idx];
+			
+			// get the digit value
+			if (ch >= 'a' && ch <= 'z')
+			{
+				digit_val = (long) (10 + (ch - 'a'));
+			}
+			else if (ch >= 'A' && ch <= 'Z')
+			{
+				digit_val = (long) (10 + (ch - 'A'));
+			}
+			else if (ch >= '0' && ch <= '9')
+			{
+				digit_val = (long) (ch - '0');
+			}
+			else
+			{
+				// invalid character, stop processing
+				break;
+			}
+
+			if (digit_val >= lbase)
+			{
+				// invalid digit for our base, stop processing
+				break;
+			}
+
+			// 'shift' all digits by multiplying current value by the base (check all vals for overflow)
+			long multip = lbase * num_digits;
+			
+			// overflow check
+			if (multip < 0)
+			{
+				throw std::out_of_range("value out of range: " + str);
+			}			
+
+			val *= multip;
+
+			// overflow check
+			if (val < 0)
+			{
+				throw std::out_of_range("value out of range: " + str);
+			}
+			
+			val += digit_val;
+
+			// overflow check
+			if (val < 0)
+			{
+				throw std::out_of_range("value out of range: " + str);
+			}
+
+			num_digits++;
+		}
+		
+		if (idx == start)
+		{
+			throw std::invalid_argument("no valid digits: " + str);
+		}
+		
+		if (pos != 0)
+		{
+			*pos = idx;
+		}
+
+		val *= neg;
+
+		// final overflow check
+		if ((neg > 0 && val < 0) || (neg < 0 && val > 0))
+		{
+			throw std::out_of_range("value out of range: " + str);
+		}
+
+		return val;
+	}
+
 }
 
 // now we move on to the actual compat functions

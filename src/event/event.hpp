@@ -8,10 +8,10 @@ namespace msa { namespace event {
 
 	// MUST BE SEQUENTIAL!! Do not assign specific constants
 	typedef enum topic_type {
-		EVENT_STACK_CLEARED,
-		EVENT_HANDLED,
-		EVENT_INTERRUPTED,
-		TEXT_INPUT
+		event_stack_cleared,
+		event_handled,
+		event_interrupted,
+		text_input
 	} Topic;
 
 	struct topic_attr;

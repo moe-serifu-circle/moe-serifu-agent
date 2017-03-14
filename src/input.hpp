@@ -9,7 +9,7 @@
 
 namespace msa { namespace input {
 
-	typedef enum input_type_type { TTY, TCP, UDP } InputType;
+	typedef enum input_type_type { tty, tcp, udp } InputType;
 
 	typedef struct chunk_type
 	{

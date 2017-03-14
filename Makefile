@@ -16,7 +16,7 @@ OS_DEP_OBJS=$(patsubst %,$(ODIR)/platform/%,$(OS_DEP_TARGETS))
 
 all: moe-serifu
 
-debug: CXXFLAGS += -g -O0 -Werror -DDEBUG_ON
+debug: CXXFLAGS += -g -O0 -Werror -DDEBUG
 debug: moe-serifu
 
 test: debug

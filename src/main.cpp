@@ -59,21 +59,21 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	DEBUG_PRINTF("(Waiting for EDT to start)\n");
-	while (hdl->status == msa::Status::CREATED)
+	while (hdl->status == msa::Status::created)
 	{
 		msa::util::sleep_milli(50);
 	}
 	DEBUG_PRINTF("(System is ready)\n");
-	while (hdl->status == msa::Status::RUNNING)
+	while (hdl->status == msa::Status::running)
 	{
 		msa::util::sleep_milli(50);
 	}
 	DEBUG_PRINTF("(Waiting for MSA to exit)\n");
-	while (hdl->status != msa::Status::STOPPED)
+	while (hdl->status != msa::Status::stopped)
 	{
 		msa::util::sleep_milli(50);
 	}
-	if (hdl->status == msa::Status::STOPPED)
+	if (hdl->status == msa::Status::stopped)
 	{
 		DEBUG_PRINTF("(MSA system has exited)\n");
 		msa::dispose(hdl);

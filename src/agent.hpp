@@ -11,8 +11,8 @@
 
 namespace msa { namespace agent {
 
-	typedef enum state_type { IDLE, ALERT, LISTEN, ERO, CONVERSE, DEBUG } State;
-	typedef enum mood_type { NORMAL } Mood;
+	typedef enum state_type { idle, alert, listen, ero, converse, debug } State;
+	typedef enum mood_type { normal } Mood;
 
 	typedef struct agent_type
 	{

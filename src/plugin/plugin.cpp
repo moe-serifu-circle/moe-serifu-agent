@@ -21,6 +21,7 @@ namespace msa { namespace plugin {
 		void *local_env;
 		std::string *id;
 		msa::lib::Library *lib;
+		std::vector<msa::cmd::Command *> commands;
 	} PluginEntry;
 
 	struct plugin_context_type
@@ -37,6 +38,7 @@ namespace msa { namespace plugin {
 	static void load_all(msa::Handle hdl, const std::string &dir_path);
 	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry);
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env);
+	static void remove_plugin_commands(msa::Handle hdl, PluginEntry *entry);
 	static void cmd_enable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 	static void cmd_disable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 	static void cmd_list(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
@@ -269,6 +271,7 @@ namespace msa { namespace plugin {
 			return;
 		}
 		PluginEntry *entry = ctx->enabled[id];
+		remove_plugin_commands(hdl, entry);
 		ctx->enabled.erase(id);
 		if (entry->info->functions->quit_func != NULL)
 		{
@@ -404,7 +407,7 @@ namespace msa { namespace plugin {
 			int status = 0;
 			try
 			{
-				status = entry->info->functions->add_commands_func(hdl, entry->local_env, new_commands);
+				status = entry->info->functions->add_commands_func(hdl, entry->local_env, entry->commands);
 			}
 			catch (...)
 			{
@@ -424,11 +427,30 @@ namespace msa { namespace plugin {
 		{
 			msa::log::info(hdl, "Plugin '" + *entry->id + "' does not define add_commands_func; skipping execution");
 		}
-		for (size_t i = 0; i < new_commands.size(); i++)
+		std::vector<msa::cmd::Command *>::iterator iter = entry->commands.begin();
+		while (iter != entry->commands.end())
 		{
-			msa::cmd::register_command(hdl, new_commands[i]);
+			try
+			{
+				msa::cmd::register_command(hdl, *iter);
+				iter++;
+			}
+			catch (const std::exception &e)
+			{
+				std::string err = std::string(e.what());
+				msa::log::error(hdl, "Plugin '" + *entry->id + "' could not add command '" + (*iter)->invoke + "': " + err);
+				iter = entry->commands.erase(iter);
+			}
 		}
 		return true;
+	}
+
+	static void remove_plugin_commands(msa::Handle hdl, PluginEntry *entry)
+	{
+		for (size_t i = 0; i < entry->commands.size(); i++)
+		{
+			msa::cmd::unregister_command(hdl, entry->commands[i]);
+		}
 	}
 	
 	static int create_plugin_context(PluginContext **ctx_ptr)

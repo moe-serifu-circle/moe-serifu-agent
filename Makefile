@@ -12,7 +12,7 @@ DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 OS_DEP_TARGETS=thread.o file.o lib.o
 OS_DEP_OBJS=$(patsubst %,$(ODIR)/platform/%,$(OS_DEP_TARGETS))
 
-.PHONY: clean test all debug plugins
+.PHONY: clean test all debug plugins clean-plugins
 
 all: moe-serifu plugins
 
@@ -22,16 +22,13 @@ debug: moe-serifu
 test: debug
 	valgrind --leak-check=yes --track-origins=yes moe-serifu
 
-clean:
+clean: clean-plugins
 	rm -f $(ODIR)/*.o
 	rm -f $(ODIR)/cmd/*.o
 	rm -f $(ODIR)/plugin/*.o
 	rm -f $(ODIR)/event/*.o
 	rm -f $(ODIR)/platform/*.o
 	rm -f moe-serifu
-	rm -f plugin/autoload/*.so
-	rm -f plugin/example/*.so
-	rm -f plugin/example/*.o
 
 
 # ----------------- #
@@ -71,7 +68,7 @@ $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
 $(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS)
 
-$(ODIR)/cmd/cmd.o: $(SDIR)/cmd/cmd.cpp $(SDIR)/cmd/cmd.hpp $(SDIR)/cmd/types.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/log.hpp
+$(ODIR)/cmd/cmd.o: $(SDIR)/cmd/cmd.cpp $(SDIR)/cmd/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd/cmd.cpp $(CXXFLAGS)
 
 $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/util.hpp
@@ -83,7 +80,7 @@ $(ODIR)/output.o: $(SDIR)/output.cpp $(SDIR)/output.hpp $(SDIR)/msa.hpp $(SDIR)/
 $(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp
 	$(CXX) -c -o $@ $(SDIR)/var.cpp $(CXXFLAGS)
 
-$(ODIR)/plugin/plugin.o: $(SDIR)/plugin/plugin.cpp $(SDIR)/plugin/plugin.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/plugin/types.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp $(SDIR)/string.hpp
+$(ODIR)/plugin/plugin.o: $(SDIR)/plugin/plugin.cpp $(SDIR)/plugin/plugin.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/plugin/plugin.cpp $(CXXFLAGS)
 
 
@@ -105,6 +102,11 @@ $(ODIR)/platform/lib.o: compat/platform/lib/lib.cpp compat/platform/file/file.hp
 #  Plugins  #
 # --------- #
 
+clean-plugins:	
+	rm -f plugin/autoload/*.so
+	rm -f plugin/example/*.so
+	rm -f plugin/example/*.o
+
 plugins: plugin/autoload/example.so
 
 plugin/autoload/example.so: plugin/example/example.so
@@ -113,5 +115,5 @@ plugin/autoload/example.so: plugin/example/example.so
 plugin/example/example.so: plugin/example/example.o
 	$(CXX) -o $@ plugin/example/example.o -shared
 	
-plugin/example/example.o: plugin/example/example.cpp
+plugin/example/example.o: plugin/example/example.cpp $(SDIR)/cmd/cmd.hpp
 	$(CXX) -c -o $@ plugin/example/example.cpp -I$(SDIR) -include compat/compat.hpp -fPIC -std=c++11 -Wall -Wextra -Wpedantic

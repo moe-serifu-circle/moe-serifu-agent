@@ -1,7 +1,4 @@
-#include "msa.hpp"
-
 #include "plugin/plugin.hpp"
-#include "cmd/types.hpp"
 
 extern "C" const msa::plugin::Info *msa_plugin_getinfo();
 

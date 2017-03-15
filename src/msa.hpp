@@ -1,5 +1,5 @@
-#ifndef MSA_HPP
-#define MSA_HPP
+#ifndef MSA_MSA_HPP
+#define MSA_MSA_HPP
 
 #include "debug_macros.hpp"
 

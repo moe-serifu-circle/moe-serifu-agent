@@ -1,5 +1,5 @@
-#ifndef EVENT_HPP
-#define EVENT_HPP
+#ifndef MSA_EVENT_EVENT_HPP
+#define MSA_EVENT_EVENT_HPP
 
 #include <ctime>
 #include <cstdint>

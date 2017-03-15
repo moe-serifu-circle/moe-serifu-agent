@@ -1,5 +1,5 @@
-#ifndef PLUGIN_HPP
-#define PLUGIN_HPP
+#ifndef MSA_PLUGIN_HPP
+#define MSA_PLUGIN_HPP
 
 #include "msa.hpp"
 #include "cmd.hpp"

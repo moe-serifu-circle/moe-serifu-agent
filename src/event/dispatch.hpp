@@ -1,5 +1,5 @@
-#ifndef EDT_HPP
-#define EDT_HPP
+#ifndef MSA_EVENT_DISPATCH_HPP
+#define MSA_EVENT_DISPATCH_HPP
 
 #include "msa.hpp"
 #include "event/handler.hpp"

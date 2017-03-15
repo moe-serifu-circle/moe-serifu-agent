@@ -1,5 +1,5 @@
-#ifndef CMD_HPP
-#define CMD_HPP
+#ifndef MSA_CMD_HPP
+#define MSA_CMD_HPP
 
 // Handles definitions and specifications of commands
 

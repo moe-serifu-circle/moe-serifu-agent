@@ -1,5 +1,5 @@
-#ifndef DEBUG_MACROS_HPP
-#define DEBUG_MACROS_HPP
+#ifndef MSA_DEBUG_MACROS_HPP
+#define MSA_DEBUG_MACROS_HPP
 
 #include <cstdio>
 

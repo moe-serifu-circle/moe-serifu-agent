@@ -1,5 +1,5 @@
-#ifndef VAR_HPP
-#define VAR_HPP
+#ifndef MSA_VAR_HPP
+#define MSA_VAR_HPP
 
 #include <string>
 #include <vector>

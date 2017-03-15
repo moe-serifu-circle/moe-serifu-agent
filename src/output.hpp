@@ -1,5 +1,5 @@
-#ifndef OUTPUT_HPP
-#define OUTPUT_HPP
+#ifndef MSA_OUTPUT_HPP
+#define MSA_OUTPUT_HPP
 
 #include "msa.hpp"
 #include "configuration.hpp"

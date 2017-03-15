@@ -1,8 +1,8 @@
-#ifndef PLUGIN_PLUGIN_HPP
-#define PLUGIN_PLUGIN_HPP
+#ifndef PLUGIN_HPP
+#define PLUGIN_HPP
 
 #include "msa.hpp"
-#include "cmd/cmd.hpp"
+#include "cmd.hpp"
 #include "configuration.hpp"
 
 #include <string>

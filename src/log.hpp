@@ -1,5 +1,5 @@
-#ifndef LOG_HPP
-#define LOG_HPP
+#ifndef MSA_LOG_HPP
+#define MSA_LOG_HPP
 
 #include "msa.hpp"
 #include "configuration.hpp"

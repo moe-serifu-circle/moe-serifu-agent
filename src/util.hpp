@@ -1,3 +1,6 @@
+#ifndef MSA_UTIL_HPP
+#define MSA_UTIL_HPP
+
 /**
 * util.hpp
 *
@@ -15,3 +18,5 @@ namespace msa { namespace util {
 	extern bool check_stdin_ready();
 
 } }
+
+#endif

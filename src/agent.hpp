@@ -1,5 +1,5 @@
-#ifndef AGENT_HPP
-#define AGENT_HPP
+#ifndef MSA_AGENT_HPP
+#define MSA_AGENT_HPP
 
 #include "msa.hpp"
 #include "configuration.hpp"

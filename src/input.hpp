@@ -1,5 +1,5 @@
-#ifndef INPUT_HPP
-#define INPUT_HPP
+#ifndef MSA_INPUT_HPP
+#define MSA_INPUT_HPP
 
 #include "msa.hpp"
 #include "configuration.hpp"

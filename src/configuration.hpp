@@ -1,5 +1,5 @@
-#ifndef CONFIGURATION_HPP
-#define CONFIGURATION_HPP
+#ifndef MSA_CONFIGURATION_HPP
+#define MSA_CONFIGURATION_HPP
 
 #include <map>
 #include <string>

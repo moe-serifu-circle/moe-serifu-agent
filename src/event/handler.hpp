@@ -1,5 +1,5 @@
-#ifndef EVENT_HANDLER_HPP
-#define EVENT_HANDLER_HPP
+#ifndef MSA_EVENT_HANDLER_HPP
+#define MSA_EVENT_HANDLER_HPP
 
 #include "msa.hpp"
 #include "event/event.hpp"

@@ -1,0 +1,16 @@
+# The implementation of libdl used by Valgrind introduces a memory leak in
+# programs that are compiled with -lpthread when dlclose() is called from a
+# different thread than the one that called dlopen().
+#
+# This has been observed in v3.10 of Valgrind on Debian and v3.11 of Valgrind
+# on Ubuntu.
+#
+# This suppression file keeps that leak from the output of our test program.
+
+{
+	Suppress Valgrind's multithreaded leak in dlopen/dlclose
+	Memcheck:Leak
+	fun:calloc
+	fun:_dlerror_run
+	...
+}

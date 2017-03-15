@@ -1,7 +1,6 @@
-#include "plugin/plugin.hpp"
+#include "plugin.hpp"
 
 #include "log.hpp"
-#include "cmd/cmd.hpp"
 #include "agent.hpp"
 #include "string.hpp"
 
@@ -503,4 +502,3 @@ namespace msa { namespace plugin {
 	}
 
 } }
-

@@ -1,4 +1,4 @@
-#include "cmd/cmd.hpp"
+#include "cmd.hpp"
 #include "event/dispatch.hpp"
 #include "string.hpp"
 #include "agent.hpp"

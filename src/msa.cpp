@@ -1,13 +1,13 @@
 #include "msa.hpp"
 #include "agent.hpp"
 #include "input.hpp"
-#include "cmd/cmd.hpp"
+#include "cmd.hpp"
 #include "event/dispatch.hpp"
 #include "configuration.hpp"
 #include "log.hpp"
 #include "output.hpp"
 #include "string.hpp"
-#include "plugin/plugin.hpp"
+#include "plugin.hpp"
 
 #include <string>
 

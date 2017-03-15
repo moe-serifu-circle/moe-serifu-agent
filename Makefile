@@ -1,6 +1,6 @@
 ODIR?=obj
 SDIR?=src
-PLDIR?=plugin
+PLDIR?=plugins
 
 CXX?=g++
 CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR) -Icompat -include compat/compat.hpp
@@ -112,7 +112,8 @@ $(PLDIR)/autoload/example.so: $(PLDIR)/example/example.so
 	cp $(PLDIR)/example/example.so $(PLDIR)/autoload/example.so
 
 $(PLDIR)/example/example.so: $(PLDIR)/example/example.o
-	$(CXX) -o $@ plugin/example/example.o -shared
+	$(CXX) -o $@ $(PLDIR)/example/example.o -shared
 	
 $(PLDIR)/example/example.o: $(PLDIR)/example/example.cpp $(SDIR)/plugin.hpp
 	$(CXX) -c -o $@ $(PLDIR)/example/example.cpp -I$(SDIR) -include compat/compat.hpp -fPIC -std=c++11 -Wall -Wextra -Wpedantic
+

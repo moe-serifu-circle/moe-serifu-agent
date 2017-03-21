@@ -9,6 +9,12 @@
 
 namespace msa { namespace agent {
 
+	static const PluginCallbacks PLUGIN_CALLBACKS = {
+		#define X(retspec, func, ...) func,
+		MSA_AGENT_PLUGIN_CALLABLE_FUNCS
+		#undef X
+	};
+
 	struct agent_context_type
 	{
 		Agent *agent;
@@ -53,6 +59,11 @@ namespace msa { namespace agent {
 			msa::log::error(hdl, "Could not dispose agent context");
 		}
 		return 0;
+	}
+
+	extern const PluginCallbacks *const get_plugin_callbacks()
+	{
+		return &PLUGIN_CALLBACKS;
 	}
 
 	extern const Agent *get_agent(msa::Handle hdl)

@@ -35,12 +35,26 @@ namespace msa { namespace agent {
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config);
 	extern int quit(msa::Handle hdl);
-	extern void say(msa::Handle hdl, const std::string &text);
-	extern void register_substitution(msa::Handle hdl, const std::string &name);
-	extern void set_substitution(msa::Handle hdl, const std::string &name, const std::string &value);
-	extern void unregister_substitution(msa::Handle hdl, const std::string &name);
-	extern void get_substitutions(msa::Handle hdl, std::vector<std::string> &subs);
 	extern const Agent *get_agent(msa::Handle hdl);
+
+	#define MSA_AGENT_PLUGIN_CALLABLE_FUNCS \
+		X(void, say, const std::string &text) \
+		X(void, register_substitution, const std::string &name) \
+		X(void, set_substitution, const std::string &name, const std::string &value) \
+		X(void, unregister_substitution, const std::string &name) \
+		X(void, get_substitutions, std::vector<std::string> &subs)
+
+	// declare hookables
+	#define X(retspec, func, ...) extern retspec func(msa::Handle hdl, __VA_ARGS__);
+	MSA_AGENT_PLUGIN_CALLABLE_FUNCS
+	#undef X
+
+	typedef struct plugin_hooks_type
+	{
+		#define X(retspec, func, ...) retspec (*func)(msa::Handle hdl, __VA_ARGS__);
+		MSA_AGENT_PLUGIN_CALLABLE_FUNCS
+		#undef X
+	} PluginHooks;
 	
 } }
 #endif

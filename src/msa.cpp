@@ -15,18 +15,7 @@
 
 namespace msa {
 
-	// 'static' level symbols; we only need one of these for all instances of the MSA system
-	
-	// num instances of valid msa handles.
-	// Increases every time init() is called, decreases every time quit() is called.
-	// Inc/Dec atomicity is guarented by a mutex.
-	//
-	// We use this handle count to determine when to init our static resources as well as
-	// when to free them.
-	int handle_count = 0;
-	msa::thread::Mutex handle_count_mutex = 
-	
-	
+	static PluginHooks *PLUGIN_HOOKS = NULL;
 	
 	// end of static symbols
 
@@ -40,10 +29,22 @@ namespace msa {
 	static int teardown_module(Handle hdl, ModFunc teardown_func, const std::string &name);
 
 	static const msa::config::Section blank_section("");
+	
+	extern void init()
+	{
+		PLUGIN_HOOKS = new PluginHooks;
+		PLUGIN_HOOKS.agent = msa::agent::get_plugin_hooks();
+		msa::thread::init();
+	}
+	
+	extern void quit()
+	{
+		msa::thread::quit();
+		delete PLUGIN_HOOKS;
+	}
 
 	extern int start(Handle *msa, const char *config_path)
 	{
-		msa::thread::init();
 		// load config first
 		msa::config::Config *conf = msa::config::load(config_path);
 		if (conf == NULL)
@@ -99,7 +100,6 @@ namespace msa {
 		if (quit_module(msa, (void **) &msa->log, msa::log::quit, "") != 0) return MSA_ERR_LOG;
 		
 		msa->status = msa::Status::stopped;
-		msa::thread::quit();
 		return MSA_SUCCESS;
 	}
 
@@ -167,7 +167,7 @@ namespace msa {
 		{
 			msa::log::error(hdl, "Failed to setup " + lower_name + " module");
 			msa::log::debug(hdl, name + " module's setup() returned " + std::to_string(ret));
-			quit(hdl);
+			stop(hdl);
 			dispose(hdl);
 			return ret;
 		}
@@ -185,7 +185,7 @@ namespace msa {
 		{
 			msa::log::error(hdl, "Failed to tear down " + lower_name + " module");
 			msa::log::debug(hdl, name + " module's teardown() returned " + std::to_string(ret));
-			quit(hdl);
+			stop(hdl);
 			dispose(hdl);
 			return ret;
 		}
@@ -210,7 +210,7 @@ namespace msa {
 				msa::log::error(hdl, "Failed to start " + lower_name + " module");
 				msa::log::debug(hdl, name + " module's init() returned " + std::to_string(ret));
 			}
-			quit(hdl);
+			stop(hdl);
 			dispose(hdl);
 			return ret;
 		}

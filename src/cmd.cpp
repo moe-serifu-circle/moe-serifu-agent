@@ -134,7 +134,7 @@ namespace msa { namespace cmd {
 	static void kill_func(msa::Handle hdl, const ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
 	{
 		msa::agent::say(hdl, "Right away, $USER_TITLE, I will terminate my EDT for you now!");
-		int status = msa::quit(hdl);
+		int status = msa::stop(hdl);
 		if (status != 0)
 		{
 			fprintf(stderr, "Shutdown error: %d\n", status);

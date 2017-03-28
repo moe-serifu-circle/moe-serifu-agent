@@ -18,8 +18,10 @@ int main(int argc, char *argv[]) {
 		cfg_path = argv[1];
 	}
 
+	msa::init();
+	
 	msa::Handle hdl;
-	int succ = msa::init(&hdl, cfg_path);
+	int succ = msa::start(&hdl, cfg_path);
 	if (succ != MSA_SUCCESS)
 	{
 		const char *err_msg;
@@ -82,6 +84,8 @@ int main(int argc, char *argv[]) {
 	{
 		DEBUG_PRINTF("(MSA state is not shutdown, but still terminating)\n");
 	}
+	
+	msa::quit();
 	return EXIT_SUCCESS;
 }
 

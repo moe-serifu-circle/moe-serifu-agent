@@ -9,10 +9,10 @@
 
 namespace msa { namespace agent {
 
-	static const PluginCallbacks PLUGIN_CALLBACKS = {
-		#define X(retspec, func, ...) func,
-		MSA_AGENT_PLUGIN_CALLABLE_FUNCS
-		#undef X
+	static const PluginHooks HOOKS = {
+		#define MSA_MODULE_HOOK(retspec, name, ...)		name,
+		#include "agent_hooks.hpp"
+		#undef MSA_MODULE_HOOK
 	};
 
 	struct agent_context_type
@@ -61,9 +61,9 @@ namespace msa { namespace agent {
 		return 0;
 	}
 
-	extern const PluginCallbacks *const get_plugin_callbacks()
+	extern const PluginHooks *get_plugin_hooks()
 	{
-		return &PLUGIN_CALLBACKS;
+		return &HOOKS;
 	}
 
 	extern const Agent *get_agent(msa::Handle hdl)

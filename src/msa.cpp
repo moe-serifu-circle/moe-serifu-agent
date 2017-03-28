@@ -15,6 +15,21 @@
 
 namespace msa {
 
+	// 'static' level symbols; we only need one of these for all instances of the MSA system
+	
+	// num instances of valid msa handles.
+	// Increases every time init() is called, decreases every time quit() is called.
+	// Inc/Dec atomicity is guarented by a mutex.
+	//
+	// We use this handle count to determine when to init our static resources as well as
+	// when to free them.
+	int handle_count = 0;
+	msa::thread::Mutex handle_count_mutex = 
+	
+	
+	
+	// end of static symbols
+
 	typedef int (*ModFunc)(Handle);
 	typedef int (*ModInitFunc)(Handle, const msa::config::Section&);
 
@@ -26,7 +41,7 @@ namespace msa {
 
 	static const msa::config::Section blank_section("");
 
-	extern int init(Handle *msa, const char *config_path)
+	extern int start(Handle *msa, const char *config_path)
 	{
 		msa::thread::init();
 		// load config first
@@ -46,6 +61,7 @@ namespace msa {
 		hdl->log = NULL;
 		hdl->plugin = NULL;
 
+		// init system modules
 		if (init_module(hdl, conf, msa::log::init, "Log") != 0) return MSA_ERR_LOG;
 		if (init_module(hdl, conf, msa::output::init, "Output") != 0) return MSA_ERR_OUTPUT;
 		if (init_module(hdl, conf, msa::event::init, "Event") != 0) return MSA_ERR_EVENT;
@@ -64,7 +80,7 @@ namespace msa {
 		return MSA_SUCCESS;
 	}
 
-	extern int quit(Handle msa)
+	extern int stop(Handle msa)
 	{
 		msa::log::info(msa, "Moe Serifu Agent is now shutting down...");
 		

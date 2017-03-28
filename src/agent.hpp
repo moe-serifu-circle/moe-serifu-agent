@@ -4,8 +4,10 @@
 #include "msa.hpp"
 #include "configuration.hpp"
 
+// Start of hooks' includes
 #include <string>
 #include <vector>
+// End of hooks' includes
 
 // Moe Serifu Agent state and manipulation
 
@@ -36,25 +38,18 @@ namespace msa { namespace agent {
 	extern int init(msa::Handle hdl, const msa::config::Section &config);
 	extern int quit(msa::Handle hdl);
 	extern const Agent *get_agent(msa::Handle hdl);
-
-	#define MSA_AGENT_PLUGIN_CALLABLE_FUNCS \
-		X(void, say, const std::string &text) \
-		X(void, register_substitution, const std::string &name) \
-		X(void, set_substitution, const std::string &name, const std::string &value) \
-		X(void, unregister_substitution, const std::string &name) \
-		X(void, get_substitutions, std::vector<std::string> &subs)
-
-	// declare hookables
-	#define X(retspec, func, ...) extern retspec func(msa::Handle hdl, __VA_ARGS__);
-	MSA_AGENT_PLUGIN_CALLABLE_FUNCS
-	#undef X
-
-	typedef struct plugin_hooks_type
+	extern const PluginHooks *get_plugin_hooks();
+	
+	#define MSA_MODULE_HOOK(retspec, name, ...)	extern retspec name(__VA_ARGS__);
+	#include "agent_hooks.hpp"
+	#undef MSA_MODULE_HOOK
+	
+	struct plugin_hooks_type
 	{
-		#define X(retspec, func, ...) retspec (*func)(msa::Handle hdl, __VA_ARGS__);
-		MSA_AGENT_PLUGIN_CALLABLE_FUNCS
-		#undef X
-	} PluginHooks;
+		#define MSA_MODULE_HOOK(retspec, name, ...)		retspec (*name)(__VA_ARGS__);
+		#include "agent_hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
 	
 } }
 #endif

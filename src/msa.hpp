@@ -40,6 +40,7 @@ namespace msa {
 	namespace agent {
 
 		typedef struct agent_context_type AgentContext;
+		typedef struct plugin_hooks_type PluginHooks;
 
 	}
 
@@ -76,9 +77,29 @@ namespace msa {
 	};
 
 	typedef struct environment_type* Handle;
+	
+	typedef struct plugin_hooks_type
+	{
+		const msa::agent::PluginHooks *agent;
+	} PluginHooks;
 
-	extern int init(Handle *hdl, const char *config_path);
-	extern int quit(Handle hdl);
+	// global library initializer. Must call before creating handles with start()
+	extern void init();
+	
+	// starts an MSA instance.
+	extern int start(Handle *hdl, const char *config_path);
+	
+	// global library destructor. Must call in order to free global resources. Do
+	// not call until all handles have been properly released with dispose()
+	extern void quit();
+	
+	// stops an MSA instance. This will invalidate most of the environment but the
+	// status will still be accessible. Use dispose() to completely free the
+	// handle.
+	extern int stop(Handle hdl);
+	
+	// disposes a handle. Do not call on an active MSA handle; call stop() on
+	// that handle first.
 	extern int dispose(Handle hdl);
 
 }

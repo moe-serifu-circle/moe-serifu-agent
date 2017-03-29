@@ -33,7 +33,7 @@ namespace msa {
 	extern void init()
 	{
 		PLUGIN_HOOKS = new PluginHooks;
-		PLUGIN_HOOKS.agent = msa::agent::get_plugin_hooks();
+		PLUGIN_HOOKS->agent = msa::agent::get_plugin_hooks();
 		msa::thread::init();
 	}
 	

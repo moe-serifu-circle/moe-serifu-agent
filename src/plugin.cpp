@@ -42,10 +42,6 @@ namespace msa { namespace plugin {
 	static void cmd_disable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 	static void cmd_list(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 	static void cmd_info(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
-	static inline void say_status(msa::Handle hdl, const std::string &name, void *ptr)
-	{
-		msa::agent::say(hdl, name + ":" + ((ptr == NULL) ? " not" : "") + " defined");
-	}
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -112,7 +108,7 @@ namespace msa { namespace plugin {
 		msa::log::info(hdl, "Loading plugin library " + path);
 		PluginContext *ctx = hdl->plugin;
 		msa::lib::Library *lib = msa::lib::open(path);
-		GetInfoFunc get_info = NULL;
+		RegisterFunc register_func = NULL;
 		// check that plugin has a getinfo()
 		try
 		{
@@ -125,7 +121,7 @@ namespace msa { namespace plugin {
 			return BAD_PLUGIN_ID;
 		}
 		const msa::plugin::Info *info = NULL;
-		const msa::PluginHooks *hooks = msa::get_plugin_hooks()
+		const msa::PluginHooks *hooks = msa::get_plugin_hooks();
 		// check if plugin's register() throws
 		try
 		{
@@ -384,7 +380,7 @@ namespace msa { namespace plugin {
 		msa::agent::say(hdl, "That's " + std::to_string(ids.size()) + " plugin" + plural + " in total.");
 	}
 
-	static void cmd_info(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event HandlerSync *const UNUSED(sync))
+	static void cmd_info(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		if (args.size() < 1)
 		{
@@ -397,34 +393,34 @@ namespace msa { namespace plugin {
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
 			return;
 		}
-		const Info *info = get_info(id);
+		const Info *info = get_info(hdl, plugin_id);
 		std::string ver_str;
 		msa::agent::say(hdl, "Ok! Here's what I know about '" + plugin_id + "':");
-		msa::agent::say(hdl, info->name + " " + info->version->to_string(ver_str));
-		const std::vector<std::map> &auths = info->authors;
+		msa::agent::say(hdl, info->name + " " + info->version.to_string(ver_str));
+		const std::vector<std::string> &auths = info->authors;
 		if (auths.empty())
 		{
 			msa::agent::say(hdl, "(no authors listed)");
 		}
 		else
 		{
-			msa::agent::say(hdl, "Authors:");
+			msa::agent::say(hdl, "AUTHORS:");
 			for (auto iter = auths.begin(); iter != auths.end(); iter++)
 			{
 				msa::agent::say(hdl, "\t* " + *iter);
 			}
 		}
 		msa::agent::say(hdl, "");
-		const FunctionTable *funcs = info->funcs;
+		const FunctionTable *f = info->functions;
 		msa::agent::say(hdl, "FUNCTIONS:");
-		say_status(hdl, "init()", funcs->init_func);
-		say_status(hdl, "quit()", funcs->quit_func);
-		say_status(hdl, "add_input_devices()", funcs->add_input_devices_func);
-		say_status(hdl, "add_output_devices()", funcs->add_output_devices_func);
-		say_status(hdl, "add_agent_props()", funcs->add_agent_props_func);
-		say_status(hdl, "add_commands()", funcs->add_commands_func);
+		msa::agent::say(hdl, "init():" + std::string((f->init_func == NULL) ? " not" : "") + " defined");
+		msa::agent::say(hdl, "quit():" + std::string((f->quit_func == NULL) ? " not" : "") + " defined");
+		msa::agent::say(hdl, "add_input_devices():" + std::string((f->add_input_devices_func == NULL) ? " not" : "") + " defined");
+		msa::agent::say(hdl, "add_output_devices():" + std::string((f->add_output_devices_func == NULL) ? " not" : "") + " defined");
+		msa::agent::say(hdl, "add_agent_props():" + std::string((f->add_agent_props_func == NULL) ? " not" : "") + " defined");
+		msa::agent::say(hdl, "add_commands():" + std::string((f->add_commands_func == NULL) ? " not" : "") + " defined");
 		msa::agent::say(hdl, "");
-		msa::agent::say(hdl, "Loaded with ID '" + info->id + "'.";
+		msa::agent::say(hdl, "Loaded with ID '" + info->id + "'.");
 	}
 	
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env)

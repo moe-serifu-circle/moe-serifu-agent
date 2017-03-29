@@ -86,7 +86,7 @@ namespace msa { namespace plugin {
 			#undef __minor_temp
 		#endif
 		
-		std::string &to_string(std::string &out_str)
+		std::string &to_string(std::string &out_str) const
 		{
 			out_str.clear();
 			out_str = "v" + std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(debug);

@@ -56,7 +56,7 @@ namespace dekarrin {
 
 extern "C" const msa::plugin::Info *msa_plugin_register(const msa::PluginHooks *hooks)
 {
-	msa_sys = hooks;
+	dekarrin::msa_sys = hooks;
 	return &dekarrin::plugin_info;
 }
 

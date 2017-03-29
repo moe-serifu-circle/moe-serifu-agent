@@ -1,6 +1,7 @@
 #include "plugin.hpp"
+#include "agent.hpp"
 
-extern "C" const msa::plugin::Info *msa_plugin_getinfo();
+extern "C" const msa::plugin::Info *msa_plugin_register(const msa::PluginHooks *hooks);
 
 namespace dekarrin {
 
@@ -15,7 +16,9 @@ namespace dekarrin {
 	static void love_func(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 	
 	static const msa::plugin::FunctionTable function_table = {init, quit, NULL, NULL, NULL, add_commands};
-	static const msa::plugin::Info plugin_info = {"example-plugin", {"dekarrin"}, msa::plugin::Version(1, 0, 0, 0), &function_table};
+	static const msa::plugin::Info plugin_info = {"example", "Example Plugin", {"dekarrin"}, msa::plugin::Version(1, 0, 0, 0), &function_table};
+
+	static const msa::PluginHooks *msa_sys;
 
 	static int init(msa::Handle hdl __attribute__((unused)), void **env)
 	{
@@ -44,15 +47,16 @@ namespace dekarrin {
 		return 0;
 	}
 	
-	static void love_func(msa::Handle hdl __attribute__((unused)), const msa::cmd::ArgList &args __attribute__((unused)), msa::event::HandlerSync *const sync __attribute__((unused)))
+	static void love_func(msa::Handle hdl, const msa::cmd::ArgList &args __attribute__((unused)), msa::event::HandlerSync *const sync __attribute__((unused)))
 	{
-		printf("worked\n");
+		msa_sys->agent->say(hdl, "$USER_TITLE, the new command works!");
 	}
 
 }
 
-extern "C" const msa::plugin::Info *msa_plugin_getinfo()
+extern "C" const msa::plugin::Info *msa_plugin_register(const msa::PluginHooks *hooks)
 {
+	msa_sys = hooks;
 	return &dekarrin::plugin_info;
 }
 

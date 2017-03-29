@@ -9,14 +9,14 @@
 #include <cstdint>
 #include <vector>
 
-// will look for a function called 'msa_plugin_getinfo()' which must be a GetInfoFunc with
-// extern "C" linkage
+// will look for a function called 'msa_plugin_register()' which must be a RegisterFunc
+// with extern "C" linkage
 
 namespace msa { namespace plugin {
 
 	typedef struct info_type Info;
 
-	typedef const Info *(*GetInfoFunc)(void);
+	typedef const Info *(*RegisterFunc)(const msa::PluginHooks *hooks);
 	typedef int (*Func)(msa::Handle hdl, void *plugin_env);
 	typedef int (*AddCommandsFunc)(msa::Handle hdl, void *plugin_env, std::vector<msa::cmd::Command *> &new_commands);
 	typedef int (*InitFunc)(msa::Handle hdl, void **plugin_env);
@@ -46,8 +46,13 @@ namespace msa { namespace plugin {
 		version_type(const std::string &ver_str) : major(0), minor(0), debug(0), build(0)
 		{
 			size_t parse_pos;
-			// parse major
 			std::string ver = ver_str;
+			// skip initial 'v'
+			if (ver[0] == 'v' || ver[0] == 'V')
+			{
+				ver = ver.substr(1);
+			}
+			// parse major
 			major = (uint32_t) std::stol(ver, &parse_pos);
 			if (parse_pos >= (ver.size() - 2) || ver[parse_pos] != '.')
 			{
@@ -80,6 +85,14 @@ namespace msa { namespace plugin {
 			#define minor __minor_temp
 			#undef __minor_temp
 		#endif
+		
+		std::string &to_string(std::string &out_str)
+		{
+			out_str.clear();
+			out_str = "v" + std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(debug);
+			out_str += (build != 0) ? ("b" + std::to_string(build)) : "";
+			return out_str;
+		}
 	} Version;
 	
 	typedef struct function_table_type
@@ -94,20 +107,24 @@ namespace msa { namespace plugin {
 
 	struct info_type
 	{
+		std::string id;
 		std::string name;
 		std::vector<std::string> authors;
 		Version version;
 		const FunctionTable *functions;
-		info_type() :
+		info_type(const std::string &id) :
+			id(id),
 			name(""),
 			authors(),
 			version(0, 0, 0, 0),
 			functions(NULL)
 			{}
-		info_type(const std::string &name,
+		info_type(const std::string &id,
+					const std::string &name,
 					const std::vector<std::string> &authors,
 					const Version version,
 					const FunctionTable *funcs) :
+			id(id),
 			name(name),
 			authors(authors),
 			version(version),
@@ -128,6 +145,7 @@ namespace msa { namespace plugin {
 	extern void disable(msa::Handle hdl, const std::string &id);
 	extern bool is_enabled(msa::Handle hdl, const std::string &id);
 	extern bool is_loaded(msa::Handle hdl, const std::string &id);
+	extern const Info *get_info(msa::Handle hdl, const std::string &id);
 	
 } }
 

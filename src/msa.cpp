@@ -43,6 +43,11 @@ namespace msa {
 		delete PLUGIN_HOOKS;
 	}
 
+	extern const PluginHooks *get_plugin_hooks()
+	{
+		return PLUGIN_HOOKS;
+	}
+
 	extern int start(Handle *msa, const char *config_path)
 	{
 		// load config first

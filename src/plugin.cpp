@@ -41,6 +41,11 @@ namespace msa { namespace plugin {
 	static void cmd_enable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 	static void cmd_disable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 	static void cmd_list(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
+	static void cmd_info(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
+	static inline void say_status(msa::Handle hdl, const std::string &name, void *ptr)
+	{
+		msa::agent::say(hdl, name + ":" + ((ptr == NULL) ? " not" : "") + " defined");
+	}
 
 	extern int init(msa::Handle hdl, const msa::config::Section &config)
 	{
@@ -111,34 +116,35 @@ namespace msa { namespace plugin {
 		// check that plugin has a getinfo()
 		try
 		{
-			get_info = msa::lib::get_symbol<GetInfoFunc>(lib, "msa_plugin_getinfo");
+			register_func = msa::lib::get_symbol<RegisterFunc>(lib, "msa_plugin_register");
 		}
 		catch (const msa::lib::library_error &e)
 		{
 			msa::lib::close(lib);
-			msa::log::error(hdl, "Loading library failed - could not find msa_plugin_getinfo symbol");
+			msa::log::error(hdl, "Loading library failed - could not find msa_plugin_register symbol");
 			return BAD_PLUGIN_ID;
 		}
 		const msa::plugin::Info *info = NULL;
-		// check if plugin's getinfo() throws
+		const msa::PluginHooks *hooks = msa::get_plugin_hooks()
+		// check if plugin's register() throws
 		try
 		{
-			info = get_info();
+			info = register_func(hooks);
 		}
 		catch (...)
 		{
-			msa::log::error(hdl, "Plugin's msa_plugin_getinfo() function threw an error");
+			msa::log::error(hdl, "Plugin's msa_plugin_register() function threw an error");
 			msa::lib::close(lib);
 			return BAD_PLUGIN_ID;
 		}
 		// check that plugin's getinfo() returns a real pointer
 		if (info == NULL)
 		{
-			msa::log::error(hdl, "Plugin's msa_plugin_getinfo() function returned NULL");
+			msa::log::error(hdl, "Plugin's msa_plugin_register() function returned NULL");
 			msa::lib::close(lib);
 			return BAD_PLUGIN_ID;
 		}
-		std::string *plugin_id = new std::string(info->name);
+		std::string *plugin_id = new std::string(info->id);
 		// check that we have not already loaded this plugin
 		if (is_loaded(hdl, *plugin_id))
 		{
@@ -304,6 +310,16 @@ namespace msa { namespace plugin {
 	{
 		return (hdl->plugin->enabled.find(id) != hdl->plugin->enabled.end());
 	}
+
+	extern const Info *get_info(msa::Handle hdl, const std::string &id)
+	{
+		if (!is_loaded(hdl, id))
+		{
+			throw std::logic_error("Plugin not loaded: " + id);
+		}
+		PluginContext *ctx = hdl->plugin;
+		return ctx->loaded[id]->info;
+	}
 	
 	static void cmd_enable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
 	{
@@ -366,6 +382,49 @@ namespace msa { namespace plugin {
 		}
 		std::string plural = ids.size() > 1 ? "s" : "";
 		msa::agent::say(hdl, "That's " + std::to_string(ids.size()) + " plugin" + plural + " in total.");
+	}
+
+	static void cmd_info(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event HandlerSync *const UNUSED(sync))
+	{
+		if (args.size() < 1)
+		{
+			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you wanna know about.");
+			return;
+		}
+		std::string plugin_id = args[0];
+		if (!is_loaded(hdl, plugin_id))
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
+			return;
+		}
+		const Info *info = get_info(id);
+		std::string ver_str;
+		msa::agent::say(hdl, "Ok! Here's what I know about '" + plugin_id + "':");
+		msa::agent::say(hdl, info->name + " " + info->version->to_string(ver_str));
+		const std::vector<std::map> &auths = info->authors;
+		if (auths.empty())
+		{
+			msa::agent::say(hdl, "(no authors listed)");
+		}
+		else
+		{
+			msa::agent::say(hdl, "Authors:");
+			for (auto iter = auths.begin(); iter != auths.end(); iter++)
+			{
+				msa::agent::say(hdl, "\t* " + *iter);
+			}
+		}
+		msa::agent::say(hdl, "");
+		const FunctionTable *funcs = info->funcs;
+		msa::agent::say(hdl, "FUNCTIONS:");
+		say_status(hdl, "init()", funcs->init_func);
+		say_status(hdl, "quit()", funcs->quit_func);
+		say_status(hdl, "add_input_devices()", funcs->add_input_devices_func);
+		say_status(hdl, "add_output_devices()", funcs->add_output_devices_func);
+		say_status(hdl, "add_agent_props()", funcs->add_agent_props_func);
+		say_status(hdl, "add_commands()", funcs->add_commands_func);
+		msa::agent::say(hdl, "");
+		msa::agent::say(hdl, "Loaded with ID '" + info->id + "'.";
 	}
 	
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env)
@@ -459,6 +518,7 @@ namespace msa { namespace plugin {
 		ctx->commands.push_back(new msa::cmd::Command("PLUGINENABLE", "It turns on a plugin", "plugin-id", cmd_enable));
 		ctx->commands.push_back(new msa::cmd::Command("PLUGINDISABLE", "It turns off a plugin", "plugin-id", cmd_disable));
 		ctx->commands.push_back(new msa::cmd::Command("PLUGINLIST", "It lists all of the plugins", "", cmd_list));
+		ctx->commands.push_back(new msa::cmd::Command("PLUGININFO", "It gives information on a plugin", "plugin-id", cmd_info));
 		*ctx_ptr = ctx;
 		return 0;
 	}

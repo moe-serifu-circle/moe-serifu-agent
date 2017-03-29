@@ -62,7 +62,7 @@ namespace msa {
 		
 	}
 
-	typedef enum status_type { created, running, stop_requested, stopped } Status;
+	typedef enum status_type { created, running, stop_requested, stopped } Status;	
 
 	struct environment_type
 	{
@@ -101,6 +101,9 @@ namespace msa {
 	// disposes a handle. Do not call on an active MSA handle; call stop() on
 	// that handle first.
 	extern int dispose(Handle hdl);
+
+	// gets the global plugin hooks table
+	extern const PluginHooks *get_plugin_hooks();
 
 }
 

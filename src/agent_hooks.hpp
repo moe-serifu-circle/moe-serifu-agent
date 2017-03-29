@@ -6,7 +6,7 @@
 // This file should only be included from agent module code.
 
 #ifndef MSA_MODULE_HOOK
-	#error "cannot include agent hooks before MSA_MODULE_HOOK macro is defined
+	#error "cannot include agent hooks before MSA_MODULE_HOOK macro is defined"
 #endif
 
 MSA_MODULE_HOOK(void, say, msa::Handle hdl, const std::string &text)

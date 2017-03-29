@@ -398,6 +398,7 @@ namespace msa { namespace plugin {
 		msa::agent::say(hdl, "Ok! Here's what I know about '" + plugin_id + "':");
 		msa::agent::say(hdl, info->name + " " + info->version.to_string(ver_str));
 		const std::vector<std::string> &auths = info->authors;
+		msa::agent::say(hdl, "");
 		if (auths.empty())
 		{
 			msa::agent::say(hdl, "(no authors listed)");
@@ -407,7 +408,7 @@ namespace msa { namespace plugin {
 			msa::agent::say(hdl, "AUTHORS:");
 			for (auto iter = auths.begin(); iter != auths.end(); iter++)
 			{
-				msa::agent::say(hdl, "\t* " + *iter);
+				msa::agent::say(hdl, *iter);
 			}
 		}
 		msa::agent::say(hdl, "");
@@ -421,6 +422,7 @@ namespace msa { namespace plugin {
 		msa::agent::say(hdl, "add_commands():" + std::string((f->add_commands_func == NULL) ? " not" : "") + " defined");
 		msa::agent::say(hdl, "");
 		msa::agent::say(hdl, "Loaded with ID '" + info->id + "'.");
+		msa::agent::say(hdl, "Plugin is currently " + std::string(is_enabled(hdl, plugin_id) ? "ENABLED" : "DISABLED") + ".");
 	}
 	
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env)

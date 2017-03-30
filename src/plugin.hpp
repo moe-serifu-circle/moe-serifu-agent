@@ -14,6 +14,16 @@
 
 namespace msa { namespace plugin {
 
+	// gcc has this dumb behavior that runs against the standard where it keeps the macros
+	// 'major' and 'minor' around for really no good reason. Also we apparently cannot put
+	// this undef series in gcc.hpp... wtf gcc.
+	#ifdef major
+		#undef major
+	#endif
+	#ifdef minor
+		#undef minor
+	#endif
+
 	typedef struct info_type Info;
 
 	typedef const Info *(*RegisterFunc)(const msa::PluginHooks *hooks);

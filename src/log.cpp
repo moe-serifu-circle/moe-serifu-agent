@@ -355,7 +355,7 @@ namespace msa { namespace log {
 			#define DEBUG_TEMP_OFF
 			#undef DEBUG
 		#endif
-		else if (lev == Level::Debug)
+		else if (lev == Level::DEBUG)
 		{
 			return "DEBUG";
 		}
@@ -363,15 +363,15 @@ namespace msa { namespace log {
 			#undef DEBUG_TEMP_OFF
 			#define DEBUG
 		#endif
-		else if (lev == Level::Info)
+		else if (lev == Level::INFO)
 		{
 			return "INFO";
 		}
-		else if (lev == Level::Warn)
+		else if (lev == Level::WARN)
 		{
 			return "WARN";
 		}
-		else if (lev == Level::Error)
+		else if (lev == Level::ERROR)
 		{
 			return "ERROR";
 		}

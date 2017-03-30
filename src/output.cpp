@@ -106,7 +106,7 @@ namespace msa { namespace output {
 	extern void write(msa::Handle hdl, const Chunk *chunk)
 	{
 		OutputContext *ctx = hdl->output;
-		if (hdl->status == msa::Status::running && ctx != NULL && ctx->running)
+		if (hdl->status == msa::Status::RUNNING && ctx != NULL && ctx->running)
 		{
 			msa::thread::mutex_lock(ctx->state_mutex);
 			Device *dev = ctx->devices[ctx->active];
@@ -327,7 +327,7 @@ namespace msa { namespace output {
 				void *id;
 				uint16_t port = 0;
 				// select what ID should point to based on type
-				if (type == OutputType::udp || type == OutputType::tcp)
+				if (type == OutputType::UDP || type == OutputType::TCP)
 				{
 					port = (uint16_t) std::stoi(id_str);
 					id = &port;

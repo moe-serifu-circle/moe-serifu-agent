@@ -58,7 +58,7 @@ namespace msa {
 		}
 
 		environment_type *hdl = new environment_type;
-		hdl->status = Status::created;
+		hdl->status = Status::CREATED;
 		hdl->event = NULL;
 		hdl->input = NULL;
 		hdl->output = NULL;

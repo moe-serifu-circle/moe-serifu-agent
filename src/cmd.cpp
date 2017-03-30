@@ -114,7 +114,7 @@ namespace msa { namespace cmd {
 	{
 		std::string startup_cmd = config.get_or("STARTUP", "echo I'd like to announce my presence!");
 		std::string *cmd_str = new std::string(startup_cmd);
-		msa::event::generate(hdl, msa::event::Topic::text_input, cmd_str);
+		msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, cmd_str);
 	}
 
 	static int create_command_context(CommandContext **ctx)

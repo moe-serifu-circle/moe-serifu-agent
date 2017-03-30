@@ -62,7 +62,7 @@ namespace msa {
 		
 	}
 
-	typedef enum status_type { created, running, stop_requested, stopped } Status;	
+	typedef enum status_type { CREATED, RUNNING, STOP_REQUESTED, STOPPED } Status;	
 
 	struct environment_type
 	{

@@ -382,17 +382,17 @@ namespace msa { namespace output {
 		dev->handler = handler;
 		switch (type)
 		{
-			case OutputType::tcp:
+			case OutputType::TCP:
 				dev->port = *(static_cast<const uint16_t *>(id));
 				dev->id = "TCP:" + std::to_string(dev->port);
 				break;
 
-			case OutputType::udp:
+			case OutputType::UDP:
 				dev->port = *(static_cast<const uint16_t *>(id));
 				dev->id = "UDP:" + std::to_string(dev->port);
 				break;
 
-			case OutputType::tty:
+			case OutputType::TTY:
 				dev->device_name = new std::string(*static_cast<const std::string *>(id));
 				dev->id = "TTY:" + *dev->device_name;
 				break;
@@ -408,7 +408,7 @@ namespace msa { namespace output {
 	
 	static int dispose_device(Device *dev)
 	{
-		if (dev->type == OutputType::tty)
+		if (dev->type == OutputType::TTY)
 		{
 			delete dev->device_name;
 		}
@@ -478,22 +478,22 @@ namespace msa { namespace output {
 		{
 			create_handler(&default_stdout_handler, "print_to_stdout", print_to_stdout);
 		}
-		register_handler(hdl, OutputType::tty, default_stdout_handler);
+		register_handler(hdl, OutputType::TTY, default_stdout_handler);
 	}
 
 	static void dispose_default_handlers(msa::Handle hdl)
 	{
-		unregister_handler(hdl, OutputType::tty, default_stdout_handler);
-		dispose_handler(default_stdout_handler); // TODO: need to mark usage with ref count
+		unregister_handler(hdl, OutputType::TTY, default_stdout_handler);
+		dispose_handler(default_stdout_handler); // TODO: need to move to quit() in init/start/stop/quit model
 	}
 
 	static int init_static_resources()
 	{
 		if (OUTPUT_TYPE_NAMES.empty())
 		{
-			OUTPUT_TYPE_NAMES["UDP"] = OutputType::udp;
-			OUTPUT_TYPE_NAMES["TCP"] = OutputType::tcp;
-			OUTPUT_TYPE_NAMES["TTY"] = OutputType::tty;
+			OUTPUT_TYPE_NAMES["UDP"] = OutputType::UDP;
+			OUTPUT_TYPE_NAMES["TCP"] = OutputType::TCP;
+			OUTPUT_TYPE_NAMES["TTY"] = OutputType::TTY;
 		}
 		return 0;
 	}

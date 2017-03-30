@@ -79,7 +79,7 @@ namespace msa { namespace event {
 
 	extern int quit(msa::Handle msa)
 	{
-		if (msa->status == msa::Status::created && msa->event != NULL)
+		if (msa->status == msa::Status::CREATED && msa->event != NULL)
 		{
 			// this shouldn't happen, but if we get here, it's because
 			// the event handle was inited but the EDT was not started.
@@ -96,7 +96,7 @@ namespace msa { namespace event {
 		{
 			set_handler_syscall_origin(msa->event->current_handler->sync);
 		}
-		msa->status = msa::Status::stop_requested;
+		msa->status = msa::Status::STOP_REQUESTED;
 		msa::log::trace(msa, "Joining on EDT");
 		msa::thread::join(msa->event->edt, NULL);
 		msa::log::trace(msa, "EDT joined");
@@ -145,8 +145,8 @@ namespace msa { namespace event {
 	static void *edt_start(void *args)
 	{
 		msa::Handle hdl = (msa::Handle) args;
-		hdl->status = msa::Status::running;
-		while (hdl->status != msa::Status::stop_requested)
+		hdl->status = msa::Status::RUNNING;
+		while (hdl->status != msa::Status::STOP_REQUESTED)
 		{
 			edt_run(hdl);
 			msa::util::sleep_milli(hdl->event->sleep_time);

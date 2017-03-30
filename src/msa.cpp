@@ -104,7 +104,7 @@ namespace msa {
 
 		if (quit_module(msa, (void **) &msa->log, msa::log::quit, "") != 0) return MSA_ERR_LOG;
 		
-		msa->status = msa::Status::stopped;
+		msa->status = msa::Status::STOPPED;
 		return MSA_SUCCESS;
 	}
 

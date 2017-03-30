@@ -6,7 +6,6 @@
 
 namespace msa { namespace event {
 
-	// MUST BE SEQUENTIAL!! Do not assign specific constants
 	typedef enum topic_type {
 		#define MSA_EVENT_TOPIC(enum_name, priority)		enum_name,
 		#include "event/topics.hpp"

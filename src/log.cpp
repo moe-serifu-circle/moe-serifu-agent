@@ -112,12 +112,12 @@ namespace msa { namespace log {
 		s->format = fmt;
 		s->output_format_string = output_format_string;
 		// now actually open the stream
-		if (s->type == StreamType::file)
+		if (s->type == StreamType::FILE)
 		{
 			std::ofstream *file = new std::ofstream;
 			file->exceptions(std::ofstream::failbit | std::ofstream::badbit);
 			std::ofstream::openmode mode = std::ofstream::out;
-			mode |= (open_mode == OpenMode::append) ? std::ofstream::app : std::ofstream::trunc;
+			mode |= (open_mode == OpenMode::APPEND) ? std::ofstream::app : std::ofstream::trunc;
 			file->open(location, mode);
 			if (!file->is_open())
 			{
@@ -158,7 +158,7 @@ namespace msa { namespace log {
 
 	extern void trace(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_push(hdl, msg, Level::Trace);
+		check_and_push(hdl, msg, Level::TRACE);
 	}
 
 	extern void trace(msa::Handle hdl, const char *msg)
@@ -169,7 +169,15 @@ namespace msa { namespace log {
 
 	extern void debug(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_push(hdl, msg, Level::Debug);
+		#ifdef DEBUG
+			#define DEBUG_TEMP_OFF
+			#undef DEBUG
+		#endif
+		check_and_push(hdl, msg, Level::DEBUG);
+		#ifdef DEBUG_TEMP_OFF
+			#undef DEBUG_TEMP_OFF
+			#define DEBUG
+		#endif
 	}
 
 	extern void debug(msa::Handle hdl, const char *msg)
@@ -180,7 +188,7 @@ namespace msa { namespace log {
 
 	extern void info(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_push(hdl, msg, Level::Info);
+		check_and_push(hdl, msg, Level::INFO);
 	}
 
 	extern void info(msa::Handle hdl, const char *msg)
@@ -191,7 +199,7 @@ namespace msa { namespace log {
 
 	extern void warn(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_push(hdl, msg, Level::Warn);
+		check_and_push(hdl, msg, Level::WARN);
 	}
 
 	extern void warn(msa::Handle hdl, const char *msg)
@@ -202,7 +210,7 @@ namespace msa { namespace log {
 
 	extern void error(msa::Handle hdl, const std::string &msg)
 	{
-		check_and_push(hdl, msg, Level::Error);
+		check_and_push(hdl, msg, Level::ERROR);
 	}
 
 	extern void error(msa::Handle hdl, const char *msg)
@@ -215,25 +223,33 @@ namespace msa { namespace log {
 	{
 		if (LEVEL_NAMES.empty())
 		{
-			LEVEL_NAMES["TRACE"] = Level::Trace;
-			LEVEL_NAMES["DEBUG"] = Level::Debug;
-			LEVEL_NAMES["INFO"] = Level::Info;
-			LEVEL_NAMES["WARN"] = Level::Warn;
-			LEVEL_NAMES["ERROR"] = Level::Error;
+			LEVEL_NAMES["TRACE"] = Level::TRACE;
+			#ifdef DEBUG
+				#define DEBUG_TEMP_OFF
+				#undef DEBUG
+			#endif
+			LEVEL_NAMES["DEBUG"] = Level::DEBUG;
+			#ifdef DEBUG_TEMP_OFF
+				#undef DEBUG_TEMP_OFF
+				#define DEBUG
+			#endif
+			LEVEL_NAMES["INFO"] = Level::INFO;
+			LEVEL_NAMES["WARN"] = Level::WARN;
+			LEVEL_NAMES["ERROR"] = Level::ERROR;
 		}
 		if (FORMAT_NAMES.empty())
 		{
-			FORMAT_NAMES["TEXT"] = Format::text;
-			FORMAT_NAMES["XML"] = Format::xml;
+			FORMAT_NAMES["TEXT"] = Format::TEXT;
+			FORMAT_NAMES["XML"] = Format::XML;
 		}
 		if (STREAM_TYPE_NAMES.empty())
 		{
-			STREAM_TYPE_NAMES["FILE"] = StreamType::file;
+			STREAM_TYPE_NAMES["FILE"] = StreamType::FILE;
 		}
 		if (OPEN_MODE_NAMES.empty())
 		{
-			OPEN_MODE_NAMES["OVERWRITE"] = OpenMode::overwrite;
-			OPEN_MODE_NAMES["APPEND"] = OpenMode::append;
+			OPEN_MODE_NAMES["OVERWRITE"] = OpenMode::OVERWRITE;
+			OPEN_MODE_NAMES["APPEND"] = OpenMode::APPEND;
 		}
 		return 0;
 	}
@@ -295,14 +311,14 @@ namespace msa { namespace log {
 				OpenMode open_mode = OPEN_MODE_NAMES[open_mode_str];
 
 				std::string output;
-				if (fmt == Format::text)
+				if (fmt == Format::TEXT)
 				{
 					if (outputs.size() <= i) {
 						throw std::invalid_argument("TEXT log format requires OUTPUT parameter");
 					}
 					output = outputs.at(i);
 				}
-				else if (fmt == Format::xml)
+				else if (fmt == Format::XML)
 				{
 					output = XML_FORMAT_STRING;
 				}
@@ -331,14 +347,22 @@ namespace msa { namespace log {
 
 	static const char *level_to_str(Level lev)
 	{
-		if (lev == Level::Trace)
+		if (lev == Level::TRACE)
 		{
 			return "TRACE";
 		}
+		#ifdef DEBUG
+			#define DEBUG_TEMP_OFF
+			#undef DEBUG
+		#endif
 		else if (lev == Level::Debug)
 		{
 			return "DEBUG";
 		}
+		#ifdef DEBUG_TEMP_OFF
+			#undef DEBUG_TEMP_OFF
+			#define DEBUG
+		#endif
 		else if (lev == Level::Info)
 		{
 			return "INFO";
@@ -386,8 +410,8 @@ namespace msa { namespace log {
 	{
 		LogStream *st = new LogStream;
 		st->out = NULL;
-		st->level = Level::Trace;
-		st->format = Format::text;
+		st->level = Level::TRACE;
+		st->format = Format::TEXT;
 		st->close_handler = NULL;
 		*stream = st;
 		return 0;
@@ -522,11 +546,11 @@ namespace msa { namespace log {
 
 	static void writer_write(LogStream *stream, const Message *msg)
 	{
-		if (stream->format == Format::xml)
+		if (stream->format == Format::XML)
 		{
 			writer_write_xml(stream, msg);
 		}
-		else if (stream->format == Format::text)
+		else if (stream->format == Format::TEXT)
 		{
 			writer_write_text(stream, msg);
 		}

@@ -23,17 +23,6 @@ namespace msa { namespace plugin {
 	
 	typedef struct version_type
 	{
-		// some compilers (looking at you, GNU.) clobber the symbols major and minor, which interfers with our
-		// init lists for the version struct. Undefine them for now if that is the case and turn them back on
-		// after the version struct.
-		#ifdef major
-			#define __major_temp major
-			#undef major
-		#endif
-		#ifdef minor
-			#define __minor_temp minor
-			#undef minor
-		#endif
 		uint32_t major;
 		uint32_t minor;
 		uint32_t debug;
@@ -76,15 +65,6 @@ namespace msa { namespace plugin {
 			ver = ver.substr(parse_pos + 1);
 			build = (uint32_t) std::stol(ver, &parse_pos);
 		}
-		// we are done using major and minor in the version code, so turn them back on
-		#ifdef __major_temp
-			#define major __major_temp
-			#undef __major_temp
-		#endif
-		#ifdef __minor_temp
-			#define minor __minor_temp
-			#undef __minor_temp
-		#endif
 		
 		std::string &to_string(std::string &out_str) const
 		{

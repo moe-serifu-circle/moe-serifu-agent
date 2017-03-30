@@ -8,10 +8,9 @@ namespace msa { namespace event {
 
 	// MUST BE SEQUENTIAL!! Do not assign specific constants
 	typedef enum topic_type {
-		event_stack_cleared,
-		event_handled,
-		event_interrupted,
-		text_input
+		#define MSA_EVENT_TOPIC(enum_name, priority)		enum_name,
+		#include "event/topics.hpp"
+		#undef MSA_EVENT_TOPIC
 	} Topic;
 
 	struct topic_attr;
@@ -24,12 +23,12 @@ namespace msa { namespace event {
 		void *args;
 	} Event;
 
-	inline bool operator<(const Event &e1, const Event &e2);
-	inline bool operator>(const Event &e1, const Event &e2);
-	inline bool operator<=(const Event &e1, const Event &e2);
-	inline bool operator>=(const Event &e1, const Event &e2);
-	inline bool operator==(const Event &e1, const Event &e2);
-	inline bool operator!=(const Event &e1, const Event &e2);
+	extern bool operator<(const Event &e1, const Event &e2);
+	extern bool operator>(const Event &e1, const Event &e2);
+	extern bool operator<=(const Event &e1, const Event &e2);
+	extern bool operator>=(const Event &e1, const Event &e2);
+	extern bool operator==(const Event &e1, const Event &e2);
+	extern bool operator!=(const Event &e1, const Event &e2);
 
 	extern const Event *create(Topic topic, void *args);
 	extern void dispose(const Event *e);

@@ -22,7 +22,7 @@ namespace msa { namespace agent {
 		msa::var::Expander *expander;
 	};
 
-	Agent::agent_type(const std::string &n) : name(n), state(State::idle), attitude(0), mood(Mood::normal)
+	Agent::agent_type(const std::string &n) : name(n), state(State::IDLE), attitude(0), mood(Mood::NORMAL)
 	{}
 
 	static int create_agent_context(AgentContext **ctx);

@@ -1,4 +1,4 @@
-#include "event.hpp"
+#include "event/event.hpp"
 
 #include <stdexcept>
 #include <cstdint>
@@ -10,42 +10,37 @@ namespace msa { namespace event {
 	};
 
 	static const struct topic_attr topic_attr_table[] = {
-		//EVENT_STACK_CLEARED
-		{10},
-		//EVENT_HANDLED
-		{10},
-		//EVENT_INTERRUPTED
-		{10},
-		// TEXT_INPUT
-		{1},
+		#define MSA_EVENT_TOPIC(enum_name, priority)		{priority},
+		#include "event/topics.hpp"
+		#undef MSA_EVENT_TOPIC
 	};
 
-	inline bool operator<(const Event &e1, const Event &e2)
+	extern bool operator<(const Event &e1, const Event &e2)
 	{
 		return e1.attributes->priority < e2.attributes->priority;
 	}
 
-	inline bool operator>(const Event &e1, const Event &e2)
+	extern bool operator>(const Event &e1, const Event &e2)
 	{
 		return (e2 < e1);
 	}
 
-	inline bool operator<=(const Event &e1, const Event &e2)
+	extern bool operator<=(const Event &e1, const Event &e2)
 	{
 		return !(e1 > e2);
 	}
 
-	inline bool operator>=(const Event &e1, const Event &e2)
+	extern bool operator>=(const Event &e1, const Event &e2)
 	{
 		return !(e1 < e2);
 	}
 
-	inline bool operator==(const Event &e1, const Event &e2)
+	extern bool operator==(const Event &e1, const Event &e2)
 	{
 		return e1.attributes->priority == e2.attributes->priority;
 	}
 
-	inline bool operator!=(const Event &e1, const Event &e2)
+	extern bool operator!=(const Event &e1, const Event &e2)
 	{
 		return !(e1 == e2);
 	}

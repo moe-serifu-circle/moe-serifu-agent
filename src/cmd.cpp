@@ -53,7 +53,7 @@ namespace msa { namespace cmd {
 		
 		register_default_commands(hdl);
 		
-		msa::event::subscribe(hdl, msa::event::Topic::text_input, parse_command);
+		msa::event::subscribe(hdl, msa::event::Topic::TEXT_INPUT, parse_command);
 		
 		// check config to see if we should do an announce event
 		try
@@ -70,7 +70,7 @@ namespace msa { namespace cmd {
 
 	extern int quit(msa::Handle hdl)
 	{
-		msa::event::unsubscribe(hdl, msa::event::Topic::text_input, parse_command);
+		msa::event::unsubscribe(hdl, msa::event::Topic::TEXT_INPUT, parse_command);
 		unregister_default_commands(hdl);
 		int status = dispose_command_context(hdl->cmd);
 		if (status != 0)

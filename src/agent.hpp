@@ -13,8 +13,18 @@
 
 namespace msa { namespace agent {
 
-	typedef enum state_type { idle, alert, listen, ero, converse, debug } State;
-	typedef enum mood_type { normal } Mood;
+	// macro would mask enum constant
+	#ifdef DEBUG
+		#define DEBUG_TEMP_OFF
+		#undef DEBUG
+	#endif
+	typedef enum state_type { IDLE, ALERT, LISTEN, ERO, CONVERSE, DEBUG } State;
+	#ifdef DEBUG_TEMP_OFF
+		#undef DEBUG_TEMP_OFF
+		#define DEBUG
+	#endif
+
+	typedef enum mood_type { NORMAL } Mood;
 
 	typedef struct agent_type
 	{

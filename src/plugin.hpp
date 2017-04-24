@@ -2,7 +2,7 @@
 #define MSA_PLUGIN_HPP
 
 #include "msa.hpp"
-#include "cmd.hpp"
+#include "cmd/cmd.hpp"
 #include "configuration.hpp"
 
 #include <string>

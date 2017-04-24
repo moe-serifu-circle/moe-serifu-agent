@@ -1,7 +1,7 @@
 #include "msa.hpp"
 #include "agent/agent.hpp"
 #include "input/input.hpp"
-#include "cmd.hpp"
+#include "cmd/cmd.hpp"
 #include "event/dispatch.hpp"
 #include "configuration.hpp"
 #include "log.hpp"

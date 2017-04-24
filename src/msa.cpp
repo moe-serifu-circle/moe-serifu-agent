@@ -1,6 +1,6 @@
 #include "msa.hpp"
 #include "agent/agent.hpp"
-#include "input.hpp"
+#include "input/input.hpp"
 #include "cmd.hpp"
 #include "event/dispatch.hpp"
 #include "configuration.hpp"
@@ -34,6 +34,7 @@ namespace msa {
 	{
 		PLUGIN_HOOKS = new PluginHooks;
 		PLUGIN_HOOKS->agent = msa::agent::get_plugin_hooks();
+		PLUGIN_HOOKS->input = msa::input::get_plugin_hooks();
 		msa::thread::init();
 	}
 	

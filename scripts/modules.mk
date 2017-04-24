@@ -10,7 +10,7 @@ $(ODIR)/agent/agent.o: $(SDIR)/agent/agent.cpp $(SDIR)/msa.hpp $(SDIR)/configura
 $(ODIR)/util.o: $(SDIR)/util.cpp $(SDIR)/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/util.cpp $(CXXFLAGS)
 
-$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/agent/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/input.hpp $(SDIR)/cmd.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp $(SDIR)/string.hpp $(SDIR)/plugin.hpp
+$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/agent/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/input/input.hpp $(SDIR)/input/hooks.hpp $(SDIR)/cmd.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp $(SDIR)/string.hpp $(SDIR)/plugin.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS)
 
 $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp
@@ -22,8 +22,8 @@ $(ODIR)/event/handler.o: $(SDIR)/event/handler.cpp $(SDIR)/event/handler.hpp $(S
 $(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/event/dispatch.hpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/configuration.hpp $(SDIR)/util.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS)
 
-$(ODIR)/input.o: $(SDIR)/input.cpp $(SDIR)/input.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/util.hpp $(SDIR)/log.hpp
-	$(CXX) -c -o $@ $(SDIR)/input.cpp $(CXXFLAGS)
+$(ODIR)/input/input.o: $(SDIR)/input/input.cpp $(SDIR)/input/input.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/input/hooks.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/util.hpp $(SDIR)/log.hpp
+	$(CXX) -c -o $@ $(SDIR)/input/input.cpp $(CXXFLAGS)
 
 $(ODIR)/string.o: $(SDIR)/string.cpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/string.cpp $(CXXFLAGS)

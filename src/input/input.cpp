@@ -1,4 +1,4 @@
-#include "input.hpp"
+#include "input/input.hpp"
 #include "event/dispatch.hpp"
 #include "util.hpp"
 #include "log.hpp"
@@ -12,6 +12,12 @@
 #include "platform/thread/thread.hpp"
 
 namespace msa { namespace input {
+
+	static const PluginHooks HOOKS = {
+		#define MSA_MODULE_HOOK(retspec, name, ...)		name,
+		#include "input/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
 
 	typedef Chunk *(*GetInputFunc)(msa::Handle, Device *);
 	typedef bool (*CheckReadyFunc)(msa::Handle, Device *);
@@ -103,6 +109,11 @@ namespace msa { namespace input {
 		}
 		destroy_static_resources(); // TODO: This will make it so only one instance of MSA can run at once!
 		return status;
+	}
+
+	extern const PluginHooks *get_plugin_hooks()
+	{
+		return &HOOKS;
 	}
 	
 	extern void add_device(msa::Handle hdl, InputType type, void *device_id)

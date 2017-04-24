@@ -9,7 +9,7 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++11 -Wall -Wextra -Wpedantic -pthread $(INCLUDE_DIRS) -include compat/compat.hpp
 LDFLAGS ?= -ldl -lpthread
 
-DEP_TARGETS ?= agent/agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd.o log.o output.o var.o plugin.o
+DEP_TARGETS ?= agent/agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input/input.o string.o configuration.o cmd.o log.o output.o var.o plugin.o
 DEP_INCS = $(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS = $(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 DEP_SOURCES = $(patsubst %.o,%.cpp,$(DEP_TARGETS))
@@ -34,6 +34,7 @@ clean: clean-plugins
 	rm -f $(ODIR)/event/*.o
 	rm -f $(ODIR)/platform/*.o
 	rm -f $(ODIR)/agent/*.o
+	rm -f $(ODIR)/input/*.o
 	rm -f moe-serifu
 
 gen-deps:

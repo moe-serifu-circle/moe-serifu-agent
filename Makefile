@@ -1,19 +1,25 @@
-ODIR?=obj
-SDIR?=src
-PLDIR?=plugins
+ODIR ?= obj
+SDIR ?= src
+OS_SDIR ?= compat
+PLDIR ?= plugins
 
-CXX?=g++
-CXXFLAGS?=-std=c++11 -Wall -Wextra -Wpedantic -pthread -I$(SDIR) -Icompat -include compat/compat.hpp
-LDFLAGS?=-ldl -lpthread
+INCLUDE_DIRS = -I$(SDIR) -I$(OS_SDIR)
 
-DEP_TARGETS?=agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd.o log.o output.o var.o plugin.o
-DEP_INCS=$(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
-DEP_OBJS=$(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
+CXX ?= g++
+CXXFLAGS ?= -std=c++11 -Wall -Wextra -Wpedantic -pthread $(INCLUDE_DIRS) -include compat/compat.hpp
+LDFLAGS ?= -ldl -lpthread
 
-OS_DEP_TARGETS=thread.o file.o lib.o
-OS_DEP_OBJS=$(patsubst %,$(ODIR)/platform/%,$(OS_DEP_TARGETS))
+DEP_TARGETS ?= agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input.o string.o configuration.o cmd.o log.o output.o var.o plugin.o
+DEP_INCS = $(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
+DEP_OBJS = $(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
+DEP_SOURCES = $(patsubst %.o,%.cpp,$(DEP_TARGETS))
+DEP_EXS = $(SDIR)/debug_macros.hpp
 
-.PHONY: clean test all debug plugins clean-plugins
+OS_DEP_TARGETS = thread/thread.o file/file.o lib/lib.o
+OS_DEP_OBJS = $(patsubst %,$(ODIR)/platform/%,$(notdir $(OS_DEP_TARGETS)))
+OS_DEP_SOURCES = $(patsubst %.o,platform/%.cpp,$(OS_DEP_TARGETS))
+
+.PHONY: clean test all debug plugins clean-plugins gen-deps
 
 all: moe-serifu plugins
 
@@ -29,6 +35,12 @@ clean: clean-plugins
 	rm -f $(ODIR)/platform/*.o
 	rm -f moe-serifu
 
+gen-deps:
+	scripts/gendeps.py SDIR $(SDIR) $(INCLUDE_DIRS) $(patsubst %,-E%,$(DEP_EXS)) $(DEP_SOURCES) > scripts/modules.mk
+	scripts/gendeps.py OS_SDIR $(OS_SDIR) $(INCLUDE_DIRS) $(OS_DEP_SOURCES) -c1 > scripts/os_modules.mk
+
+include scripts/*.mk
+
 
 # ----------------- #
 #  Binary Recipies  #
@@ -39,62 +51,6 @@ moe-serifu: $(ODIR)/main.o $(DEP_OBJS) $(OS_DEP_OBJS)
 
 $(ODIR)/main.o: $(SDIR)/main.cpp $(DEP_INCS)
 	$(CXX) -c -o $@ $(SDIR)/main.cpp $(CXXFLAGS)
-
-$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/input.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/cmd.hpp $(SDIR)/log.hpp $(SDIR)/debug_macros.hpp $(SDIR)/string.hpp $(SDIR)/plugin.hpp
-	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS)
-
-$(ODIR)/configuration.o: $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
-	$(CXX) -c -o $@ $(SDIR)/configuration.cpp $(CXXFLAGS)
-
-$(ODIR)/string.o: $(SDIR)/string.cpp $(SDIR)/string.hpp
-	$(CXX) -c -o $@ $(SDIR)/string.cpp $(CXXFLAGS)
-
-$(ODIR)/agent.o: $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp $(SDIR)/var.hpp
-	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS)
-
-$(ODIR)/util.o: $(SDIR)/util.cpp $(SDIR)/util.hpp
-	$(CXX) -c -o $@ $(SDIR)/util.cpp $(CXXFLAGS)
-
-$(ODIR)/input.o: $(SDIR)/input.cpp $(SDIR)/input.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp  $(SDIR)/configuration.hpp $(SDIR)/log.hpp
-	$(CXX) -c -o $@ $(SDIR)/input.cpp $(CXXFLAGS)
-
-$(ODIR)/event/handler.o: $(SDIR)/event/handler.cpp $(SDIR)/msa.hpp $(SDIR)/event/event.hpp
-	$(CXX) -c -o $@ $(SDIR)/event/handler.cpp $(CXXFLAGS)
-
-$(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp
-	$(CXX) -c -o $@ $(SDIR)/event/event.cpp $(CXXFLAGS)
-
-$(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/util.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp
-	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS)
-
-$(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/log.hpp
-	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS)
-
-$(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/util.hpp
-	$(CXX) -c -o $@ $(SDIR)/log.cpp $(CXXFLAGS)
-
-$(ODIR)/output.o: $(SDIR)/output.cpp $(SDIR)/output.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/log.hpp
-	$(CXX) -c -o $@ $(SDIR)/output.cpp $(CXXFLAGS)
-
-$(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp
-	$(CXX) -c -o $@ $(SDIR)/var.cpp $(CXXFLAGS)
-
-$(ODIR)/plugin.o: $(SDIR)/plugin.cpp $(SDIR)/plugin.hpp $(SDIR)/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/log.hpp $(SDIR)/string.hpp
-	$(CXX) -c -o $@ $(SDIR)/plugin.cpp $(CXXFLAGS)
-
-
-# ------------------- #
-#  OS Binary Recipes  #
-# ------------------- #
-
-$(ODIR)/platform/thread.o: compat/platform/thread/thread.cpp
-	$(CXX) -c -o $@ compat/platform/thread/thread.cpp $(CXXFLAGS)
-
-$(ODIR)/platform/file.o: compat/platform/file/file.cpp
-	$(CXX) -c -o $@ compat/platform/file/file.cpp $(CXXFLAGS)
-
-$(ODIR)/platform/lib.o: compat/platform/lib/lib.cpp compat/platform/file/file.hpp
-	$(CXX) -c -o $@ compat/platform/lib/lib.cpp $(CXXFLAGS)
 
 
 # --------- #

@@ -31,11 +31,8 @@ test: debug
 
 clean: clean-plugins
 	rm -f $(ODIR)/*.o
-	rm -f $(ODIR)/event/*.o
+	rm -f $(patsubst %,$(ODIR)/%*.o,$(sort $(subst ./,,$(dir $(DEP_TARGETS)))))
 	rm -f $(ODIR)/platform/*.o
-	rm -f $(ODIR)/agent/*.o
-	rm -f $(ODIR)/input/*.o
-	rm -f $(ODIR)/cmd/*.o
 	rm -f moe-serifu
 
 gen-deps:

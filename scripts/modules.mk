@@ -4,13 +4,13 @@
 # changes will be overwritten.                    #
 ###################################################
 
-$(ODIR)/agent.o: $(SDIR)/agent.cpp $(SDIR)/agent.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/agent_hooks.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp $(SDIR)/var.hpp
-	$(CXX) -c -o $@ $(SDIR)/agent.cpp $(CXXFLAGS)
+$(ODIR)/agent/agent.o: $(SDIR)/agent/agent.cpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp $(SDIR)/var.hpp
+	$(CXX) -c -o $@ $(SDIR)/agent/agent.cpp $(CXXFLAGS)
 
 $(ODIR)/util.o: $(SDIR)/util.cpp $(SDIR)/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/util.cpp $(CXXFLAGS)
 
-$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/agent_hooks.hpp $(SDIR)/input.hpp $(SDIR)/cmd.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp $(SDIR)/string.hpp $(SDIR)/plugin.hpp
+$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/agent/agent.hpp $(SDIR)/configuration.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/input.hpp $(SDIR)/cmd.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/log.hpp $(SDIR)/output.hpp $(SDIR)/string.hpp $(SDIR)/plugin.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS)
 
 $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp
@@ -31,7 +31,7 @@ $(ODIR)/string.o: $(SDIR)/string.cpp $(SDIR)/string.hpp
 $(ODIR)/configuration.o: $(SDIR)/configuration.cpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/configuration.cpp $(CXXFLAGS)
 
-$(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent.hpp $(SDIR)/agent_hooks.hpp $(SDIR)/log.hpp
+$(ODIR)/cmd.o: $(SDIR)/cmd.cpp $(SDIR)/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/string.hpp $(SDIR)/agent/agent.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/log.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd.cpp $(CXXFLAGS)
 
 $(ODIR)/log.o: $(SDIR)/log.cpp $(SDIR)/log.hpp $(SDIR)/msa.hpp $(SDIR)/configuration.hpp $(SDIR)/string.hpp $(SDIR)/util.hpp
@@ -43,6 +43,6 @@ $(ODIR)/output.o: $(SDIR)/output.cpp $(SDIR)/output.hpp $(SDIR)/msa.hpp $(SDIR)/
 $(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp
 	$(CXX) -c -o $@ $(SDIR)/var.cpp $(CXXFLAGS)
 
-$(ODIR)/plugin.o: $(SDIR)/plugin.cpp $(SDIR)/plugin.hpp $(SDIR)/msa.hpp $(SDIR)/cmd.hpp $(SDIR)/configuration.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/log.hpp $(SDIR)/agent.hpp $(SDIR)/agent_hooks.hpp $(SDIR)/string.hpp
+$(ODIR)/plugin.o: $(SDIR)/plugin.cpp $(SDIR)/plugin.hpp $(SDIR)/msa.hpp $(SDIR)/cmd.hpp $(SDIR)/configuration.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/log.hpp $(SDIR)/agent/agent.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/plugin.cpp $(CXXFLAGS)
 

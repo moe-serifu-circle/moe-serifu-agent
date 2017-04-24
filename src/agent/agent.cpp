@@ -11,7 +11,7 @@ namespace msa { namespace agent {
 
 	static const PluginHooks HOOKS = {
 		#define MSA_MODULE_HOOK(retspec, name, ...)		name,
-		#include "agent_hooks.hpp"
+		#include "agent/hooks.hpp"
 		#undef MSA_MODULE_HOOK
 	};
 

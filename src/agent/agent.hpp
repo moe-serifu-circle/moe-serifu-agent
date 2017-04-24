@@ -51,13 +51,13 @@ namespace msa { namespace agent {
 	extern const PluginHooks *get_plugin_hooks();
 	
 	#define MSA_MODULE_HOOK(retspec, name, ...)	extern retspec name(__VA_ARGS__);
-	#include "agent_hooks.hpp"
+	#include "agent/hooks.hpp"
 	#undef MSA_MODULE_HOOK
 	
 	struct plugin_hooks_type
 	{
 		#define MSA_MODULE_HOOK(retspec, name, ...)		retspec (*name)(__VA_ARGS__);
-		#include "agent_hooks.hpp"
+		#include "agent/hooks.hpp"
 		#undef MSA_MODULE_HOOK
 	};
 	

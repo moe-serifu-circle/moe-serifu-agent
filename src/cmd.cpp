@@ -1,7 +1,7 @@
 #include "cmd.hpp"
 #include "event/dispatch.hpp"
 #include "string.hpp"
-#include "agent.hpp"
+#include "agent/agent.hpp"
 #include "log.hpp"
 
 #include <cstdio>

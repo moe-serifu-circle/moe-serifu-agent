@@ -1,7 +1,7 @@
 #include "plugin.hpp"
 
 #include "log.hpp"
-#include "agent.hpp"
+#include "agent/agent.hpp"
 #include "string.hpp"
 
 #include "platform/file/file.hpp"

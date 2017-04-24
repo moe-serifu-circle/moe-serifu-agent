@@ -1,5 +1,5 @@
 #include "msa.hpp"
-#include "agent.hpp"
+#include "agent/agent.hpp"
 #include "input.hpp"
 #include "cmd.hpp"
 #include "event/dispatch.hpp"

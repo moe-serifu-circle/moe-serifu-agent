@@ -74,8 +74,9 @@ def main():
 	return 0
 		
 def generate_recipes(srcvar, srcdir, modules, include_paths, excluded_files, chomp_dirs=0):
-	state = {'srcvar': srcvar, 'srcdir': srcdir, 'include_paths': include_paths, 'excludes': excluded_files, 'hit_excludes': []}
+	state = {'srcvar': srcvar, 'srcdir': srcdir, 'include_paths': include_paths, 'excludes': excluded_files}
 	recipes = []
+	reps = {}
 	for mod in modules:
 		target = mod.rsplit('.', 1)[0] + '.o'
 		target_dir = os.path.dirname(target)
@@ -83,7 +84,7 @@ def generate_recipes(srcvar, srcdir, modules, include_paths, excluded_files, cho
 		for n in range(chomp_dirs):
 			target_dir = os.path.dirname(target_dir)
 		target = os.path.join('$(ODIR)', target_dir, target_file)
-		deps = scan_deps(state, os.path.join(srcdir, mod), mod)
+		deps = scan_deps(state, os.path.join(srcdir, mod), mod, reports=reps)
 		steps = ['$(CXX) -c -o $@ ' + os.path.join('$(' + srcvar + ')', mod) + ' $(CXXFLAGS)']
 		recipes.append((target, deps, steps))
 	return recipes
@@ -155,8 +156,14 @@ def find_includes(path):
 	f.close()
 	return incs
 	
-def scan_deps(state, scan_file, dep_file, visited=None):
+def scan_deps(state, scan_file, dep_file, visited=None, reports=None):
 	deps = []
+	if reports is None:
+		reports = {}
+	if 'excluded' not in reports:
+		reports['excluded'] = []
+	if 'missed' not in reports:
+		reports['missed'] = []
 	if visited is None:
 		visited = []
 	if dep_file is not None:
@@ -169,17 +176,20 @@ def scan_deps(state, scan_file, dep_file, visited=None):
 		inc_dep = None
 		inc_file, inc_dep = find_file(state['include_paths'], inc, scan_file, state['srcdir'])
 		if inc_file is None:
-			sys.stderr.write("cannot locate file '" + inc + "' included from '" + scan_file + "'; skipping\n")
+			# only show the error message if we haven't yet done so:
+			if (inc, scan_file) not in reports['missed']:
+				sys.stderr.write("cannot locate file '" + inc + "' included from '" + scan_file + "'; skipping\n")
+				reports['missed'].append((inc, scan_file))
 		else:
 			if inc_file not in visited:
 				if inc_file in state['excludes']:
 					# only show the error message if we haven't yet done so:
-					if inc_file not in state['hit_excludes']:
+					if inc_file not in reports['excluded']:
 						sys.stderr.write("file '" + inc_file + "' explicitly excluded; skipping\n")
-						state['hit_excludes'].append(inc_file)
+						reports['excluded'].append(inc_file)
 					visited.append(inc_file)
 				else:
-					deps += scan_deps(state, inc_file, inc_dep, visited)
+					deps += scan_deps(state, inc_file, inc_dep, visited, reports)
 	return deps
 	
 def find_file(include_dirs, included_path, including_file, srcdir):

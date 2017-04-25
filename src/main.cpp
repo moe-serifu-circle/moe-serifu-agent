@@ -1,7 +1,7 @@
 /* Main source code file. */
 
 #include "msa.hpp"
-#include "util.hpp"
+#include "util/util.hpp"
 
 #include <cstdlib>
 #include <cstdio>

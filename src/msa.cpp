@@ -38,6 +38,7 @@ namespace msa {
 		PLUGIN_HOOKS->log = msa::log::get_plugin_hooks();
 		PLUGIN_HOOKS->output = msa::output::get_plugin_hooks();
 		PLUGIN_HOOKS->plugin = msa::plugin::get_plugin_hooks();
+		PLUGIN_HOOKS->event = msa::event::get_plugin_hooks();
 		msa::thread::init();
 	}
 	

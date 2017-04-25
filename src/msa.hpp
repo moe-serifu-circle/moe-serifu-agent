@@ -36,6 +36,7 @@ namespace msa {
 	namespace event {
 		
 		typedef struct event_dispatch_context_type EventDispatchContext;
+		typedef struct plugin_hooks_type PluginHooks;
 		
 	}
 
@@ -84,10 +85,11 @@ namespace msa {
 	
 	typedef struct plugin_hooks_type
 	{
-		const msa::agent::PluginHooks *agent;
+		const msa::event::PluginHooks *event;
 		const msa::input::PluginHooks *input;
-		const msa::log::PluginHooks *log;
 		const msa::output::PluginHooks *output;
+		const msa::agent::PluginHooks *agent;
+		const msa::log::PluginHooks *log;
 		const msa::plugin::PluginHooks *plugin;
 	} PluginHooks;
 

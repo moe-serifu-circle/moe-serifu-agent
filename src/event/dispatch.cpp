@@ -13,6 +13,12 @@
 
 namespace msa { namespace event {
 
+	static const PluginHooks HOOKS = {
+		#define MSA_MODULE_HOOK(retspec, name, ...)		name,
+		#include "event/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
+
 	typedef struct handler_context_type {
 		const Event *event;
 		EventHandler handler_func;
@@ -102,6 +108,11 @@ namespace msa { namespace event {
 		msa::log::trace(msa, "EDT joined");
 		dispose_event_dispatch_context(msa->event);
 		return 0;
+	}
+
+	extern const PluginHooks *get_plugin_hooks()
+	{
+		return &HOOKS;
 	}
 
 	extern void subscribe(msa::Handle msa, Topic t, EventHandler handler)

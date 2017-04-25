@@ -5,6 +5,10 @@ PLDIR ?= plugins
 
 INCLUDE_DIRS = -I$(SDIR) -I$(OS_SDIR)
 
+# python interpreter is normally set by the shebang of the scripts, but some environments don't support standard
+# shebangs, and should export this variable before running scripts:
+PYTHON ?=
+
 CXX ?= g++
 CXXFLAGS ?= -std=c++11 -Wall -Wextra -Wpedantic -pthread $(INCLUDE_DIRS) -include compat/compat.hpp
 LDFLAGS ?= -ldl -lpthread
@@ -36,8 +40,8 @@ clean: clean-plugins
 	rm -f moe-serifu
 
 gen-deps:
-	scripts/gendeps.py SDIR $(SDIR) $(INCLUDE_DIRS) $(patsubst %,-E%,$(DEP_EXS)) $(DEP_SOURCES) > scripts/modules.mk
-	scripts/gendeps.py OS_SDIR $(OS_SDIR) $(INCLUDE_DIRS) $(OS_DEP_SOURCES) -c1 > scripts/os_modules.mk
+	$(PYTHON) scripts/gendeps.py SDIR $(SDIR) $(INCLUDE_DIRS) $(patsubst %,-E%,$(DEP_EXS)) $(DEP_SOURCES) > scripts/modules.mk
+	$(PYTHON) scripts/gendeps.py OS_SDIR $(OS_SDIR) $(INCLUDE_DIRS) $(OS_DEP_SOURCES) -c1 > scripts/os_modules.mk
 
 include scripts/*.mk
 

@@ -1,4 +1,4 @@
-#include "log.hpp"
+#include "log/log.hpp"
 #include "string.hpp"
 #include "util.hpp"
 
@@ -16,6 +16,12 @@
 #include "platform/thread/thread.hpp"
 
 namespace msa { namespace log {
+
+	static const PluginHooks HOOKS = {
+		#define MSA_MODULE_HOOK(retspec, name, ...)		name,
+		#include "log/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
 
 	static std::map<std::string, Level> LEVEL_NAMES;
 	static std::map<std::string, Format> FORMAT_NAMES;
@@ -99,6 +105,11 @@ namespace msa { namespace log {
 		msa::thread::join(hdl->log->writer_thread, NULL);
 		dispose_log_context(hdl->log);
 		return 0;
+	}
+	
+	extern const PluginHooks *get_plugin_hooks()
+	{
+		return &HOOKS;
 	}
 
 	extern stream_id create_stream(msa::Handle hdl, StreamType type, const std::string &location, Format fmt, const std::string &output_format_string, OpenMode open_mode)

@@ -2,7 +2,7 @@
 #include "event/dispatch.hpp"
 #include "string.hpp"
 #include "agent/agent.hpp"
-#include "log.hpp"
+#include "log/log.hpp"
 
 #include <cstdio>
 #include <stdexcept>

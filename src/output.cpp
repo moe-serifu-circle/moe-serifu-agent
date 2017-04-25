@@ -1,5 +1,5 @@
 #include "output.hpp"
-#include "log.hpp"
+#include "log/log.hpp"
 #include "string.hpp"
 
 #include <map>

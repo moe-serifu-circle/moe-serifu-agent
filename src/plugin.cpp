@@ -1,6 +1,6 @@
 #include "plugin.hpp"
 
-#include "log.hpp"
+#include "log/log.hpp"
 #include "agent/agent.hpp"
 #include "string.hpp"
 

@@ -1,5 +1,5 @@
-#include "agent.hpp"
-#include "log.hpp"
+#include "agent/agent.hpp"
+#include "log/log.hpp"
 #include "output.hpp"
 #include "var.hpp"
 

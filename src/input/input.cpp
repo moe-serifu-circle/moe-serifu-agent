@@ -1,7 +1,7 @@
 #include "input/input.hpp"
 #include "event/dispatch.hpp"
 #include "util.hpp"
-#include "log.hpp"
+#include "log/log.hpp"
 
 #include <map>
 #include <string>

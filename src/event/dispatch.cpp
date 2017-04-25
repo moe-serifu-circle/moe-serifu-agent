@@ -1,6 +1,6 @@
 #include "event/dispatch.hpp"
 #include "util.hpp"
-#include "log.hpp"
+#include "log/log.hpp"
 
 #include <cstdio>
 #include <queue>

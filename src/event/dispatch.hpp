@@ -3,7 +3,7 @@
 
 #include "msa.hpp"
 #include "event/handler.hpp"
-#include "configuration.hpp"
+#include "cfg/cfg.hpp"
 
 namespace msa { namespace event {
 

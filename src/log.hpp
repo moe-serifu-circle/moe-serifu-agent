@@ -2,7 +2,7 @@
 #define MSA_LOG_HPP
 
 #include "msa.hpp"
-#include "configuration.hpp"
+#include "cfg/cfg.hpp"
 
 #include <cstdint>
 #include <string>

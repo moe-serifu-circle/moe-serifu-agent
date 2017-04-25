@@ -3,7 +3,7 @@
 
 #include "msa.hpp"
 #include "cmd/cmd.hpp"
-#include "configuration.hpp"
+#include "cfg/cfg.hpp"
 
 #include <string>
 #include <cstdint>

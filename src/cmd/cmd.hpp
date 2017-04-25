@@ -4,7 +4,7 @@
 // Handles definitions and specifications of commands
 
 #include "msa.hpp"
-#include "configuration.hpp"
+#include "cfg/cfg.hpp"
 #include "event/handler.hpp"
 
 #include <vector>

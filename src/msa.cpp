@@ -3,7 +3,7 @@
 #include "input/input.hpp"
 #include "cmd/cmd.hpp"
 #include "event/dispatch.hpp"
-#include "configuration.hpp"
+#include "cfg/cfg.hpp"
 #include "log.hpp"
 #include "output.hpp"
 #include "string.hpp"

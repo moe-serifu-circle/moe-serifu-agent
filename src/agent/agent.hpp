@@ -2,7 +2,7 @@
 #define MSA_AGENT_AGENT_HPP
 
 #include "msa.hpp"
-#include "configuration.hpp"
+#include "cfg/cfg.hpp"
 
 // Start of hooks' includes
 #include <string>

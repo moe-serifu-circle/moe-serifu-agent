@@ -2,7 +2,7 @@
 #define MSA_OUTPUT_HPP
 
 #include "msa.hpp"
-#include "configuration.hpp"
+#include "cfg/cfg.hpp"
 
 #include <string>
 #include <vector>

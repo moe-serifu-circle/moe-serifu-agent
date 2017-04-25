@@ -1,4 +1,4 @@
-#include "plugin.hpp"
+#include "plugin/plugin.hpp"
 #include "agent/agent.hpp"
 
 extern "C" const msa::plugin::Info *msa_plugin_register(const msa::PluginHooks *hooks);

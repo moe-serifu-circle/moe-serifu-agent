@@ -10,7 +10,7 @@ $(ODIR)/agent/agent.o: $(SDIR)/agent/agent.cpp $(SDIR)/agent/agent.hpp $(SDIR)/m
 $(ODIR)/util.o: $(SDIR)/util.cpp $(SDIR)/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/util.cpp $(CXXFLAGS)
 
-$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/agent/agent.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/input/input.hpp $(SDIR)/input/hooks.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp $(SDIR)/output/output.hpp $(SDIR)/output/hooks.hpp $(SDIR)/string.hpp $(SDIR)/plugin.hpp
+$(ODIR)/msa.o: $(SDIR)/msa.cpp $(SDIR)/msa.hpp $(SDIR)/agent/agent.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/input/input.hpp $(SDIR)/input/hooks.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp $(SDIR)/output/output.hpp $(SDIR)/output/hooks.hpp $(SDIR)/string.hpp $(SDIR)/plugin/plugin.hpp $(SDIR)/plugin/hooks.hpp
 	$(CXX) -c -o $@ $(SDIR)/msa.cpp $(CXXFLAGS)
 
 $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp
@@ -43,6 +43,6 @@ $(ODIR)/output/output.o: $(SDIR)/output/output.cpp $(SDIR)/output/output.hpp $(S
 $(ODIR)/var.o: $(SDIR)/var.cpp $(SDIR)/var.hpp
 	$(CXX) -c -o $@ $(SDIR)/var.cpp $(CXXFLAGS)
 
-$(ODIR)/plugin.o: $(SDIR)/plugin.cpp $(SDIR)/plugin.hpp $(SDIR)/msa.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp $(SDIR)/agent/agent.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/string.hpp
-	$(CXX) -c -o $@ $(SDIR)/plugin.cpp $(CXXFLAGS)
+$(ODIR)/plugin/plugin.o: $(SDIR)/plugin/plugin.cpp $(SDIR)/plugin/plugin.hpp $(SDIR)/msa.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/plugin/hooks.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp $(SDIR)/agent/agent.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/string.hpp
+	$(CXX) -c -o $@ $(SDIR)/plugin/plugin.cpp $(CXXFLAGS)
 

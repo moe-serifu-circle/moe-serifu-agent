@@ -7,7 +7,7 @@
 #include "log/log.hpp"
 #include "output/output.hpp"
 #include "string.hpp"
-#include "plugin.hpp"
+#include "plugin/plugin.hpp"
 
 #include <string>
 
@@ -37,6 +37,7 @@ namespace msa {
 		PLUGIN_HOOKS->input = msa::input::get_plugin_hooks();
 		PLUGIN_HOOKS->log = msa::log::get_plugin_hooks();
 		PLUGIN_HOOKS->output = msa::output::get_plugin_hooks();
+		PLUGIN_HOOKS->plugin = msa::plugin::get_plugin_hooks();
 		msa::thread::init();
 	}
 	

@@ -1,4 +1,4 @@
-#include "plugin.hpp"
+#include "plugin/plugin.hpp"
 
 #include "log/log.hpp"
 #include "agent/agent.hpp"
@@ -11,6 +11,12 @@
 #include <exception>
 
 namespace msa { namespace plugin {
+
+	static const PluginHooks HOOKS = {
+		#define MSA_MODULE_HOOK(retspec, name, ...)		name,
+		#include "plugin/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
 
 	static const std::string BAD_PLUGIN_ID = "";
 
@@ -101,6 +107,11 @@ namespace msa { namespace plugin {
 			return -1;
 		}
 		return 0;
+	}
+
+	extern const PluginHooks *get_plugin_hooks()
+	{
+		return &HOOKS;
 	}
 	
 	extern const std::string &load(msa::Handle hdl, const std::string &path)

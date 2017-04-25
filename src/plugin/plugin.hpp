@@ -1,5 +1,5 @@
-#ifndef MSA_PLUGIN_HPP
-#define MSA_PLUGIN_HPP
+#ifndef MSA_PLUGIN_PLUGIN_HPP
+#define MSA_PLUGIN_PLUGIN_HPP
 
 #include "msa.hpp"
 #include "cmd/cmd.hpp"
@@ -130,12 +130,20 @@ namespace msa { namespace plugin {
 	extern int quit(msa::Handle hdl);
 	extern const std::string &load(msa::Handle hdl, const std::string &path);
 	extern void unload(msa::Handle hdl, const std::string &id);
-	extern void get_loaded(msa::Handle hdl, std::vector<std::string> &ids);
 	extern void enable(msa::Handle hdl, const std::string &id);
 	extern void disable(msa::Handle hdl, const std::string &id);
-	extern bool is_enabled(msa::Handle hdl, const std::string &id);
-	extern bool is_loaded(msa::Handle hdl, const std::string &id);
-	extern const Info *get_info(msa::Handle hdl, const std::string &id);
+	extern const PluginHooks *get_plugin_hooks();
+	
+	#define MSA_MODULE_HOOK(retspec, name, ...)	extern retspec name(__VA_ARGS__);
+	#include "plugin/hooks.hpp"
+	#undef MSA_MODULE_HOOK
+	
+	struct plugin_hooks_type
+	{
+		#define MSA_MODULE_HOOK(retspec, name, ...)		retspec (*name)(__VA_ARGS__);
+		#include "plugin/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
 	
 } }
 

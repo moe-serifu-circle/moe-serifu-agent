@@ -62,6 +62,7 @@ namespace msa {
 	namespace plugin {
 	
 		typedef struct plugin_context_type PluginContext;
+		typedef struct plugin_hooks_type PluginHooks;
 		
 	}
 
@@ -87,6 +88,7 @@ namespace msa {
 		const msa::input::PluginHooks *input;
 		const msa::log::PluginHooks *log;
 		const msa::output::PluginHooks *output;
+		const msa::plugin::PluginHooks *plugin;
 	} PluginHooks;
 
 	// global library initializer. Must call before creating handles with start()

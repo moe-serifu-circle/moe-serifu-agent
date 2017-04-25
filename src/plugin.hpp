@@ -122,7 +122,7 @@ namespace msa { namespace plugin {
 			{}
 	};
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config);
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config);
 	// call setup only after entire msa system is inited
 	extern int setup(msa::Handle hdl);
 	// call setup only before entire msa system is quit

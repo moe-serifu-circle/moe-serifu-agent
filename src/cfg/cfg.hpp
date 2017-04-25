@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace msa { namespace config {
+namespace msa { namespace cfg {
 
 	/**
 	 * Use the config section like a collection of values (with get_all()), or you can just

@@ -55,7 +55,7 @@ namespace msa { namespace log {
 	};
 
 	static int init_static_resources();
-	static void read_config(msa::Handle hdl, const msa::config::Section &config);
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config);
 	static int create_log_context(LogContext **ctx);
 	static int dispose_log_context(LogContext *ctx);
 	static int create_log_stream(LogStream **stream);
@@ -75,7 +75,7 @@ namespace msa { namespace log {
 	static void writer_write_xml(LogStream *stream, const Message *ctx);
 	static void writer_write_text(LogStream *stream, const Message *ctx);
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config)
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		init_static_resources();
 		create_log_context(&hdl->log);
@@ -254,7 +254,7 @@ namespace msa { namespace log {
 		return 0;
 	}
 	
-	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		// first check for global level
 		std::string gl_level_str = config.get_or("GLOBAL_LEVEL", "INFO");

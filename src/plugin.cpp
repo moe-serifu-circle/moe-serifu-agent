@@ -33,7 +33,7 @@ namespace msa { namespace plugin {
 	
 	static int create_plugin_context(PluginContext **ctx_ptr);
 	static int dispose_plugin_context(PluginContext *ctx);
-	static void read_config(msa::Handle hdl, const msa::config::Section &config);
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config);
 	static void load_all(msa::Handle hdl, const std::string &dir_path);
 	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry);
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env);
@@ -43,7 +43,7 @@ namespace msa { namespace plugin {
 	static void cmd_list(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 	static void cmd_info(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config)
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		if (create_plugin_context(&hdl->plugin) != 0)
 		{
@@ -531,7 +531,7 @@ namespace msa { namespace plugin {
 		return 0;
 	}
 
-	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		if (!config.has("DIR"))
 		{

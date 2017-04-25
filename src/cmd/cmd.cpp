@@ -16,7 +16,7 @@ namespace msa { namespace cmd {
 		std::map<std::string, const Command *> commands;
 	};
 
-	static void read_config(msa::Handle hdl, const msa::config::Section &config);
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config);
 	static int create_command_context(CommandContext **ctx);
 	static int dispose_command_context(CommandContext *ctx);
 
@@ -35,7 +35,7 @@ namespace msa { namespace cmd {
 		{"HELP", "With no args, it lists all commands. Otherwise, it displays the help", "[command]", help_func}
 	};
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config)
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		// need to init events before this
 		if (hdl->event == NULL)
@@ -110,7 +110,7 @@ namespace msa { namespace cmd {
 		ctx->commands.erase(invoke);
 	}
 
-	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		std::string startup_cmd = config.get_or("STARTUP", "echo I'd like to announce my presence!");
 		std::string *cmd_str = new std::string(startup_cmd);

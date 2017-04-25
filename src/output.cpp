@@ -56,14 +56,14 @@ namespace msa { namespace output {
 	static int create_device(Device **dev_ptr, OutputType type, const OutputHandler *handler, const void *id);
 	static int dispose_device(Device *dev);
 	static bool handler_is_registered(msa::Handle hdl, OutputType type, const std::string &name);
-	static void read_config(msa::Handle hdl, const msa::config::Section &config);
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config);
 	static void switch_to_next_device(msa::Handle hdl, const std::vector<std::string> &bad_ids);
 	static void switch_device_internal(msa::Handle hdl, const std::string &id);
 	static void create_default_handlers(msa::Handle hdl);
 	static void dispose_default_handlers(msa::Handle hdl);
 	static int init_static_resources();
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config)
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		init_static_resources();
 		if (create_output_context(&hdl->output) != 0)
@@ -303,7 +303,7 @@ namespace msa { namespace output {
 		msa::thread::mutex_unlock(ctx->state_mutex);
 	}
 	
-	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		if (config.has("TYPE") && config.has("HANDLER") && config.has("ID"))
 		{

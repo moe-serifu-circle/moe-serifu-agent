@@ -27,11 +27,11 @@ namespace msa { namespace agent {
 
 	static int create_agent_context(AgentContext **ctx);
 	static int dispose_agent_context(AgentContext *ctx);
-	static void read_config(msa::Handle hdl, const msa::config::Section &config);
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config);
 	static void add_default_substitutions(msa::Handle hdl);
 	static void remove_default_substitutions(msa::Handle hdl);
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config)
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		int status = create_agent_context(&hdl->agent);
 		if (status != 0)
@@ -122,7 +122,7 @@ namespace msa { namespace agent {
 		return 0;
 	}
 
-	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		std::string name = std::string(config.get_or("NAME", "DEFAULT_NAME"));
 		std::string user_title = std::string(config.get_or("USER_TITLE", "Master"));

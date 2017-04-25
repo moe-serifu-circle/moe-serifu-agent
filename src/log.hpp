@@ -26,7 +26,7 @@ namespace msa { namespace log {
 	typedef enum open_mode_type { OVERWRITE, APPEND } OpenMode;
 	typedef size_t stream_id;
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config);
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config);
 
 	extern int quit(msa::Handle hdl);
 

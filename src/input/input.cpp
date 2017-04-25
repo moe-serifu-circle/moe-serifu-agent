@@ -60,7 +60,7 @@ namespace msa { namespace input {
 
 	static int init_static_resources();
 	static int destroy_static_resources();
-	static void read_config(msa::Handle hdl, const msa::config::Section &config);
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config);
 	static void create_device(Device **dev, InputType type, const void *device_id);
 	static void dispose_device(Device *device);
 	static int create_input_context(InputContext **ctx);
@@ -75,7 +75,7 @@ namespace msa { namespace input {
 	static void it_read_input(msa::Handle hdl, Device *dev, InputHandler *input_handler);
 	static void it_cleanup(msa::Handle hdl, Device *dev);
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config)
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		init_static_resources();
 		int stat = create_input_context(&hdl->input);
@@ -242,7 +242,7 @@ namespace msa { namespace input {
 		return 0;
 	}
 
-	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		if (config.has("TYPE") && config.has("ID") && config.has("HANDLER"))
 		{

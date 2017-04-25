@@ -19,7 +19,7 @@ namespace msa { namespace output {
 
 	typedef struct output_handler_type OutputHandler;
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config);
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config);
 	extern int quit(msa::Handle hdl);
 	
 	extern void write(msa::Handle hdl, const Chunk *chunk);

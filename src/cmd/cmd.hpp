@@ -27,7 +27,7 @@ namespace msa { namespace cmd {
 		CommandHandler handler;
 	} Command;
 	
-	extern int init(msa::Handle hdl, const msa::config::Section &config);
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config);
 	extern int quit(msa::Handle hdl);
 	extern void register_command(msa::Handle hdl, const Command *cmd);
 	extern void unregister_command(msa::Handle hdl, const Command *cmd);

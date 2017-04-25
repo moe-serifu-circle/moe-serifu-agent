@@ -20,15 +20,15 @@ namespace msa {
 	// end of static symbols
 
 	typedef int (*ModFunc)(Handle);
-	typedef int (*ModInitFunc)(Handle, const msa::config::Section&);
+	typedef int (*ModInitFunc)(Handle, const msa::cfg::Section&);
 
-	static const msa::config::Section &get_module_section(msa::config::Config *conf, const std::string &name);
-	static int init_module(Handle hdl, msa::config::Config *conf, ModInitFunc init_func, const std::string &name);
+	static const msa::cfg::Section &get_module_section(msa::cfg::Config *conf, const std::string &name);
+	static int init_module(Handle hdl, msa::cfg::Config *conf, ModInitFunc init_func, const std::string &name);
 	static int setup_module(Handle hdl, ModFunc setup_func, const std::string &name);
 	static int quit_module(Handle msa, void **mod, ModFunc quit_func, const std::string &log_name);
 	static int teardown_module(Handle hdl, ModFunc teardown_func, const std::string &name);
 
-	static const msa::config::Section blank_section("");
+	static const msa::cfg::Section blank_section("");
 	
 	extern void init()
 	{
@@ -52,7 +52,7 @@ namespace msa {
 	extern int start(Handle *msa, const char *config_path)
 	{
 		// load config first
-		msa::config::Config *conf = msa::config::load(config_path);
+		msa::cfg::Config *conf = msa::cfg::load(config_path);
 		if (conf == NULL)
 		{
 			return MSA_ERR_CONFIG;
@@ -151,7 +151,7 @@ namespace msa {
 		return MSA_SUCCESS;
 	}
 
-	static const msa::config::Section &get_module_section(msa::config::Config *conf, const std::string &name)
+	static const msa::cfg::Section &get_module_section(msa::cfg::Config *conf, const std::string &name)
 	{
 		if (conf->find(name) != conf->end())
 		{
@@ -199,7 +199,7 @@ namespace msa {
 		return ret;
 	}
 	
-	static int init_module(Handle hdl, msa::config::Config *conf, ModInitFunc init_func, const std::string &name)
+	static int init_module(Handle hdl, msa::cfg::Config *conf, ModInitFunc init_func, const std::string &name)
 	{
 		std::string lower_name = name;
 		std::string upper_name = name;
@@ -207,7 +207,7 @@ namespace msa {
 		msa::string::to_upper(upper_name);
 		bool enable_failure_log = (upper_name != "LOG"); // cant log messages before log is started
 		
-		msa::config::Section section = get_module_section(conf, upper_name);
+		msa::cfg::Section section = get_module_section(conf, upper_name);
 		int ret = init_func(hdl, section);
 		if (ret != 0)
 		{

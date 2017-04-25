@@ -45,7 +45,7 @@ namespace msa { namespace agent {
 		agent_type(const std::string &n);
 	} Agent;
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config);
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config);
 	extern int quit(msa::Handle hdl);
 	extern const Agent *get_agent(msa::Handle hdl);
 	extern const PluginHooks *get_plugin_hooks();

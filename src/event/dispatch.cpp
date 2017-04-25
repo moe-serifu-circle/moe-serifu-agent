@@ -34,7 +34,7 @@ namespace msa { namespace event {
 
 	static int create_event_dispatch_context(EventDispatchContext **event);
 	static int dispose_event_dispatch_context(EventDispatchContext *event);
-	static void read_config(msa::Handle hdl, const msa::config::Section &config);
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config);
 	static void *event_start(void *args);
 	
 	static void push_event(msa::Handle msa, const Event *e);
@@ -48,7 +48,7 @@ namespace msa { namespace event {
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e);
 	static void dispose_handler_context(HandlerContext *ctx, bool wait);
 
-	extern int init(msa::Handle hdl, const msa::config::Section &config)
+	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		int create_status = create_event_dispatch_context(&hdl->event);
 		if (create_status != 0)
@@ -137,7 +137,7 @@ namespace msa { namespace event {
 		return 0;
 	}
 
-	static void read_config(msa::Handle hdl, const msa::config::Section &config)
+	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
 	}

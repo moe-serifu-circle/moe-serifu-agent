@@ -4,7 +4,7 @@
 #include <fstream>
 #include <stdexcept>
 
-namespace msa { namespace config {
+namespace msa { namespace cfg {
 
 	const char section_header_start_char = '[';
 	const char section_header_end_char = ']';

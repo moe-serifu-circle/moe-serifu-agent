@@ -50,6 +50,7 @@ namespace msa {
 	namespace cmd {
 
 		typedef struct command_context_type CommandContext;
+		typedef struct plugin_hooks_type PluginHooks;
 
 	}
 
@@ -89,6 +90,7 @@ namespace msa {
 		const msa::input::PluginHooks *input;
 		const msa::output::PluginHooks *output;
 		const msa::agent::PluginHooks *agent;
+		const msa::cmd::PluginHooks *cmd;
 		const msa::log::PluginHooks *log;
 		const msa::plugin::PluginHooks *plugin;
 	} PluginHooks;

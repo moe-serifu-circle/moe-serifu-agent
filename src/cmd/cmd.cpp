@@ -10,6 +10,12 @@
 
 namespace msa { namespace cmd {
 
+	static const PluginHooks HOOKS = {
+		#define MSA_MODULE_HOOK(retspec, name, ...)		name,
+		#include "cmd/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
+
 	struct command_context_type
 	{
 		bool running;
@@ -81,9 +87,9 @@ namespace msa { namespace cmd {
 		return 0;
 	}
 
-	extern void dispose_handler(Command *cmd)
+	extern const PluginHooks *get_plugin_hooks()
 	{
-		delete cmd;
+		return &HOOKS;
 	}
 
 	extern void register_command(msa::Handle hdl, const Command *cmd)
@@ -108,6 +114,16 @@ namespace msa { namespace cmd {
 			throw std::logic_error("command does not exist: " + invoke);
 		}
 		ctx->commands.erase(invoke);
+	}
+	
+	extern void get_commands(msa::Handle hdl, std::vector<const Command *> &list)
+	{
+		CommandContext *ctx = hdl->cmd;
+		std::map<std::string, const Command *>::const_iterator iter;
+		for (iter = ctx->commands.begin(); iter != ctx->commands.end(); iter++)
+		{
+			list.push_back(iter->second);
+		}
 	}
 
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)

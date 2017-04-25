@@ -31,6 +31,18 @@ namespace msa { namespace cmd {
 	extern int quit(msa::Handle hdl);
 	extern void register_command(msa::Handle hdl, const Command *cmd);
 	extern void unregister_command(msa::Handle hdl, const Command *cmd);
+	extern const PluginHooks *get_plugin_hooks();
+	
+	#define MSA_MODULE_HOOK(retspec, name, ...)	extern retspec name(__VA_ARGS__);
+	#include "cmd/hooks.hpp"
+	#undef MSA_MODULE_HOOK
+	
+	struct plugin_hooks_type
+	{
+		#define MSA_MODULE_HOOK(retspec, name, ...)		retspec (*name)(__VA_ARGS__);
+		#include "cmd/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
 } }
 
 #endif

@@ -156,7 +156,6 @@ namespace msa { namespace input {
 		typedef std::map<std::string, Device *>::iterator it_type;
 		for (it_type iter = devs->begin(); iter != devs->end(); iter++)
 		{
-			// TODO: figure out why we cant have a vec of const str passed in.
 			std::string id = iter->second->id;
 			list->push_back(id);
 		}

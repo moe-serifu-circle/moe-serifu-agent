@@ -7,7 +7,7 @@
 #include <stack>
 #include <map>
 #include <string>
-#include <exception>
+#include <stdexcept>
 
 #include "platform/thread/thread.hpp"
 
@@ -36,6 +36,10 @@ namespace msa { namespace event {
 		std::map<Topic, EventHandler> handlers;
 		std::stack<HandlerContext *> interrupted;
 		int sleep_time;
+		std::chrono::milliseconds tick_resolution;
+		std::chrono::time_point last_tick_time;
+		std::map<int16_t, Timer*> timers;
+		msa::thread::Mutex timers_mutex;
 	};
 
 	static int create_event_dispatch_context(EventDispatchContext **event);
@@ -52,6 +56,7 @@ namespace msa { namespace event {
 	static void edt_interrupt_handler(msa::Handle hdl);
 	static void edt_spawn_handler(msa::Handle hdl, const Event *e);
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e);
+	static void edt_fire_timers(msa::Handle hdl);
 	static void dispose_handler_context(HandlerContext *ctx, bool wait);
 
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
@@ -79,7 +84,7 @@ namespace msa { namespace event {
 			msa::log::error(hdl, "Could not create event dispatch thread (error " + std::to_string(create_status) + ")");
 			msa::thread::mutex_destroy(&hdl->event->queue_mutex);
 			return create_status;
-       	}
+       		}
 		return 0;
 	}
 
@@ -131,11 +136,79 @@ namespace msa { namespace event {
 		push_event(msa, e);
 	}
 
+	extern int16_t schedule(msa::Handle msa, time_t timestamp, const Topic topic, void *args)
+	{
+		time_t ref_time = time(NULL);
+		if (ref_time >= timestamp)
+		{
+			return -1;
+		}
+		return delay(msa, std::chrono::seconds(timestamp), topic, args);
+	}
+
+	extern int16_t delay(msa::Handle msa, std::chrono::milliseconds delay, const Topic topic, void *args)
+	{
+		Timer *t = new Timer;
+		t->period = delay;
+		t->last_fired = std::chrono::high_resolution_clock::now();
+		t->recurring = false;
+		t->event_args = args;
+		t->event_topic = topic;
+		msa::thread::mutex_lock(&msa->event->timers_mutex);
+		t->id = msa->event->timers.size()
+		msa->event->timers[t->id] = t;
+		msa::thread::mutex_unlock(&msa->event->timers_mutex);
+		return t->id;
+	}
+	
+	extern int16_t add_timer(msa::Handle msa, std::chrono::milliseconds period, const Topic, void *args)
+	{
+		Timer *t = new Timer;
+		t->period = period;
+		t->last_fired = std::chrono::high_resolution_clock::now();
+		t->recurring = true;
+		t->event_args = args;
+		t->event_topic = topic;
+		msa::thread::mutex_lock(&msa->event->timers_mutex);
+		t->id = msa->event->timers.size()
+		msa->event->timers[t->id] = t;
+		msa::thread::mutex_unlock(&msa->event->timers_mutex);
+		return t->id;
+	}
+
+	extern void remove_timer(msa::Handle msa, int16_t id)
+	{
+		EventDispatchContext *ctx = msa->event;
+		msa::thread::mutex_lock(&ctx->timers_mutex);
+		if (ctx->timers.find(id) == ctx->timers.end())
+		{
+			msa::thread::mutex_unlock(ctx->timers_mutex);
+			throw std::logic_error("no timer with ID: " + std::to_string(id));
+		}
+		ctx->timers.erase(id);
+		msa::thread::mutex_unlock(&ctx->timers_mutex);
+		return;
+	}
+
+	extern void get_timers(msa::Handle msa, std::vector<const Timer *> &list)
+	{
+		EventDispatchContext *ctx = msa->event;
+		msa::thread::mutex_lock(&ctx->timers_mutex);
+		std::map<int16_t id, Timer*>::const_iterator iter;
+		for (iter = ctx->timers.begin(); iter != ctx->timers.end(); iter++)
+		{
+			list.push_back(iter->second);
+		}
+		msa::thread::mutex_unlock(&ctx->timers_mutex);
+	}
+
 	static int create_event_dispatch_context(EventDispatchContext **event)
 	{
 		EventDispatchContext *edc = new EventDispatchContext;
 		msa::thread::mutex_init(&edc->queue_mutex, NULL);
+		msa::thread::mutex_init(&edc->timers_mutex, NULL);
 		edc->current_handler = NULL;
+		edc->last_tick_time = std::chrono::time_point::min;
 		*event = edc;
 		return 0;
 	}
@@ -151,6 +224,7 @@ namespace msa { namespace event {
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
+		hdl->event->tick_resolution = std::stoi(config.get_or("TICK_RESOLUTION", "10"));
 	}
 
 	static void *edt_start(void *args)
@@ -184,6 +258,7 @@ namespace msa { namespace event {
 			dispose_handler_context(intr_ctx, true);
 		}
 		msa::thread::mutex_destroy(&hdl->event->queue_mutex);
+		msa::thread::mutex_destroy(&hdl->event->timers_mutex);
 		while (!hdl->event->queue.empty())
 		{
 			const Event *e = hdl->event->queue.top();
@@ -216,6 +291,43 @@ namespace msa { namespace event {
 			edc->current_handler = ctx;
 		}
 		// TODO: Add a synthetic event for when queue has emptied and no events
+
+		// check if we need to do timing tasks
+		std::chrono::time_point now = std::chrono::high_resolution_clock::now();
+		if (edc->last_tick_time + edc->tick_resolution <= now)
+		{
+			edc->last_tick_time = now;
+			edt_fire_timers(hdl, now);
+		}
+	}
+
+	static const void *edt_fire_timers(msa::Handle hdl, std::chrono::time_point now)
+	{
+		EventDispatchContext *ctx = hdl->event;
+		msa::thread::mutex_lock(&ctx->timers_mutex);
+		std::map<int16_t id, Timer*>::iterator iter = ctx->timers.begin();
+		while (iter != ctx->timers.end())
+		{
+			Timer *t = iter->second;
+			if (t->last_fired + t->period <= now)
+			{
+				generate(hdl, t->event_topic, t->event_args);
+				if (t->recurring)
+				{
+					t->last_fired = std::chrono::high_resolution_clock::now();
+					iter++;
+				}
+				else
+				{
+					iter = ctx->timers.erase(iter);
+				}
+			}
+			else
+			{
+				iter++;
+			}
+		}
+		msa::thread::mutex_unlock(&ctx->timers_mutex);
 	}
 
 	static const Event *edt_poll_event_queue(msa::Handle hdl)

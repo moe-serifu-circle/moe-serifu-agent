@@ -13,7 +13,7 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++11 -Wall -Wextra -Wpedantic -pthread $(INCLUDE_DIRS) -include compat/compat.hpp
 LDFLAGS ?= -ldl -lpthread
 
-DEP_TARGETS ?= agent/agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input/input.o string.o cfg/cfg.o cmd/cmd.o log/log.o output.o var.o plugin.o
+DEP_TARGETS ?= agent/agent.o util.o msa.o event/event.o event/handler.o event/dispatch.o input/input.o string.o cfg/cfg.o cmd/cmd.o log/log.o output/output.o var.o plugin.o
 DEP_INCS = $(patsubst %.o,$(SDIR)/%.hpp,$(DEP_TARGETS))
 DEP_OBJS = $(patsubst %,$(ODIR)/%,$(DEP_TARGETS))
 DEP_SOURCES = $(patsubst %.o,%.cpp,$(DEP_TARGETS))

@@ -1,4 +1,4 @@
-#include "output.hpp"
+#include "output/output.hpp"
 #include "log/log.hpp"
 #include "string.hpp"
 
@@ -9,6 +9,12 @@
 #include "platform/thread/thread.hpp"
 
 namespace msa { namespace output {
+
+	static const PluginHooks HOOKS = {
+		#define MSA_MODULE_HOOK(retspec, name, ...)		name,
+		#include "output/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
 	
 	typedef std::map<std::string, const OutputHandler *> TypedHandlerMap;
 	typedef std::map<OutputType, TypedHandlerMap> HandlerMap;
@@ -101,6 +107,11 @@ namespace msa { namespace output {
 			return -1;
 		}
 		return 0;
+	}
+
+	extern const PluginHooks *get_plugin_hooks()
+	{
+		return &HOOKS;
 	}
 	
 	extern void write(msa::Handle hdl, const Chunk *chunk)

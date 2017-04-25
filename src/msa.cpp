@@ -5,7 +5,7 @@
 #include "event/dispatch.hpp"
 #include "cfg/cfg.hpp"
 #include "log/log.hpp"
-#include "output.hpp"
+#include "output/output.hpp"
 #include "string.hpp"
 #include "plugin.hpp"
 
@@ -36,6 +36,7 @@ namespace msa {
 		PLUGIN_HOOKS->agent = msa::agent::get_plugin_hooks();
 		PLUGIN_HOOKS->input = msa::input::get_plugin_hooks();
 		PLUGIN_HOOKS->log = msa::log::get_plugin_hooks();
+		PLUGIN_HOOKS->output = msa::output::get_plugin_hooks();
 		msa::thread::init();
 	}
 	

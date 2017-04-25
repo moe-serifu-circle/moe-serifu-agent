@@ -1,5 +1,5 @@
-#ifndef MSA_OUTPUT_HPP
-#define MSA_OUTPUT_HPP
+#ifndef MSA_OUTPUT_OUTPUT_HPP
+#define MSA_OUTPUT_OUTPUT_HPP
 
 #include "msa.hpp"
 #include "cfg/cfg.hpp"
@@ -22,24 +22,25 @@ namespace msa { namespace output {
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config);
 	extern int quit(msa::Handle hdl);
 	
-	extern void write(msa::Handle hdl, const Chunk *chunk);
-	extern void write_text(msa::Handle hdl, const std::string &text);
-	extern void add_device(msa::Handle hdl, OutputType type, void *device_id);
-	extern void get_devices(msa::Handle hdl, std::vector<std::string> *list);
-	extern void remove_device(msa::Handle hdl, const std::string &id);
-	extern void switch_device(msa::Handle hdl, const std::string &id);
-	extern void get_active_device(msa::Handle hdl, std::string &id);
 	
-	extern void create_chunk(Chunk **chunk, const std::string &text);
-	extern void dispose_chunk(Chunk *chunk);
-
-	extern void create_handler(OutputHandler **handler, const std::string &name, OutputHandlerFunc func);
-	extern void dispose_handler(OutputHandler *handler);
-	extern const std::string &get_handler_name(const OutputHandler *handler);
+	extern void add_device(msa::Handle hdl, OutputType type, void *device_id);
+	extern void remove_device(msa::Handle hdl, const std::string &id);
 	
 	extern void register_handler(msa::Handle hdl, OutputType type, const OutputHandler *handler);
 	extern void unregister_handler(msa::Handle hdl, OutputType type, const OutputHandler *handler);
-
+	extern const PluginHooks *get_plugin_hooks();
+	
+	#define MSA_MODULE_HOOK(retspec, name, ...)	extern retspec name(__VA_ARGS__);
+	#include "output/hooks.hpp"
+	#undef MSA_MODULE_HOOK
+	
+	struct plugin_hooks_type
+	{
+		#define MSA_MODULE_HOOK(retspec, name, ...)		retspec (*name)(__VA_ARGS__);
+		#include "output/hooks.hpp"
+		#undef MSA_MODULE_HOOK
+	};
+	
 } }
 
 #endif

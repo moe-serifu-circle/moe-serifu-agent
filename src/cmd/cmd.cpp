@@ -1,6 +1,6 @@
 #include "cmd/cmd.hpp"
 #include "event/dispatch.hpp"
-#include "string.hpp"
+#include "util/string.hpp"
 #include "agent/agent.hpp"
 #include "log/log.hpp"
 

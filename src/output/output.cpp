@@ -1,6 +1,6 @@
 #include "output/output.hpp"
 #include "log/log.hpp"
-#include "string.hpp"
+#include "util/string.hpp"
 
 #include <map>
 #include <stdexcept>

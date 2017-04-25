@@ -1,5 +1,5 @@
-#ifndef MSA_UTIL_HPP
-#define MSA_UTIL_HPP
+#ifndef MSA_UTIL_UTIL_HPP
+#define MSA_UTIL_UTIL_HPP
 
 /**
 * util.hpp

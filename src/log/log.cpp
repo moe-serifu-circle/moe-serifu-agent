@@ -1,6 +1,6 @@
 #include "log/log.hpp"
-#include "string.hpp"
-#include "util.hpp"
+#include "util/string.hpp"
+#include "util/util.hpp"
 
 #include <fstream>
 #include <vector>

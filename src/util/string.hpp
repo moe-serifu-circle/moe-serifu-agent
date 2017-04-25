@@ -1,5 +1,5 @@
-#ifndef MSA_STRING_HPP
-#define MSA_STRING_HPP
+#ifndef MSA_UTIL_STRING_HPP
+#define MSA_UTIL_STRING_HPP
 
 #include <string>
 #include <vector>

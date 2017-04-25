@@ -6,7 +6,7 @@
 #include "cfg/cfg.hpp"
 #include "log/log.hpp"
 #include "output/output.hpp"
-#include "string.hpp"
+#include "util/string.hpp"
 #include "plugin/plugin.hpp"
 
 #include <string>

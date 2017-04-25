@@ -1,6 +1,6 @@
 #include "input/input.hpp"
 #include "event/dispatch.hpp"
-#include "util.hpp"
+#include "util/util.hpp"
 #include "log/log.hpp"
 
 #include <map>

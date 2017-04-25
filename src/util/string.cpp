@@ -1,4 +1,4 @@
-#include "string.hpp"
+#include "util/string.hpp"
 #include <cctype>
 
 namespace msa { namespace string {

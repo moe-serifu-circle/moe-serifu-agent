@@ -2,7 +2,7 @@
 
 #include "log/log.hpp"
 #include "agent/agent.hpp"
-#include "string.hpp"
+#include "util/string.hpp"
 
 #include "platform/file/file.hpp"
 #include "platform/lib/lib.hpp"

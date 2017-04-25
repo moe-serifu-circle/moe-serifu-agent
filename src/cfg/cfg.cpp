@@ -1,5 +1,5 @@
 #include "cfg/cfg.hpp"
-#include "string.hpp"
+#include "util/string.hpp"
 
 #include <fstream>
 #include <stdexcept>

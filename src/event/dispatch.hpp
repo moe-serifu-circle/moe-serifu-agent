@@ -17,6 +17,7 @@ namespace msa { namespace event {
 		bool recurring;
 		void *event_args;
 		Topic event_topic;
+		size_t event_args_size;
 	} Timer;
 
 	extern int init(msa::Handle msa, const msa::cfg::Section &config);

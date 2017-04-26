@@ -19,7 +19,8 @@ namespace msa { namespace event {
 		#undef MSA_MODULE_HOOK
 	};
 
-	typedef std::chrono::high_resolution_clock::time_point chrono_time;
+	typedef std::chrono::high_resolution_clock chrono_clock;
+	typedef chrono_clock::time_point chrono_time;
 
 	typedef struct handler_context_type {
 		const Event *event;
@@ -152,10 +153,11 @@ namespace msa { namespace event {
 	{
 		Timer *t = new Timer;
 		t->period = delay;
-		t->last_fired = std::chrono::high_resolution_clock::now();
+		t->last_fired = chrono_clock::now();
 		t->recurring = false;
 		t->event_args = args;
 		t->event_topic = topic;
+		t->event_args_size = 0;
 		msa::thread::mutex_lock(&msa->event->timers_mutex);
 		t->id = msa->event->timers.size();
 		msa->event->timers[t->id] = t;
@@ -164,14 +166,15 @@ namespace msa { namespace event {
 		return t->id;
 	}
 	
-	extern int16_t add_timer(msa::Handle msa, std::chrono::milliseconds period, const Topic topic, void *args)
+	extern int16_t add_timer(msa::Handle msa, std::chrono::milliseconds period, const Topic topic, void *args, size_t args_size)
 	{
 		Timer *t = new Timer;
 		t->period = period;
-		t->last_fired = std::chrono::high_resolution_clock::now();
+		t->last_fired = chrono_clock::now();
 		t->recurring = true;
 		t->event_args = args;
 		t->event_topic = topic;
+		t->event_args_size = args_size;
 		msa::thread::mutex_lock(&msa->event->timers_mutex);
 		t->id = msa->event->timers.size();
 		msa->event->timers[t->id] = t;
@@ -189,8 +192,11 @@ namespace msa { namespace event {
 			msa::thread::mutex_unlock(&ctx->timers_mutex);
 			throw std::logic_error("no timer with ID: " + std::to_string(id));
 		}
+		Timer *t = timers[id];
 		ctx->timers.erase(id);
 		msa::thread::mutex_unlock(&ctx->timers_mutex);
+		delete t->event_args;
+		delete t;
 		msa::log::info(msa, "Removed timer ID " + std::to_string(id));
 		return;
 	}
@@ -299,7 +305,7 @@ namespace msa { namespace event {
 		// TODO: Add a synthetic event for when queue has emptied and no events
 
 		// check if we need to do timing tasks
-		chrono_time now = std::chrono::high_resolution_clock::now();
+		chrono_time now = chrono_clock::now();
 		if (edc->last_tick_time + edc->tick_resolution <= now)
 		{
 			edc->last_tick_time = now;
@@ -318,8 +324,14 @@ namespace msa { namespace event {
 			if (t->last_fired + t->period <= now)
 			{
 				int16_t id = iter->first;
-				msa::log::debug(hdl, "Fired timer " + std::to_string(id));
+				if (t->recurring)
+				{
+					// then we must copy the event args
+					// TODO: this naive copying of pointer size doesn't do a deep copy;
+					// clone method would be better
+				}
 				generate(hdl, t->event_topic, t->event_args);
+				msa::log::debug(hdl, "Fired timer " + std::to_string(id));
 				if (t->recurring)
 				{
 					t->last_fired = now;

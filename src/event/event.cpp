@@ -60,18 +60,9 @@ namespace msa { namespace event {
 		return (topic_attr_table + idx);
 	}
 
-	extern const Event *create(Topic topic, void *args)
-	{
-		Event *e = new Event;
-		e->generation_time = time(NULL);
-		e->attributes = get_topic_attr(topic);
-		e->topic = topic;
-		e->args = args;
-		return e;
-	}
-
 	extern void dispose(const Event *e)
 	{
+		delete e->args;
 		delete e;
 	}
 

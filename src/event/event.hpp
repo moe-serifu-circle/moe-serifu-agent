@@ -35,10 +35,8 @@ namespace msa { namespace event {
 				delete args;
 			}
 
-			Args(const Args<T> &other)
-			{
-				args = new T(*other.args);
-			}
+			Args(const Args<T> &other) : args(new T(*other.args))
+			{}
 
 			Args &operator=(const Args<T> &other)
 			{

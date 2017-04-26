@@ -184,13 +184,13 @@ namespace msa { namespace cmd {
 		}
 		cur_arg++;
 		auto ms = std::chrono::milliseconds(delay);
-		std::string *cmd_str = new std::string;
+		std::string cmd_str = "";
 		for (size_t i = cur_arg; i < args.size(); i++)
 		{
-			*cmd_str += args[i];
+			cmd_str += args[i];
 			if (i + 1 < args.size())
 			{
-				*cmd_str += " ";
+				cmd_str += " ";
 			}
 		}
 		std::string plural = ms.count() != 0 ? "s" : "";

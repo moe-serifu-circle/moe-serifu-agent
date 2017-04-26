@@ -18,7 +18,8 @@ namespace msa { namespace event {
 	// implement IArgs
 	class IArgs {
 		public:
-			virtual IArgs *copy() = 0;
+			virtual ~IArgs() {}
+			virtual IArgs *copy() const = 0;
 	};
 	
 	// concrete implementation of IArgs that just defers copy operation to resident object
@@ -29,19 +30,19 @@ namespace msa { namespace event {
 			Args(const T &wrapped) : args(new T(wrapped))
 			{}
 
-			~Args()
+			virtual ~Args()
 			{
 				delete args;
 			}
 
 			Args(const Args<T> &other)
 			{
-				args = new T(other.args);
+				args = new T(*other.args);
 			}
 
 			Args &operator=(const Args<T> &other)
 			{
-				T *temp_args = new T(other.args);
+				T *temp_args = new T(*other.args);
 				delete args;
 				args = temp_args;
 				return *this;
@@ -60,6 +61,12 @@ namespace msa { namespace event {
 		private:
 			T *args;
 	};
+	
+	template<typename T>
+	Args<T> wrap(const T &arg)
+	{
+		return Args<T>(arg);
+	}
 
 	struct topic_attr;
 
@@ -78,7 +85,7 @@ namespace msa { namespace event {
 	extern bool operator==(const Event &e1, const Event &e2);
 	extern bool operator!=(const Event &e1, const Event &e2);
 	
-	extern const Event *create(Topic topic, const IArgs &args)
+	extern const Event *create(Topic topic, const IArgs &args);
 	extern void dispose(const Event *e);
 	extern uint8_t get_priority(const Event *e);
 	extern int max_topic_index();

@@ -134,7 +134,7 @@ namespace msa { namespace cmd {
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		std::string startup_cmd = config.get_or("STARTUP", "echo I'd like to announce my presence!");
-		msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, msa::event::Args(startup_cmd));
+		msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, msa::event::wrap(startup_cmd));
 	}
 
 	static int create_command_context(CommandContext **ctx)
@@ -198,11 +198,11 @@ namespace msa { namespace cmd {
 		int16_t id = -1;
 		if (recurring)
 		{
-			id = msa::event::add_timer(hdl, ms, msa::event::Topic::TEXT_INPUT, cmd_str);
+			id = msa::event::add_timer(hdl, ms, msa::event::Topic::TEXT_INPUT, msa::event::wrap(cmd_str));
 		}
 		else
 		{
-			id = msa::event::delay(hdl, ms, msa::event::Topic::TEXT_INPUT, cmd_str);
+			id = msa::event::delay(hdl, ms, msa::event::Topic::TEXT_INPUT, msa::event::wrap(cmd_str));
 		}
 		if (id == -1)
 		{

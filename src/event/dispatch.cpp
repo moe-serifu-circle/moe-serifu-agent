@@ -21,6 +21,47 @@ namespace msa { namespace event {
 
 	typedef std::chrono::high_resolution_clock chrono_clock;
 	typedef chrono_clock::time_point chrono_time;
+	
+	class Timer
+	{
+		public:
+			int16_t id;
+			std::chrono::milliseconds period;
+			std::chrono::high_resolution_clock::time_point last_fired;
+			bool recurring;
+			IArgs *event_args;
+			Topic event_topic;
+			Timer(std::chrono::milliseconds period, Topic topic, const IArgs &args, bool recurring) :
+				id(0),
+				period(period),
+				last_fired(chrono_clock::now()),
+				recurring(recurring),
+				event_args(args.copy()),
+				event_topic(topic)
+			{}
+			Timer(const Timer &other) :
+				id(other.id),
+				period(other.period),
+				last_fired(other.last_fired),
+				recurring(other.recurring),
+				event_args(other.event_args->copy()),
+				event_topic(other.event_topic)
+			{}
+			~Timer()
+			{
+				delete event_args;
+			}
+			Timer &operator=(const Timer &other)
+			{
+				delete event_args;
+				event_args = other.event_args->copy();
+				id = other.id;
+				period = other.period;
+				last_fired = other.last_fired;
+				event_topic = other.event_topic;
+				return *this;
+			}
+	};
 
 	typedef struct handler_context_type {
 		const Event *event;
@@ -44,46 +85,6 @@ namespace msa { namespace event {
 		std::map<int16_t, Timer*> timers;
 		msa::thread::Mutex timers_mutex;
 	};
-	
-	class Timer
-	{
-		public:
-			int16_t id;
-			std::chrono::milliseconds period;
-			std::chrono::high_resolution_clock::time_point last_fired;
-			bool recurring;
-			IArgs *event_args;
-			Topic event_topic;
-			Timer(std::chrono::milliseconds period, Topic topic, const &IArgs args, bool recurring) :
-				id(0),
-				period(period),
-				last_fired(chrono_clock::now()),
-				recurring(recurring),
-				event_args(args.copy()),
-				event_topic(topic)
-			{}
-			Timer(const Timer &other) :
-				id(other.id),
-				period(other.period),
-				last_fired(other.last_fired),
-				recurring(other.recurring),
-				event_args(other.args->copy()),
-				event_topic(other.topic)
-			~Timer()
-			{
-				delete event_args;
-			}
-			Timer &operator=(const Timer &other)
-			{
-				delete event_args;
-				event_args = other.event_args->copy();
-				id = other.id;
-				period = other.period;
-				last_fired = other.last_fired;
-				event_topic = other.event_topic;
-				return *this;
-			}
-	} Timer;
 
 	static int create_event_dispatch_context(EventDispatchContext **event);
 	static int dispose_event_dispatch_context(EventDispatchContext *event);
@@ -202,7 +203,7 @@ namespace msa { namespace event {
 	
 	extern int16_t add_timer(msa::Handle msa, std::chrono::milliseconds period, const Topic topic, const IArgs &args)
 	{
-		Timer *t = new Timer(delay, topic, args, true);
+		Timer *t = new Timer(period, topic, args, true);
 		msa::thread::mutex_lock(&msa->event->timers_mutex);
 		t->id = msa->event->timers.size();
 		msa->event->timers[t->id] = t;
@@ -220,7 +221,7 @@ namespace msa { namespace event {
 			msa::thread::mutex_unlock(&ctx->timers_mutex);
 			throw std::logic_error("no timer with ID: " + std::to_string(id));
 		}
-		Timer *t = timers[id];
+		Timer *t = ctx->timers[id];
 		ctx->timers.erase(id);
 		msa::thread::mutex_unlock(&ctx->timers_mutex);
 		delete t;
@@ -228,7 +229,7 @@ namespace msa { namespace event {
 		return;
 	}
 
-	extern void get_timers(msa::Handle msa, std::vector<uint16_t> &list)
+	extern void get_timers(msa::Handle msa, std::vector<int16_t> &list)
 	{
 		EventDispatchContext *ctx = msa->event;
 		msa::thread::mutex_lock(&ctx->timers_mutex);
@@ -304,10 +305,11 @@ namespace msa { namespace event {
 			hdl->event->queue.pop();
 			delete e;
 		}
-		while (!hdl->event->timers.empty())
+		auto timer_iter = hdl->event->timers.begin();
+		while (timer_iter != hdl->event->timers.end())
 		{
-			const Timer *t = hdl->event->timers.top();
-			hdl->event->timers.pop();
+			Timer *t = timer_iter->second;
+			timer_iter = hdl->event->timers.erase(timer_iter);
 			delete t;
 		}
 	}

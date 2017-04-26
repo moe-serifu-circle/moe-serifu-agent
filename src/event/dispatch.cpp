@@ -177,6 +177,7 @@ namespace msa { namespace event {
 	extern void generate(msa::Handle msa, Topic t, const IArgs &args)
 	{
 		const Event *e = create(t, args);
+		msa::log::debug(msa, "Pushed a " + topic_str(t) + " event");
 		push_event(msa, e);
 	}
 
@@ -197,7 +198,7 @@ namespace msa { namespace event {
 		t->id = msa->event->timers.size();
 		msa->event->timers[t->id] = t;
 		msa::thread::mutex_unlock(&msa->event->timers_mutex);
-		msa::log::info(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire in " + std::to_string(delay.count()) + "ms (id = " + std::to_string(t->id) + ")");
+		msa::log::debug(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire in " + std::to_string(delay.count()) + "ms (id = " + std::to_string(t->id) + ")");
 		return t->id;
 	}
 	
@@ -208,7 +209,7 @@ namespace msa { namespace event {
 		t->id = msa->event->timers.size();
 		msa->event->timers[t->id] = t;
 		msa::thread::mutex_unlock(&msa->event->timers_mutex);
-		msa::log::info(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id) + ")");
+		msa::log::debug(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id) + ")");
 		return t->id;
 	}
 
@@ -225,7 +226,7 @@ namespace msa { namespace event {
 		ctx->timers.erase(id);
 		msa::thread::mutex_unlock(&ctx->timers_mutex);
 		delete t;
-		msa::log::info(msa, "Removed timer ID " + std::to_string(id));
+		msa::log::debug(msa, "Removed timer ID " + std::to_string(id));
 		return;
 	}
 
@@ -319,6 +320,7 @@ namespace msa { namespace event {
 		const Event *e = edt_poll_event_queue(hdl);
 		if (e != NULL)
 		{
+			msa::log::debug(hdl, "Dispatching " + topic_str(e->topic) + " event");
 			edt_dispatch_event(hdl, e);
 		}
 		

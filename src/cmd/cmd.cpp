@@ -134,8 +134,7 @@ namespace msa { namespace cmd {
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		std::string startup_cmd = config.get_or("STARTUP", "echo I'd like to announce my presence!");
-		std::string *cmd_str = new std::string(startup_cmd);
-		msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, cmd_str);
+		msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, msa::event::Args(startup_cmd));
 	}
 
 	static int create_command_context(CommandContext **ctx)
@@ -292,10 +291,11 @@ namespace msa { namespace cmd {
 	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
 	{
 		CommandContext *ctx = hdl->cmd;
-		std::string *str = static_cast<std::string *>(e->args);
+		auto e_args = dynamic_cast<msa::event::Args<std::string>*>(e->args);
+		std::string str = e_args->get_args();
+		delete e_args;
 		std::vector<std::string> args;
-		msa::string::tokenize(*str, ' ', args);
-		delete str;
+		msa::string::tokenize(str, ' ', args);
 		// pull out command name and call the appropriate function
 		if (args.size() == 0)
 		{

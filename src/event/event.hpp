@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <cstdint>
+#include <string>
 
 namespace msa { namespace event {
 
@@ -33,6 +34,7 @@ namespace msa { namespace event {
 	extern void dispose(const Event *e);
 	extern uint8_t get_priority(const Event *e);
 	extern int max_topic_index();
+	extern std::string topic_str(Topic t);
 
 } }
 

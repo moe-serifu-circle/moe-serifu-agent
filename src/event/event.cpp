@@ -79,4 +79,12 @@ namespace msa { namespace event {
 	{
 		return e->attributes->priority;
 	}
+	
+	extern std::string topic_str(Topic t)
+	{
+		#define MSA_EVENT_TOPIC(enum_name, priority)		if (t == Topic::enum_name) return "enum_name";
+		#include "event/topics.hpp"
+		#undef MSA_EVENT_TOPIC
+		return std::to_string(t);
+	}
 } }

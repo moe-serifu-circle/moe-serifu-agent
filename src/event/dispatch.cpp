@@ -160,6 +160,7 @@ namespace msa { namespace event {
 		t->id = msa->event->timers.size();
 		msa->event->timers[t->id] = t;
 		msa::thread::mutex_unlock(&msa->event->timers_mutex);
+		msa::log::info(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire in " + std::to_string(delay.count()) + "ms (id = " + std::to_string(t->id) + ")");
 		return t->id;
 	}
 	
@@ -175,6 +176,7 @@ namespace msa { namespace event {
 		t->id = msa->event->timers.size();
 		msa->event->timers[t->id] = t;
 		msa::thread::mutex_unlock(&msa->event->timers_mutex);
+		msa::log::info(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id) + ")");
 		return t->id;
 	}
 
@@ -189,6 +191,7 @@ namespace msa { namespace event {
 		}
 		ctx->timers.erase(id);
 		msa::thread::mutex_unlock(&ctx->timers_mutex);
+		msa::log::info(msa, "Removed timer ID " + std::to_string(id));
 		return;
 	}
 
@@ -314,6 +317,8 @@ namespace msa { namespace event {
 			Timer *t = iter->second;
 			if (t->last_fired + t->period <= now)
 			{
+				int16_t id = iter->first;
+				msa::log::debug(hdl, "Fired timer " + std::to_string(id));
 				generate(hdl, t->event_topic, t->event_args);
 				if (t->recurring)
 				{
@@ -323,6 +328,7 @@ namespace msa { namespace event {
 				else
 				{
 					iter = ctx->timers.erase(iter);
+					msa::log::debug(hdl, "Completed and removed timer " + std::to_string(id));
 				}
 			}
 			else

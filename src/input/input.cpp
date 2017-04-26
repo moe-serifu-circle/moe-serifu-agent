@@ -183,10 +183,10 @@ namespace msa { namespace input {
 		msa::thread::Attributes attr;
 		msa::thread::attr_init(&attr);
 		msa::thread::attr_set_detach(&attr, true);
-		dev->running = (msa::thread::create(&dev->thread, &attr, it_start, ita, "input") == 0);
+		bool started = (msa::thread::create(&dev->thread, &attr, it_start, ita, "input") == 0);
 		msa::thread::attr_destroy(&attr);
 		
-		if (dev->running)
+		if (started)
 		{
 			hdl->input->active.push_back(dev->id);
 			msa::log::info(hdl, "Enabled input device " + dev->id);
@@ -353,6 +353,8 @@ namespace msa { namespace input {
 		msa::Handle hdl = ita->hdl;
 		Device *dev = ita->dev;
 		delete ita;
+
+		dev->running = true;
 		
 		InputHandler *input_handler = it_get_handler(hdl, dev);
 

@@ -383,8 +383,8 @@ namespace msa { namespace input {
 			if (input_handler->is_ready(hdl, dev))
 			{
 				Chunk *chunk = input_handler->get_input(hdl, dev);
-				delete chunk;
 				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, msa::event::wrap(chunk->text));
+				delete chunk;
 			}
 		}
 	}

@@ -322,7 +322,7 @@ namespace msa { namespace event {
 				generate(hdl, t->event_topic, t->event_args);
 				if (t->recurring)
 				{
-					t->last_fired = std::chrono::high_resolution_clock::now();
+					t->last_fired = now;
 					iter++;
 				}
 				else

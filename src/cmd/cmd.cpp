@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <map>
+#include <chrono>
 
 namespace msa { namespace cmd {
 
@@ -30,6 +31,8 @@ namespace msa { namespace cmd {
 	static void help_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 	static void echo_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 	static void kill_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
+	static void timer_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
+	static void deltimer_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
 	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
 	static void register_default_commands(msa::Handle hdl);
@@ -38,6 +41,8 @@ namespace msa { namespace cmd {
 	static const struct command_type default_commands[] = {
 		{"KILL", "It shuts down this MSA instance", "", kill_func},
 		{"ECHO", "It outputs its arguments", "echo-args...", echo_func},
+		{"TIMER", "It schedules a command to execute in the future", "[-r] time-ms command", timer_func},
+		{"DELTIMER", "It deletes a timer", "timer-id", deltimer_func},
 		{"HELP", "With no args, it lists all commands. Otherwise, it displays the help", "[command]", help_func}
 	};
 
@@ -155,6 +160,81 @@ namespace msa { namespace cmd {
 		{
 			fprintf(stderr, "Shutdown error: %d\n", status);
 		}
+	}
+
+	static void timer_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	{
+		bool recurring = false;
+		size_t cur_arg = 0;
+		recurring = args.size() >= 1 && args[0] == "-r";
+		if (recurring) cur_arg++;
+		if (args.size() < cur_arg + 2)
+		{
+			msa::agent::say(hdl, "You gotta give me a time and a command to execute, $USER_TITLE.");
+			return;
+		}
+		int delay = 0;
+		try
+		{
+			delay = std::stoi(args[cur_arg]);
+		}
+		catch (std::exception &e)
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + args[cur_arg] + "' isn't a number of milliseconds.");
+			return;
+		}
+		cur_arg++;
+		auto ms = std::chrono::milliseconds(delay);
+		std::string *cmd_str = new std::string;
+		for (size_t i = cur_arg; i < args.size(); i++)
+		{
+			*cmd_str += args[i];
+			if (i + 1 < args.size())
+			{
+				*cmd_str += " ";
+			}
+		}
+		std::string plural = ms.count() != 0 ? "s" : "";
+		std::string type = recurring ? "every" : "in";
+		int16_t id = -1;
+		if (recurring)
+		{
+			id = msa::event::add_timer(hdl, ms, msa::event::Topic::TEXT_INPUT, cmd_str);
+		}
+		else
+		{
+			id = msa::event::delay(hdl, ms, msa::event::Topic::TEXT_INPUT, cmd_str);
+		}
+		if (id == -1)
+		{
+			msa::agent::say(hdl, "Oh no! I'm sorry, $USER_TITLE, that didn't work quite right!");
+		}
+		else
+		{
+			msa::agent::say(hdl, "Okay, $USER_TITLE, I will do that " + type + " " + std::to_string(ms.count()) + " millisecond" + plural + "!");
+			msa::agent::say(hdl, "The timer ID is " + std::to_string(id) + ".");
+		}
+	}	
+
+	static void deltimer_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	{
+		if (args.size() < 1)
+		{
+			msa::agent::say(hdl, "Ahh... $USER_TITLE, I need to know which timer I should delete.");
+			return;
+		}
+		int16_t id = 0;
+		try
+		{
+			id = std::stoi(args[0]);
+		}
+		catch (std::exception &e)
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + args[0] + "' isn't an integer.");
+			return;
+		}
+		msa::event::remove_timer(hdl, id);
+		msa::agent::say(hdl, "Okay! I stopped timer " + std::to_string(id) + " for you, $USER_TITLE.");
 	}
 	
 	static void help_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const UNUSED(sync))

@@ -385,9 +385,9 @@ namespace msa { namespace input {
 			if (input_handler->is_ready(hdl, dev))
 			{
 				Chunk *chunk = input_handler->get_input(hdl, dev);
-				msa::log::trace("Got input; notifying event system");
+				msa::log::trace(hdl, "Got input; notifying event system");
 				msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, msa::event::wrap(chunk->text));
-				msa::log::trace("Input event has been pushed to the queue");
+				msa::log::trace(hdl, "Input event has been pushed to the queue");
 				delete chunk;
 			}
 		}

@@ -47,7 +47,7 @@ namespace msa { namespace cmd {
 		// need to init events before this
 		if (hdl->event == NULL)
 		{
-			msa::log::error(hdl, "Tried to init CMD module before EVENT module started");
+			msa::log::error(hdl, "Can't init CMD module before EVENT module started");
 			return 1;
 		}
 

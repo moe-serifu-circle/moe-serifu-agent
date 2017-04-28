@@ -37,6 +37,7 @@ namespace msa { namespace agent {
 		if (status != 0)
 		{
 			msa::log::error(hdl, "Could not create agent context");
+			return status;
 		}
 		try
 		{
@@ -45,6 +46,7 @@ namespace msa { namespace agent {
 		catch (const std::exception &e)
 		{
 			msa::log::error(hdl, "Could not read agent config: " + std::string(e.what()));
+			return -1;
 		}
 		add_default_substitutions(hdl);
 		return 0;
@@ -57,6 +59,7 @@ namespace msa { namespace agent {
 		if (status != 0)
 		{
 			msa::log::error(hdl, "Could not dispose agent context");
+			return status;
 		}
 		return 0;
 	}

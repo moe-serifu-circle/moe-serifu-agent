@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 namespace msa { namespace cfg {
 
@@ -36,6 +37,17 @@ namespace msa { namespace cfg {
 		private:
 			std::string name;
 			std::map<std::string, std::vector<std::string>> entries;
+	};
+
+	class config_error : public std::runtime_error
+	{
+		public:
+			config_error(const std::string &key_arg, const std::string &what_arg);
+			virtual const char *what() const;
+			virtual const char *key() const;
+
+		private:
+			const std::string _key;
 	};
 
 	typedef std::map<std::string, Section> Config;

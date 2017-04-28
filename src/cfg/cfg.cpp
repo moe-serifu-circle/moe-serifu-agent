@@ -297,7 +297,14 @@ namespace msa { namespace cfg {
 
 	const std::string &Section::operator[](const char *key) const
 	{
-		return get_all(key).at(0);
+		try
+		{
+			return get_all(key).at(0);
+		}
+		catch (std::out_of_range &e)
+		{
+
+		}
 	}
 
 	const std::string &Section::operator[](const std::string &key) const

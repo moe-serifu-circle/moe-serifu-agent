@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <stdexcept>
 
@@ -17,14 +18,10 @@ namespace msa { namespace cfg {
 	{
 		public:
 			Section();
-			Section(const char *name);
 			Section(const std::string &name);
 			Section &operator=(const Section &sec);
 			bool has(const char *key) const;
 			bool has(const std::string &key) const;
-			const char *get_or(const char *key, const char *def) const;
-			const std::string &get_or(const std::string &key, const std::string &def) const;
-			const std::string &operator[](const char *key) const;
 			const std::string &operator[](const std::string &key) const;
 			const std::string &get_name() const;
 			const std::map<std::string, std::vector<std::string>> &get_entries() const;
@@ -33,6 +30,17 @@ namespace msa { namespace cfg {
 			void push(const std::string &key, const std::string &val);
 			void set(const std::string &key, size_t index, std::string &val);
 			void create_key(const std::string &key);
+			template<class T> const T &get_as(const std::string &key) const
+			{
+				std::istringstream ss((*this)[key]);
+				T typed;
+				ss >> typed;
+				return typed;
+			}
+			template<class T> const T &get_or(const std::string &key, const T &def) const
+			{
+				return has(key) ? get_as<T>(key) : def;
+			}
 		
 		private:
 			std::string name;

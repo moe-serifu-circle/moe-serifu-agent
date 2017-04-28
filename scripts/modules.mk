@@ -19,7 +19,7 @@ $(ODIR)/event/event.o: $(SDIR)/event/event.cpp $(SDIR)/event/event.hpp $(SDIR)/e
 $(ODIR)/event/handler.o: $(SDIR)/event/handler.cpp $(SDIR)/event/handler.hpp $(SDIR)/msa.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/handler.cpp $(CXXFLAGS)
 
-$(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/event/dispatch.hpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/event/hooks.hpp $(SDIR)/util/util.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp
+$(ODIR)/event/dispatch.o: $(SDIR)/event/dispatch.cpp $(SDIR)/event/dispatch.hpp $(SDIR)/msa.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/event/hooks.hpp $(SDIR)/util/util.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp $(SDIR)/cmd/cmd.hpp $(SDIR)/cmd/hooks.hpp $(SDIR)/agent/agent.hpp $(SDIR)/agent/hooks.hpp
 	$(CXX) -c -o $@ $(SDIR)/event/dispatch.cpp $(CXXFLAGS)
 
 $(ODIR)/input/input.o: $(SDIR)/input/input.cpp $(SDIR)/input/input.hpp $(SDIR)/msa.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/input/hooks.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/event/hooks.hpp $(SDIR)/util/util.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp

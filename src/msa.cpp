@@ -73,7 +73,7 @@ namespace msa {
 		hdl->log = NULL;
 		hdl->plugin = NULL;
 
-		// init system modules
+		// init system modules; changing order could break everything
 		if (init_module(hdl, conf, msa::log::init, "Log") != 0) return MSA_ERR_LOG;
 		if (init_module(hdl, conf, msa::output::init, "Output") != 0) return MSA_ERR_OUTPUT;
 		if (init_module(hdl, conf, msa::event::init, "Event") != 0) return MSA_ERR_EVENT;
@@ -82,8 +82,9 @@ namespace msa {
 		if (init_module(hdl, conf, msa::cmd::init, "Command") != 0) return MSA_ERR_CMD;
 		if (init_module(hdl, conf, msa::plugin::init, "Plugin") != 0) return MSA_ERR_PLUGIN;
 		
-		// system is inited, do setup now
+		// system is inited, do setup now (order does not matter)
 		if (setup_module(hdl, msa::plugin::setup, "Plugin") != 0) return MSA_ERR_PLUGIN;
+		if (setup_module(hdl, msa::event::setup, "Event") != 0) return MSA_ERR_EVENT;
 
 		*msa = hdl;
 		delete conf;
@@ -96,9 +97,11 @@ namespace msa {
 	{
 		msa::log::info(msa, "Moe Serifu Agent is now shutting down...");
 		
+		// teardown; order does not matter here
 		if (teardown_module(msa, msa::plugin::teardown, "Plugin") != 0) return MSA_ERR_PLUGIN;
+		if (teardown_module(msa, msa::event::teardown, "Event") != 0) return MSA_ERR_EVENT;
 		
-		// modules are torn down, now quit them
+		// modules are torn down, now quit them; order matters
 		if (quit_module(msa, (void **) &msa->plugin, msa::plugin::quit, "Plugin") != 0) return MSA_ERR_PLUGIN;
 		if (quit_module(msa, (void **) &msa->input, msa::input::quit, "Input") != 0) return MSA_ERR_INPUT;
 		if (quit_module(msa, (void **) &msa->agent, msa::agent::quit, "Agent") != 0) return MSA_ERR_AGENT;
@@ -107,7 +110,8 @@ namespace msa {
 		if (quit_module(msa, (void **) &msa->output, msa::output::quit, "Output") != 0) return MSA_ERR_OUTPUT;
 		
 		msa::log::info(msa, "Moe Serifu Agent primary modules shutdown cleanly");
-
+		
+		// shutdown log module last
 		if (quit_module(msa, (void **) &msa->log, msa::log::quit, "") != 0) return MSA_ERR_LOG;
 		
 		msa->status = msa::Status::STOPPED;

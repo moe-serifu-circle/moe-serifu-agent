@@ -1,6 +1,8 @@
 #include "event/dispatch.hpp"
 #include "util/util.hpp"
 #include "log/log.hpp"
+#include "cmd/cmd.hpp"
+#include "agent/agent.hpp"
 
 #include <cstdio>
 #include <queue>
@@ -84,6 +86,7 @@ namespace msa { namespace event {
 		chrono_time last_tick_time;
 		std::map<int16_t, Timer*> timers;
 		msa::thread::Mutex timers_mutex;
+		std::vector<msa::cmd::Command *> commands;
 	};
 
 	static int create_event_dispatch_context(EventDispatchContext **event);
@@ -103,6 +106,9 @@ namespace msa { namespace event {
 	static void edt_fire_timers(msa::Handle hdl, chrono_time now);
 	static void dispose_handler_context(HandlerContext *ctx, bool wait);
 
+	static void cmd_timer(msa::Handle hdl, const msa::cmd::ArgList &args, HandlerSync *const sync);
+	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ArgList &args, HandlerSync *const sync);
+
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		int create_status = create_event_dispatch_context(&hdl->event);
@@ -120,6 +126,7 @@ namespace msa { namespace event {
 		catch (const std::exception &e)
 		{
 			msa::log::error(hdl, "Could not read event config: " + std::string(e.what()));
+			return 1;
 		}
 
 		create_status = msa::thread::create(&hdl->event->edt, NULL, edt_start, hdl, "edt");
@@ -128,7 +135,7 @@ namespace msa { namespace event {
 			msa::log::error(hdl, "Could not create event dispatch thread (error " + std::to_string(create_status) + ")");
 			msa::thread::mutex_destroy(&hdl->event->queue_mutex);
 			return create_status;
-       		}
+		}
 		return 0;
 	}
 
@@ -156,6 +163,26 @@ namespace msa { namespace event {
 		msa::thread::join(msa->event->edt, NULL);
 		msa::log::trace(msa, "EDT joined");
 		dispose_event_dispatch_context(msa->event);
+		return 0;
+	}
+	
+	extern int setup(msa::Handle hdl)
+	{
+		EventDispatchContext *ctx = hdl->event;
+		for (size_t i = 0; i < ctx->commands.size(); i++)
+		{
+			msa::cmd::register_command(hdl, ctx->commands[i]);
+		}
+		return 0;
+	}
+	
+	extern int teardown(msa::Handle hdl)
+	{
+		EventDispatchContext *ctx = hdl->event;
+		for (size_t i = 0; i < ctx->commands.size(); i++)
+		{
+			msa::cmd::unregister_command(hdl, ctx->commands[i]);
+		}
 		return 0;
 	}
 
@@ -249,22 +276,44 @@ namespace msa { namespace event {
 		msa::thread::mutex_init(&edc->timers_mutex, NULL);
 		edc->current_handler = NULL;
 		edc->last_tick_time = chrono_time::min();
+		edc->commands.push_back(new msa::cmd::Command("TIMER", "It schedules a command to execute in the future", "[-r] time-ms command", cmd_timer));
+		edc->commands.push_back(new msa::cmd::Command("DELTIMER", "It deletes a timer", "timer-id", cmd_deltimer)),
 		*event = edc;
 		return 0;
 	}
 
 	static int dispose_event_dispatch_context(EventDispatchContext *event)
 	{
-		// it would seem that we should destory our queue mutex here, but
+		// it would seem that we should destory our mutexes here, but
 		// that is instead handled in the edt_cleanup function.
+		auto iter = event->commands.begin();
+		while (iter != event->commands.end())
+		{
+			msa::cmd::Command *c = *iter;
+			iter = event->commands.erase(iter);
+			delete c;
+		}
 		delete event;
 		return 0;
 	}
 
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
-		hdl->event->sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
+		int sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
 		int tick_res = std::stoi(config.get_or("TICK_RESOLUTION", "10"));
+		if (sleep_time <= 0)
+		{
+			throw std::logic_error("IDLE_SLEEP_TIME must be greater than 0");
+		}
+		if (tick_res <= 0)
+		{
+			throw std::logic_error("TICK_RESOLUTION must be greater than 0");
+		}
+		if (tick_res < sleep_time)
+		{
+			throw std::logic_error("TICK_RESOLUTION cannot be less than IDLE_SLEEP_TIME");
+		}
+		hdl->event->sleep_time = sleep_time;
 		hdl->event->tick_resolution = std::chrono::milliseconds(tick_res);
 	}
 
@@ -524,6 +573,81 @@ namespace msa { namespace event {
 		msa::thread::mutex_lock(&msa->event->queue_mutex);
 		msa->event->queue.push(e);
 		msa::thread::mutex_unlock(&msa->event->queue_mutex);
+	}
+
+	static void cmd_timer(msa::Handle hdl, const msa::cmd::ArgList &args, HandlerSync *const UNUSED(sync))
+	{
+		bool recurring = false;
+		size_t cur_arg = 0;
+		recurring = args.size() >= 1 && args[0] == "-r";
+		if (recurring) cur_arg++;
+		if (args.size() < cur_arg + 2)
+		{
+			msa::agent::say(hdl, "You gotta give me a time and a command to execute, $USER_TITLE.");
+			return;
+		}
+		int period = 0;
+		try
+		{
+			period = std::stoi(args[cur_arg]);
+		}
+		catch (std::exception &e)
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + args[cur_arg] + "' isn't a number of milliseconds.");
+			return;
+		}
+		cur_arg++;
+		auto ms = std::chrono::milliseconds(period);
+		std::string cmd_str = "";
+		for (size_t i = cur_arg; i < args.size(); i++)
+		{
+			cmd_str += args[i];
+			if (i + 1 < args.size())
+			{
+				cmd_str += " ";
+			}
+		}
+		std::string plural = ms.count() != 1 ? "s" : "";
+		std::string type = recurring ? "every" : "in";
+		int16_t id = -1;
+		if (recurring)
+		{
+			id = add_timer(hdl, ms, Topic::TEXT_INPUT, wrap(cmd_str));
+		}
+		else
+		{
+			id = delay(hdl, ms, Topic::TEXT_INPUT, wrap(cmd_str));
+		}
+		if (id == -1)
+		{
+			msa::agent::say(hdl, "Oh no! I'm sorry, $USER_TITLE, that didn't work quite right!");
+		}
+		else
+		{
+			msa::agent::say(hdl, "Okay, $USER_TITLE, I will do that " + type + " " + std::to_string(ms.count()) + " millisecond" + plural + "!");
+			msa::agent::say(hdl, "The timer ID is " + std::to_string(id) + ".");
+		}
+	}	
+
+	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ArgList &args, HandlerSync *const UNUSED(sync))
+	{
+		if (args.size() < 1)
+		{
+			msa::agent::say(hdl, "Ahh... $USER_TITLE, I need to know which timer I should delete.");
+			return;
+		}
+		int16_t id = 0;
+		try
+		{
+			id = std::stoi(args[0]);
+		}
+		catch (std::exception &e)
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + args[0] + "' isn't an integer.");
+			return;
+		}
+		remove_timer(hdl, id);
+		msa::agent::say(hdl, "Okay! I stopped timer " + std::to_string(id) + " for you, $USER_TITLE.");
 	}
 
 } }

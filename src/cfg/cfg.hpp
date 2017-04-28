@@ -42,12 +42,14 @@ namespace msa { namespace cfg {
 	class config_error : public std::runtime_error
 	{
 		public:
-			config_error(const std::string &key_arg, const std::string &what_arg);
+			config_error(const std::string &sec, const std::string &key, const std::string &what);
 			virtual const char *what() const;
-			virtual const char *key() const;
+			const char *key() const;
+			const char *sec() const;
 
 		private:
 			const std::string _key;
+			const std::string _section;
 	};
 
 	typedef std::map<std::string, Section> Config;

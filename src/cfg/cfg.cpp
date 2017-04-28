@@ -351,19 +351,25 @@ namespace msa { namespace cfg {
 		}
 	}
 
-	config_error::config_error(const std::string &key_arg, const std::string &what_arg) :
+	config_error::config_error(const std::string &sec, const std::string &key, const std::string &what) :
 		runtime_error(what_arg),
-		_key(key_arg)
+		_key(key),
+		_section(sec)
 	{}
 
 	const char *config_error::what() const
 	{
-		return key() + ": " + runtime_error::what();
+		return section() + "." + key() + ": " + runtime_error::what();
 	}
 
 	const char *config_error::key() const
 	{
 		return _key.c_str();
+	}
+	
+	const char *config_error::section() const
+	{
+		return _section.c_str();
 	}
 
 } }

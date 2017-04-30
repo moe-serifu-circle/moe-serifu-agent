@@ -10,7 +10,25 @@
 
 #include "util/string.hpp"
 
-namespace msa { namespace cfg {
+namespace msa { namespace cfg {	
+
+	class config_error : public std::runtime_error
+	{
+		public:
+			config_error(const std::string &sec, const std::string &key, const std::string &what);
+			config_error(const std::string &sec, const std::string &key, size_t index, const std::string &what);
+			virtual const char *what() const throw();
+			const char *key() const;
+			const char *section() const;
+			size_t index() const;
+
+		private:
+			const std::string _key;
+			const std::string _section;
+			const size_t _index;
+			const bool _explicit_index;
+			mutable std::string _what_cache;
+	};
 
 	/**
 	 * Use the config section like a collection of values (with get_all()), or you can just
@@ -91,7 +109,7 @@ namespace msa { namespace cfg {
 			 */
 			template<class T> const T &get_as(const std::string &key) const
 			{
-				static_assert(std::is_same<std::string, T>::value || std::is_artithmetic<T>::value, "for converting values, only arithmetic types are supported");
+				static_assert(std::is_same<std::string, T>::value || std::is_arithmetic<T>::value, "for converting values, only arithmetic types are supported");
 				std::istringstream ss((*this)[key]);
 				T typed;
 				ss >> typed;
@@ -145,7 +163,7 @@ namespace msa { namespace cfg {
 			 */
 			template<class T> std::vector<T> get_all_as(const std::string &key) const
 			{
-				static_assert(std::is_same<std::string, T>::value || std::is_artithmetic<T>::value, "for converting values, only arithmetic types are supported");
+				static_assert(std::is_same<std::string, T>::value || std::is_arithmetic<T>::value, "for converting values, only arithmetic types are supported");
 				std::vector<T> items;
 				const std::vector<std::string> all = get_all(key);
 				for (auto i = all.begin(); i != all.end(); i++)
@@ -184,24 +202,6 @@ namespace msa { namespace cfg {
 		private:
 			std::string name;
 			std::map<std::string, std::vector<std::string>> entries;
-	};
-
-	class config_error : public std::runtime_error
-	{
-		public:
-			config_error(const std::string &sec, const std::string &key, const std::string &what);
-			config_error(const std::string &sec, const std::string &key, size_t index, const std::string &what);
-			virtual const char *what() const;
-			const char *key() const;
-			const char *section() const;
-			size_t index() const;
-
-		private:
-			const std::string _key;
-			const std::string _section;
-			const size_t _index;
-			const bool _explicit_index;
-			mutable std::string _what_cache;
 	};
 
 	typedef std::map<std::string, Section> Config;

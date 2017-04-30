@@ -354,7 +354,7 @@ namespace msa { namespace cfg {
 		_what_cache()
 	{}
 
-	const char *config_error::what() const
+	const char *config_error::what() const throw()
 	{
 		if (_what_cache.empty())
 		{

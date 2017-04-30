@@ -78,15 +78,28 @@ namespace msa { namespace cfg {
 			/**
 			 * Gets the first index of a key and converts it to the given type.
 			 *
-			 * <T> must be an arithmetic fundamental type.
+			 * <T> must be an arithmetic fundamental type (or std::string).
 			 */
 			template<class T> const T &get_as(const std::string &key) const
 			{
-				static_assert(std::is_artithmetic<T>::value, "for converting values, only arithmetic types are supported");
+				static_assert(std::is_same<std::string, T>::value || std::is_artithmetic<T>::value, "for converting values, only arithmetic types are supported");
 				std::istringstream ss((*this)[key]);
 				T typed;
 				ss >> typed;
 				return typed;
+			}
+
+			/**
+			 * Gets the first index of a key and converts it to the given enum type.
+			 */
+			template<class T> const T get_as_enum(const std::string &key, const std::map<std::string, T> &enum_map) const
+			{
+				std::string val = (*this)[key];
+				if (enum_map.find(val) == enum_map.end())
+				{
+					throw config_error(get_name(), key, "not a valid kind of " + key);
+				}
+				return enum_map[val];
 			}
 
 			/**
@@ -105,9 +118,10 @@ namespace msa { namespace cfg {
 			 *
 			 * <T> must be an arithmetic fundamental type.
 			 */
-			template<class T> void get_all_as(const std::string &key, std::vector<T> &items) const
+			template<class T> std::vector<T> get_all_as(const std::string &key) const
 			{
-				static_assert(std::is_artithmetic<T>::value, "for converting values, only arithmetic types are supported");
+				static_assert(std::is_same<std::string, T>::value || std::is_artithmetic<T>::value, "for converting values, only arithmetic types are supported");
+				std::vector<T> items;
 				const std::vector<std::string> all = get_all(key);
 				for (auto i = all.begin(); i != all.end(); i++)
 				{
@@ -116,6 +130,25 @@ namespace msa { namespace cfg {
 					ss >> typed;
 					items.push_back(typed);
 				}
+				return items;
+			}
+
+			/**
+			 * Gets the values of a key and converts them to the given enum type.
+			 */
+			template<class T> std::vector<T> get_all_as_enum(const std::string &key, const std::map<std::string, T> &enum_map) const
+			{
+				const std::vector<std::string> all = get_all(key);
+				std::vector<T> items;
+				for (size_t i = 0; i < all.size(); i++)
+				{
+					if (enum_map.find(all[i]) == enum_map.end())
+					{
+						throw config_error(get_name(), key, i, "not a valid kind of " + key);
+					}
+					items.push_back(enum_map[val]);
+				}
+				return items;
 			}
 		
 		private:

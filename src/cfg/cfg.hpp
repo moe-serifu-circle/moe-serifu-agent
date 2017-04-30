@@ -114,6 +114,18 @@ namespace msa { namespace cfg {
 			}
 
 			/**
+			 * Gets the first index of a key if it exists. The value is converted to
+			 * the given type by looking up the string value in the mape. If the key does
+			 * not exist, the default value is returned.
+			 *
+			 * <T> must be an arithmetic fundamental type.
+			 */
+			template<class T> const T &get_as_enum_or(const std::string &key, const T &def, const std::map<std::string, T> enum_map) const
+			{
+				return has(key) ? get_as_enum<T>(key, enum_map) : def;
+			}
+
+			/**
 			 * Gets all values of a key. Each value is converted to the given type.
 			 *
 			 * <T> must be an arithmetic fundamental type.

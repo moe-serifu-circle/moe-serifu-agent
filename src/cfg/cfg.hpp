@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "util/string.hpp"
+
 namespace msa { namespace cfg {
 
 	/**
@@ -99,9 +101,13 @@ namespace msa { namespace cfg {
 			/**
 			 * Gets the first index of a key and converts it to the given enum type.
 			 */
-			template<class T> const T get_as_enum(const std::string &key, const std::map<std::string, T> &enum_map) const
+			template<class T> const T get_as_enum(const std::string &key, const std::map<std::string, T> &enum_map, bool case_sensitive = false) const
 			{
 				std::string val = (*this)[key];
+				if (!case_sensitive)
+				{
+					msa::string::to_upper(val);
+				}
 				if (enum_map.find(val) == enum_map.end())
 				{
 					throw config_error(get_name(), key, "not a valid kind of " + key);
@@ -127,9 +133,9 @@ namespace msa { namespace cfg {
 			 *
 			 * <T> must be an arithmetic fundamental type.
 			 */
-			template<class T> const T &get_as_enum_or(const std::string &key, const T &def, const std::map<std::string, T> enum_map) const
+			template<class T> const T &get_as_enum_or(const std::string &key, const T &def, const std::map<std::string, T> enum_map, bool case_sensitive = false) const
 			{
-				return has(key) ? get_as_enum<T>(key, enum_map) : def;
+				return has(key) ? get_as_enum<T>(key, enum_map, case_sensitive) : def;
 			}
 
 			/**
@@ -155,12 +161,17 @@ namespace msa { namespace cfg {
 			/**
 			 * Gets the values of a key and converts them to the given enum type.
 			 */
-			template<class T> std::vector<T> get_all_as_enum(const std::string &key, const std::map<std::string, T> &enum_map) const
+			template<class T> std::vector<T> get_all_as_enum(const std::string &key, const std::map<std::string, T> &enum_map, bool case_sensitive = false) const
 			{
 				const std::vector<std::string> all = get_all(key);
 				std::vector<T> items;
 				for (size_t i = 0; i < all.size(); i++)
 				{
+					std::string val = all[i];
+					if (!case_sensitive)
+					{
+						msa::string::to_upper(val);
+					}
 					if (enum_map.find(all[i]) == enum_map.end())
 					{
 						throw config_error(get_name(), key, i, "not a valid kind of " + key);

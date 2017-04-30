@@ -43,7 +43,7 @@ namespace msa { namespace agent {
 		{
 			read_config(hdl, config);
 		}
-		catch (const std::exception &e)
+		catch (const msa::cfg::config_error &e)
 		{
 			msa::log::error(hdl, "Could not read agent config: " + std::string(e.what()));
 			return -1;
@@ -127,8 +127,8 @@ namespace msa { namespace agent {
 
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
-		std::string name = std::string(config.get_or("NAME", "DEFAULT_NAME"));
-		std::string user_title = std::string(config.get_or("USER_TITLE", "Master"));
+		std::string name = config.get_or("NAME", "DEFAULT_NAME");
+		std::string user_title = config.get_or("USER_TITLE", "Master");
 		hdl->agent->agent = new Agent(name);
 		hdl->agent->user_title = user_title;
 	}

@@ -268,64 +268,32 @@ namespace msa { namespace log {
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
 		// first check for global level
-		std::string gl_level_str = config.get_or("GLOBAL_LEVEL", "INFO");
-		msa::string::to_upper(gl_level_str);
-		if (LEVEL_NAMES.find(gl_level_str) == LEVEL_NAMES.end())
-		{
-			throw std::invalid_argument("'" + gl_level_str + "' is not a valid log level");
-		}
-		hdl->log->level = LEVEL_NAMES[gl_level_str];
+		Level gl_level = config.get_as_enum_or("GLOBAL_LEVEL", Level::INFO, LEVEL_NAMES);
+		hdl->log->level = gl_level;
 		
 		// now check config for individual streams
 		if (config.has("TYPE") && config.has("LOCATION"))
 		{
-			const std::vector<std::string> types = config.get_all("TYPE");
+			const std::vector<StreamType> types = config.get_all_as_enum("TYPE", STREAM_TYPE_NAMES);
 			const std::vector<std::string> locs = config.get_all("LOCATION");
-			const std::vector<std::string> levs = config.has("LEVEL") ? config.get_all("LEVEL") : std::vector<std::string>();
-			const std::vector<std::string> fmts = config.has("FORMAT") ? config.get_all("FORMAT") : std::vector<std::string>();
+			const std::vector<Level> levs = config.has("LEVEL") ? config.get_all_as_enum("LEVEL", LEVEL_NAMES) : std::vector<Level>();
+			const std::vector<Format> fmts = config.has("FORMAT") ? config.get_all_as_enum("FORMAT", FORMAT_NAMES) : std::vector<Format>();
 			const std::vector<std::string> outputs = config.has("OUTPUT") ? config.get_all("OUTPUT") : std::vector<std::string>();
-			const std::vector<std::string> open_modes = config.has("OPEN_MODE") ? config.get_all("OPEN_MODE") : std::vector<std::string>();
+			const std::vector<OpenMode> open_modes = config.has("OPEN_MODE") ? config.get_all_as_enum("OPEN_MODE", OPEN_MODE_NAMES) : std::vector<OpenMode>();
 
 			for (size_t i = 0; i < types.size() && i < locs.size(); i++)
 			{
-				std::string type_str = types[i];
+				StreamType type = types[i];
 				std::string location = locs[i];
-				std::string lev_str = levs.size() > i ? levs[i] : "info";
-				std::string fmt_str = fmts.size() > i ? fmts[i] : "xml";
-				std::string open_mode_str = open_modes.size() > i ? open_modes[i] : "append";
-				
-				msa::string::to_upper(type_str);
-				msa::string::to_upper(lev_str);
-				msa::string::to_upper(fmt_str);
-				msa::string::to_upper(open_mode_str);
-				
-				if (FORMAT_NAMES.find(fmt_str) == FORMAT_NAMES.end())
-				{
-					throw std::invalid_argument("'" + fmt_str + "' is not a valid log format");
-				}
-				if (LEVEL_NAMES.find(lev_str) == LEVEL_NAMES.end())
-				{
-					throw std::invalid_argument("'" + lev_str + "' is not a valid log level");
-				}
-				if (STREAM_TYPE_NAMES.find(type_str) == STREAM_TYPE_NAMES.end())
-				{
-					throw std::invalid_argument("'" + type_str + "' is not a valid log stream type");
-				}
-				if (OPEN_MODE_NAMES.find(open_mode_str) == OPEN_MODE_NAMES.end())
-				{
-					throw std::invalid_argument("'" + open_mode_str + "' is not a valid log open mode");
-				}
-
-				StreamType type = STREAM_TYPE_NAMES[type_str];
-				Level lev = LEVEL_NAMES[lev_str];
-				Format fmt = FORMAT_NAMES[fmt_str];
-				OpenMode open_mode = OPEN_MODE_NAMES[open_mode_str];
-
+				Level lev = levs.size() > i ? levs[i] : Level::INFO;
+				Format fmt = fmts.size() > i ? fmts[i] : Formats::XML;
+				OpenMode open_mode = open_modes.size() > i ? open_modes[i] : OpenMode::APPEND;
 				std::string output;
 				if (fmt == Format::TEXT)
 				{
-					if (outputs.size() <= i) {
-						throw std::invalid_argument("TEXT log format requires OUTPUT parameter");
+					if (outputs.size() <= i)
+					{
+						throw msa::cfg::config_error(config.get_name(), "FORMAT", i, "TEXT log format requires OUTPUT parameter");
 					}
 					output = outputs.at(i);
 				}

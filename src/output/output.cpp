@@ -82,7 +82,7 @@ namespace msa { namespace output {
 		{
 			read_config(hdl, config);
 		}
-		catch (const std::exception &e)
+		catch (const msa::cfg::config_error &e)
 		{
 			msa::log::error(hdl, "Could not read output module config: " + std::string(e.what()));
 			return -3;
@@ -318,22 +318,17 @@ namespace msa { namespace output {
 	{
 		if (config.has("TYPE") && config.has("HANDLER") && config.has("ID"))
 		{
-			const std::vector<std::string> types = config.get_all("TYPE");
+			const std::vector<OutputType> types = config.get_all_as_enum("TYPE", OUTPUT_TYPE_NAMES);
 			const std::vector<std::string> handlers = config.get_all("HANDLER");
 			const std::vector<std::string> ids = config.get_all("ID");
 			for (size_t i = 0; i < types.size() && i < handlers.size() && i < ids.size(); i++)
 			{
-				std::string type_str = types[i];
+				OutputType type = types[i];
 				std::string handler_str = handlers[i];
 				std::string id_str = ids[i];
-				if (OUTPUT_TYPE_NAMES.find(type_str) == OUTPUT_TYPE_NAMES.end())
-				{
-					throw std::invalid_argument("not a valid output device type: " + type_str);
-				}
-				OutputType type = OUTPUT_TYPE_NAMES[type_str];
 				if (!handler_is_registered(hdl, type, handler_str))
 				{
-					throw std::invalid_argument("no OutputType:" + std::to_string(type) + " handler: " + handler_str);
+					throw msa::cfg::config_error(config.get_name(), "HANDLER", i, "no OutputType::" + std::to_string(type) + " handler registered for \"" + handler_str + "\"");
 				}
 				void *id;
 				uint16_t port = 0;

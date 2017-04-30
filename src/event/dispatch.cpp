@@ -123,7 +123,7 @@ namespace msa { namespace event {
 		{
 			read_config(hdl, config);
 		}
-		catch (const std::exception &e)
+		catch (const msa::cfg::config_error &e)
 		{
 			msa::log::error(hdl, "Could not read event config: " + std::string(e.what()));
 			return 1;
@@ -299,20 +299,10 @@ namespace msa { namespace event {
 
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
-		int sleep_time = std::stoi(config.get_or("IDLE_SLEEP_TIME", "10"));
-		int tick_res = std::stoi(config.get_or("TICK_RESOLUTION", "10"));
-		if (sleep_time <= 0)
-		{
-			throw std::logic_error("IDLE_SLEEP_TIME must be greater than 0");
-		}
-		if (tick_res <= 0)
-		{
-			throw std::logic_error("TICK_RESOLUTION must be greater than 0");
-		}
-		if (tick_res < sleep_time)
-		{
-			throw std::logic_error("TICK_RESOLUTION cannot be less than IDLE_SLEEP_TIME");
-		}
+		config.check_range("IDLE_SLEEP_TIME", 1, 1000, false);
+		int sleep_time = config.get_or("IDLE_SLEEP_TIME", 10);
+		config.check_range("TICK_RESOLUTION", 1, sleep_time, false);
+		int tick_res = config.get_or("TICK_RESOLUTION", 10);
 		hdl->event->sleep_time = sleep_time;
 		hdl->event->tick_resolution = std::chrono::milliseconds(tick_res);
 	}
@@ -550,7 +540,7 @@ namespace msa { namespace event {
 		}
 	}
 
-	void *event_start(void *args)
+	static void *event_start(void *args)
 	{
 		msa::Handle hdl = (msa::Handle) args;
 		HandlerContext *ctx = hdl->event->current_handler;

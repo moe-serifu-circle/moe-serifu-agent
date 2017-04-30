@@ -67,9 +67,10 @@ namespace msa { namespace cmd {
 		{
 			read_config(hdl, config);
 		}
-		catch (const std::exception &e)
+		catch (const msa::cfg::config_error &e)
 		{
 			msa::log::error(hdl, "Could not read cmd config: " + std::string(e.what()));
+			return -1;
 		}
 		
 		return 0;

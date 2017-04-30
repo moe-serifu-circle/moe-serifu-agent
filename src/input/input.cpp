@@ -88,7 +88,7 @@ namespace msa { namespace input {
 		{
 			read_config(hdl, config);
 		}
-		catch (const std::exception &e)
+		catch (const msa::cfg::config_error &e)
 		{
 			msa::log::error(hdl, "Could not read input module config: " + std::string(e.what()));
 			return 2;
@@ -246,24 +246,14 @@ namespace msa { namespace input {
 		if (config.has("TYPE") && config.has("ID") && config.has("HANDLER"))
 		{
 			// for each of the configs, read it in
-			const std::vector<std::string> types = config.get_all("TYPE");
+			const std::vector<InputType> types = config.get_all_as_enum("TYPE", INPUT_TYPE_NAMES);
 			const std::vector<std::string> ids = config.get_all("ID");
-			const std::vector<std::string> handlers = config.get_all("HANDLER");
-			for (size_t i = 0; i < types.size() && i < ids.size() && i < handlers.size(); i++)
+			const std::vector<InputHandler*> handlers = config.get_all_as_enum("HANDLER", INPUT_HANDLER_NAMES);
+			for (size_t i = 0; i < std::min(types.size(), ids.size(), handlers.size()); i++)
 			{
 				std::string id = ids[i];
-				std::string type_str = types[i];
-				std::string handler_str = handlers[i];
-				if (INPUT_TYPE_NAMES.find(type_str) == INPUT_TYPE_NAMES.end())
-				{
-					throw std::invalid_argument("'" + type_str + "' is not a valid input type");
-				}
-				if (INPUT_HANDLER_NAMES.find(handler_str) == INPUT_HANDLER_NAMES.end())
-				{
-					throw std::invalid_argument("'" + handler_str + "' is not a valid handler");
-				}
-				InputType type = INPUT_TYPE_NAMES[type_str];
-				InputHandler *handler = INPUT_HANDLER_NAMES[handler_str];
+				InputType type = types[i];
+				InputHandler *handler = handlers[i];
 				hdl->input->handlers[type] = handler;
 				add_device(hdl, type, &id);
 				enable_device(hdl, type_str + ":" + id);

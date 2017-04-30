@@ -270,41 +270,16 @@ namespace msa { namespace cfg {
 
 	Section::Section() : name("") {}
 
-	Section::Section(const char *name) : name(name) {}
-
 	Section::Section(const std::string &name) : name(name) {}
-
-	bool Section::has(const char *key) const
-	{
-		const std::string str = std::string(key);
-		return has(str);
-	}
 
 	bool Section::has(const std::string &key) const
 	{
 		return entries.find(key) != entries.end();
 	}
 
-	const char *Section::get_or(const char *key, const char *def) const
-	{
-		return has(key) ? (*this)[key].c_str() : def;
-	}
-
 	const std::string &Section::get_or(const std::string &key, const std::string &def) const
 	{
 		return has(key) ? (*this)[key] : def;
-	}
-
-	const std::string &Section::operator[](const char *key) const
-	{
-		try
-		{
-			return get_all(key).at(0);
-		}
-		catch (std::out_of_range &e)
-		{
-
-		}
 	}
 
 	const std::string &Section::operator[](const std::string &key) const
@@ -329,14 +304,9 @@ namespace msa { namespace cfg {
 		return entries;
 	}
 
-	const std::vector<std::string> &Section::get_all(const char *key) const
-	{
-		std::string str = std::string(key);
-		return get_all(str);
-	}
-
 	const std::vector<std::string> &Section::get_all(const std::string &key) const
 	{
+		check_exists(key);
 		return entries.at(key);
 	}
 
@@ -358,15 +328,44 @@ namespace msa { namespace cfg {
 		}
 	}
 
+	void Section::check_exists(const std::string &key) const
+	{
+		if (!has(key))
+		{
+			throw config_error(get_name(), key, "key does not exist");
+		}
+	}
+
 	config_error::config_error(const std::string &sec, const std::string &key, const std::string &what) :
 		runtime_error(what_arg),
 		_key(key),
-		_section(sec)
+		_section(sec),
+		_index(0),
+		_explicit_index(false),
+		_what_cache()
+	{}
+
+	config_error::config_error(const std::string &sec, const std::string &key, size_t index, const std::string &what) :
+		runtime_error(what_arg),
+		_key(key),
+		_section(sec),
+		_index(index),
+		_explicit_index(true),
+		_what_cache()
 	{}
 
 	const char *config_error::what() const
 	{
-		return section() + "." + key() + ": " + runtime_error::what();
+		if (_what_cache.empty())
+		{
+			_what_cache = section() + "." + key();
+			if (_explicit_index)
+			{
+				_what_cache += "[" + std::to_string(index) + "]";
+			}
+			_what_cache += ": " + runtime_error::what();
+		}
+		return _what_cache.c_str();
 	}
 
 	const char *config_error::key() const

@@ -36,12 +36,19 @@ namespace msa { namespace cfg {
 			void check_exists(const std::string &key) const;
 
 			/**
-			 * Checks if a key exists, and that the value falls within the given range (inclusive).
+			 * Checks that the value of a key falls within the given range (inclusive). If check_exists is set to
+			 * false, the key not existing will not cause an exception to be thrown.
 			 *
 			 * <T> must be an arithmetic fundamental type.
+			 *
+			 * If default not set, the key not existing will cause an exception.
 			 */
-			template<class T> void check_range(const std::string &key, const T &min, const T &max) const
+			template<class T> void check_range(const std::string &key, const T &min, const T &max, bool check_exists = true) const
 			{
+				if (!check_exists && !has(key))
+				{
+					return;
+				}
 				T typed = get_as<T>(key);
 				if (typed < min)
 				{

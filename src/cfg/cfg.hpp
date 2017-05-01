@@ -107,7 +107,7 @@ namespace msa { namespace cfg {
 			 *
 			 * <T> must be an arithmetic fundamental type (or std::string).
 			 */
-			template<class T> const T &get_as(const std::string &key) const
+			template<class T> T get_as(const std::string &key) const
 			{
 				static_assert(std::is_same<std::string, T>::value || std::is_arithmetic<T>::value, "for converting values, only arithmetic types are supported");
 				std::istringstream ss((*this)[key]);
@@ -119,7 +119,7 @@ namespace msa { namespace cfg {
 			/**
 			 * Gets the first index of a key and converts it to the given enum type.
 			 */
-			template<class T> const T get_as_enum(const std::string &key, const std::map<std::string, T> &enum_map, bool case_sensitive = false) const
+			template<class T> T get_as_enum(const std::string &key, const std::map<std::string, T> &enum_map, bool case_sensitive = false) const
 			{
 				std::string val = (*this)[key];
 				if (!case_sensitive)
@@ -130,7 +130,7 @@ namespace msa { namespace cfg {
 				{
 					throw config_error(get_name(), key, "not a valid kind of " + key);
 				}
-				return enum_map[val];
+				return enum_map.at(val);
 			}
 
 			/**
@@ -139,7 +139,7 @@ namespace msa { namespace cfg {
 			 *
 			 * <T> must be an arithmetic fundamental type.
 			 */
-			template<class T> const T &get_or(const std::string &key, const T &def) const
+			template<class T> T get_or(const std::string &key, const T &def) const
 			{
 				return has(key) ? get_as<T>(key) : def;
 			}
@@ -151,7 +151,7 @@ namespace msa { namespace cfg {
 			 *
 			 * <T> must be an arithmetic fundamental type.
 			 */
-			template<class T> const T &get_as_enum_or(const std::string &key, const T &def, const std::map<std::string, T> enum_map, bool case_sensitive = false) const
+			template<class T> T get_as_enum_or(const std::string &key, const T &def, const std::map<std::string, T> enum_map, bool case_sensitive = false) const
 			{
 				return has(key) ? get_as_enum<T>(key, enum_map, case_sensitive) : def;
 			}
@@ -194,7 +194,7 @@ namespace msa { namespace cfg {
 					{
 						throw config_error(get_name(), key, i, "not a valid kind of " + key);
 					}
-					items.push_back(enum_map[val]);
+					items.push_back(enum_map.at(val));
 				}
 				return items;
 			}

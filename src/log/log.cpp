@@ -286,7 +286,7 @@ namespace msa { namespace log {
 				StreamType type = types[i];
 				std::string location = locs[i];
 				Level lev = levs.size() > i ? levs[i] : Level::INFO;
-				Format fmt = fmts.size() > i ? fmts[i] : Formats::XML;
+				Format fmt = fmts.size() > i ? fmts[i] : Format::XML;
 				OpenMode open_mode = open_modes.size() > i ? open_modes[i] : OpenMode::APPEND;
 				std::string output;
 				if (fmt == Format::TEXT)

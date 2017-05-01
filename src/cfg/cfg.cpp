@@ -277,11 +277,6 @@ namespace msa { namespace cfg {
 		return entries.find(key) != entries.end();
 	}
 
-	const std::string &Section::get_or(const std::string &key, const std::string &def) const
-	{
-		return has(key) ? (*this)[key] : def;
-	}
-
 	const std::string &Section::operator[](const std::string &key) const
 	{
 		return get_all(key).at(0);
@@ -337,7 +332,7 @@ namespace msa { namespace cfg {
 	}
 
 	config_error::config_error(const std::string &sec, const std::string &key, const std::string &what) :
-		runtime_error(what_arg),
+		runtime_error(what),
 		_key(key),
 		_section(sec),
 		_index(0),
@@ -346,7 +341,7 @@ namespace msa { namespace cfg {
 	{}
 
 	config_error::config_error(const std::string &sec, const std::string &key, size_t index, const std::string &what) :
-		runtime_error(what_arg),
+		runtime_error(what),
 		_key(key),
 		_section(sec),
 		_index(index),
@@ -358,12 +353,12 @@ namespace msa { namespace cfg {
 	{
 		if (_what_cache.empty())
 		{
-			_what_cache = section() + "." + key();
+			_what_cache = std::string(section()) + "." + key();
 			if (_explicit_index)
 			{
-				_what_cache += "[" + std::to_string(index) + "]";
+				_what_cache += std::string("[") + std::to_string(index()) + std::string("]");
 			}
-			_what_cache += ": " + runtime_error::what();
+			_what_cache += std::string(": ") + runtime_error::what();
 		}
 		return _what_cache.c_str();
 	}
@@ -376,6 +371,11 @@ namespace msa { namespace cfg {
 	const char *config_error::section() const
 	{
 		return _section.c_str();
+	}
+
+	size_t config_error::index() const
+	{
+		return _index;
 	}
 
 } }

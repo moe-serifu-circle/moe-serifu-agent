@@ -127,8 +127,8 @@ namespace msa { namespace agent {
 
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
-		std::string name = config.get_or("NAME", "DEFAULT_NAME");
-		std::string user_title = config.get_or("USER_TITLE", "Master");
+		std::string name = config.get_or<std::string>("NAME", "DEFAULT_NAME");
+		std::string user_title = config.get_or<std::string>("USER_TITLE", "Master");
 		hdl->agent->agent = new Agent(name);
 		hdl->agent->user_title = user_title;
 	}

@@ -130,7 +130,7 @@ namespace msa { namespace cmd {
 
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config)
 	{
-		std::string startup_cmd = config.get_or("STARTUP", "echo I'd like to announce my presence!");
+		std::string startup_cmd = config.get_or<std::string>("STARTUP", "echo I'd like to announce my presence!");
 		msa::event::generate(hdl, msa::event::Topic::TEXT_INPUT, msa::event::wrap(startup_cmd));
 	}
 

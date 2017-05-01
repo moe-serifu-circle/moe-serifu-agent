@@ -29,6 +29,7 @@ namespace msa { namespace input {
 	} InputHandler;
 
 	static std::map<std::string, InputType> INPUT_TYPE_NAMES;
+	static std::map<InputType, std::string> INPUT_TYPE_STRS;
 	static std::map<std::string, InputHandler *> INPUT_HANDLER_NAMES;
 
 	struct device_type
@@ -223,6 +224,12 @@ namespace msa { namespace input {
 			INPUT_TYPE_NAMES["TCP"] = InputType::TCP;
 			INPUT_TYPE_NAMES["TTY"] = InputType::TTY;
 		}
+		if (INPUT_TYPE_STRS.empty())
+		{
+			INPUT_TYPE_STRS[InputType::UDP] = "UDP";
+			INPUT_TYPE_STRS[InputType::TCP] = "TCP";
+			INPUT_TYPE_STRS[InputType::TTY] = "TTY";
+		}
 		if (INPUT_HANDLER_NAMES.empty())
 		{
 			INPUT_HANDLER_NAMES["get_tty_input"] = new InputHandler {get_tty_input, tty_ready};
@@ -232,8 +239,7 @@ namespace msa { namespace input {
 
 	static int destroy_static_resources()
 	{
-		std::map<std::string, InputHandler *>::iterator it;
-		for (it = INPUT_HANDLER_NAMES.begin(); it != INPUT_HANDLER_NAMES.end(); it++)
+		for (auto it = INPUT_HANDLER_NAMES.begin(); it != INPUT_HANDLER_NAMES.end(); it++)
 		{
 			delete it->second;
 		}
@@ -249,14 +255,14 @@ namespace msa { namespace input {
 			const std::vector<InputType> types = config.get_all_as_enum("TYPE", INPUT_TYPE_NAMES);
 			const std::vector<std::string> ids = config.get_all("ID");
 			const std::vector<InputHandler*> handlers = config.get_all_as_enum("HANDLER", INPUT_HANDLER_NAMES);
-			for (size_t i = 0; i < std::min(types.size(), ids.size(), handlers.size()); i++)
+			for (size_t i = 0; i < types.size() && i < ids.size() && i < handlers.size(); i++)
 			{
 				std::string id = ids[i];
 				InputType type = types[i];
 				InputHandler *handler = handlers[i];
 				hdl->input->handlers[type] = handler;
 				add_device(hdl, type, &id);
-				enable_device(hdl, type_str + ":" + id);
+				enable_device(hdl, INPUT_TYPE_STRS[type] + ":" + id);
 			}
 		}
 	}

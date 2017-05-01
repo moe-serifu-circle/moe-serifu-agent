@@ -53,6 +53,7 @@ namespace msa { namespace output {
 	};
 
 	static std::map<std::string, OutputType> OUTPUT_TYPE_NAMES;
+	static std::map<OutputType, std::string> OUTPUT_TYPE_STRS;
 	static OutputHandler *default_stdout_handler = NULL;
 
 	static void print_to_stdout(msa::Handle hdl, const Chunk *chunk, Device *dev);
@@ -149,7 +150,7 @@ namespace msa { namespace output {
 		if (!handler_is_registered(hdl, type, handler_id))
 		{
 			msa::thread::mutex_unlock(ctx->state_mutex);
-			throw std::logic_error("handler does not exist for output type " + std::to_string(type) + ": " + handler_id);
+			throw std::logic_error("handler does not exist for output type " + OUTPUT_TYPE_STRS[type] + ": " + handler_id);
 		}
 		Device *dev;
 		create_device(&dev, type, ctx->handlers[type][handler_id], device_id);
@@ -278,7 +279,7 @@ namespace msa { namespace output {
 		TypedHandlerMap &typed_handlers = handlers[type];
 		if (typed_handlers.find(handler->name) != typed_handlers.end())
 		{
-			throw std::logic_error("output handler already exists: " + std::to_string(type) + "/" + handler->name);
+			throw std::logic_error("output handler already exists: " + OUTPUT_TYPE_STRS[type] + "/" + handler->name);
 		}
 		typed_handlers[handler->name] = handler;
 	}
@@ -328,7 +329,7 @@ namespace msa { namespace output {
 				std::string id_str = ids[i];
 				if (!handler_is_registered(hdl, type, handler_str))
 				{
-					throw msa::cfg::config_error(config.get_name(), "HANDLER", i, handler_str, "no OutputType::" + std::to_string(type) + " handler registered as that");
+					throw msa::cfg::config_error(config.get_name(), "HANDLER", i, handler_str, "no OutputType::" + OUTPUT_TYPE_STRS[type] + " handler registered as that");
 				}
 				void *id;
 				uint16_t port = 0;
@@ -405,7 +406,7 @@ namespace msa { namespace output {
 
 			default:
 				delete dev;
-				throw std::invalid_argument("unknown output type: " + std::to_string(type));
+				throw std::invalid_argument("unknown output type: " + std::to_string(static_cast<int>(type)));
 				break;
 		}
 		*dev_ptr = dev;
@@ -500,6 +501,12 @@ namespace msa { namespace output {
 			OUTPUT_TYPE_NAMES["UDP"] = OutputType::UDP;
 			OUTPUT_TYPE_NAMES["TCP"] = OutputType::TCP;
 			OUTPUT_TYPE_NAMES["TTY"] = OutputType::TTY;
+		}
+		if (OUTPUT_TYPE_STRS.empty())
+		{
+			OUTPUT_TYPE_STRS[OutputType::UDP] = "UDP";
+			OUTPUT_TYPE_STRS[OutputType::TCP] = "TCP";
+			OUTPUT_TYPE_STRS[OutputType::TTY] = "TTY";
 		}
 		return 0;
 	}

@@ -292,7 +292,7 @@ namespace msa { namespace input {
 
 			default:
 				delete dev;
-				throw std::invalid_argument("unknown input type: " + std::to_string(type));
+				throw std::invalid_argument("unknown input type: " + std::to_string(static_cast<int>(type)));
 				break;
 		}
 		*dev_ptr = dev;
@@ -369,7 +369,7 @@ namespace msa { namespace input {
 		{
 			dev->running = false;
 			disable_device(hdl, dev->id);
-			throw std::logic_error("no handler for input device type " + std::to_string(dev->type));
+			throw std::logic_error("no handler for input device type " + std::to_string(static_cast<int>(dev->type)));
 		}
 		return hdl->input->handlers[dev->type];
 	}

@@ -140,7 +140,7 @@ namespace msa { namespace log {
 		else
 		{
 			dispose_log_stream(s);
-			throw std::invalid_argument("unknown log stream type: " + std::to_string(s->type));
+			throw std::invalid_argument("unknown log stream type: " + std::to_string(static_cast<int>(s->type)));
 		}
 
 		hdl->log->streams.push_back(s);

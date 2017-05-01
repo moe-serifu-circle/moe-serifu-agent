@@ -7,11 +7,12 @@
 
 namespace msa { namespace event {
 
-	typedef enum topic_type {
+	enum class Topic
+	{
 		#define MSA_EVENT_TOPIC(enum_name, priority)		enum_name,
 		#include "event/topics.hpp"
 		#undef MSA_EVENT_TOPIC
-	} Topic;
+	};
 
 	// wraps the actual event args so that users of the event API do not have to manually provide
 	// move, copy, and delete operators for every actual type of event args unless they wish to

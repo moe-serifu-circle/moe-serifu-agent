@@ -9,21 +9,41 @@
 
 namespace msa { namespace log {
 
-	typedef enum stream_type_type { FILE } StreamType;
+	enum class StreamType
+	{
+		FILE
+	};
 
 	// we have a constant named "DEBUG"; turn off that macro if it's on
 	#ifdef DEBUG
 		#define DEBUG_TEMP_OFF
 		#undef DEBUG
 	#endif
-	typedef enum level_type { TRACE, DEBUG, INFO, WARN, ERROR } Level;
+	enum class Level
+	{
+		TRACE,
+		DEBUG,
+		INFO,
+		WARN,
+		ERROR
+	};
 	#ifdef DEBUG_TEMP_OFF
 		#undef DEBUG_TEMP_OFF
 		#define DEBUG
 	#endif
 
-	typedef enum format_type { TEXT, XML } Format;
-	typedef enum open_mode_type { OVERWRITE, APPEND } OpenMode;
+	enum class Format
+	{
+		TEXT,
+		XML
+	};
+	
+	enum class OpenMode
+	{
+		OVERWRITE,
+		APPEND
+	};
+	
 	typedef size_t stream_id;
 
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config);

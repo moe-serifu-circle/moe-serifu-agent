@@ -52,7 +52,8 @@ namespace msa { namespace event {
 
 	static const struct topic_attr *get_topic_attr(Topic t)
 	{
-		if (t > max_topic_index() || t < 0)
+		int t_val = static_cast<int>(t);
+		if (t_val > max_topic_index() || t_val < 0)
 		{
 			throw std::invalid_argument("unknown topic; did you add the topic to the attr table?");
 		}
@@ -85,6 +86,6 @@ namespace msa { namespace event {
 		#define MSA_EVENT_TOPIC(enum_name, priority)		if (t == Topic::enum_name) return #enum_name;
 		#include "event/topics.hpp"
 		#undef MSA_EVENT_TOPIC
-		return std::to_string(t);
+		return std::to_string(static_cast<int>(t));
 	}
 } }

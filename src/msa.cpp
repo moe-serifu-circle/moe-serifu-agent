@@ -26,7 +26,8 @@ namespace msa {
 	static int init_module(Handle hdl, msa::cfg::Config *conf, ModInitFunc init_func, const std::string &name);
 	static int setup_module(Handle hdl, ModFunc setup_func, const std::string &name);
 	static int quit_module(Handle msa, void **mod, ModFunc quit_func, const std::string &log_name);
-	static int teardown_module(Handle hdl, ModFunc teardown_func, const std::string &name);
+	static int teardown_module(Handle hdl, void **mod, ModFunc teardown_func, const std::string &name);
+	static int stop(Handle hdl, int retcode);
 
 	static const msa::cfg::Section blank_section("");
 	
@@ -95,27 +96,7 @@ namespace msa {
 
 	extern int stop(Handle msa)
 	{
-		msa::log::info(msa, "Moe Serifu Agent is now shutting down...");
-		
-		// teardown; order does not matter here
-		if (teardown_module(msa, msa::plugin::teardown, "Plugin") != 0) return MSA_ERR_PLUGIN;
-		if (teardown_module(msa, msa::event::teardown, "Event") != 0) return MSA_ERR_EVENT;
-		
-		// modules are torn down, now quit them; order matters
-		if (quit_module(msa, (void **) &msa->plugin, msa::plugin::quit, "Plugin") != 0) return MSA_ERR_PLUGIN;
-		if (quit_module(msa, (void **) &msa->input, msa::input::quit, "Input") != 0) return MSA_ERR_INPUT;
-		if (quit_module(msa, (void **) &msa->agent, msa::agent::quit, "Agent") != 0) return MSA_ERR_AGENT;
-		if (quit_module(msa, (void **) &msa->cmd, msa::cmd::quit, "Command") != 0) return MSA_ERR_CMD;
-		if (quit_module(msa, (void **) &msa->event, msa::event::quit, "Event") != 0) return MSA_ERR_EVENT;
-		if (quit_module(msa, (void **) &msa->output, msa::output::quit, "Output") != 0) return MSA_ERR_OUTPUT;
-		
-		msa::log::info(msa, "Moe Serifu Agent primary modules shutdown cleanly");
-		
-		// shutdown log module last
-		if (quit_module(msa, (void **) &msa->log, msa::log::quit, "") != 0) return MSA_ERR_LOG;
-		
-		msa->status = msa::Status::STOPPED;
-		return MSA_SUCCESS;
+		return stop(msa, 0);
 	}
 
 	extern int dispose(Handle msa)
@@ -160,6 +141,34 @@ namespace msa {
 		return MSA_SUCCESS;
 	}
 
+	static int stop(Handle msa, int retcode)
+	{
+		msa::log::info(msa, "Moe Serifu Agent is now shutting down...");
+		
+		// teardown; order does not matter here. Skip if non-normal shutdown
+		if (retcode == 0)
+		{
+			if (teardown_module(msa, (void **) &msa->plugin, msa::plugin::teardown, "Plugin") != 0) return MSA_ERR_PLUGIN;
+			if (teardown_module(msa, (void **) &msa->event, msa::event::teardown, "Event") != 0) return MSA_ERR_EVENT;
+		}
+		
+		// modules are torn down, now quit them; order matters
+		if (quit_module(msa, (void **) &msa->plugin, msa::plugin::quit, "Plugin") != 0) return MSA_ERR_PLUGIN;
+		if (quit_module(msa, (void **) &msa->input, msa::input::quit, "Input") != 0) return MSA_ERR_INPUT;
+		if (quit_module(msa, (void **) &msa->agent, msa::agent::quit, "Agent") != 0) return MSA_ERR_AGENT;
+		if (quit_module(msa, (void **) &msa->cmd, msa::cmd::quit, "Command") != 0) return MSA_ERR_CMD;
+		if (quit_module(msa, (void **) &msa->event, msa::event::quit, "Event") != 0) return MSA_ERR_EVENT;
+		if (quit_module(msa, (void **) &msa->output, msa::output::quit, "Output") != 0) return MSA_ERR_OUTPUT;
+		
+		msa::log::info(msa, "Moe Serifu Agent primary modules shutdown cleanly");
+		
+		// shutdown log module last
+		if (quit_module(msa, (void **) &msa->log, msa::log::quit, "") != 0) return MSA_ERR_LOG;
+		
+		msa->status = msa::Status::STOPPED;
+		return MSA_SUCCESS;
+	}
+
 	static const msa::cfg::Section &get_module_section(msa::cfg::Config *conf, const std::string &name)
 	{
 		if (conf->find(name) != conf->end())
@@ -182,7 +191,7 @@ namespace msa {
 		{
 			msa::log::error(hdl, "Failed to setup " + lower_name + " module");
 			msa::log::debug(hdl, name + " module's setup() returned " + std::to_string(ret));
-			stop(hdl);
+			stop(hdl, ret);
 			dispose(hdl);
 			return ret;
 		}
@@ -190,21 +199,27 @@ namespace msa {
 		return ret;
 	}
 	
-	static int teardown_module(Handle hdl, ModFunc teardown_func, const std::string &name)
+	static int teardown_module(Handle hdl, void **mod, ModFunc teardown_func, const std::string &name)
 	{
 		std::string lower_name = name;
 		msa::string::to_lower(lower_name);
 		
-		int ret = teardown_func(hdl);
-		if (ret != 0)
+		int ret = 0;
+		if (*mod != NULL)
 		{
-			msa::log::error(hdl, "Failed to tear down " + lower_name + " module");
-			msa::log::debug(hdl, name + " module's teardown() returned " + std::to_string(ret));
-			stop(hdl);
-			dispose(hdl);
-			return ret;
+			int ret = teardown_func(hdl);
+			if (ret != 0)
+			{
+				msa::log::error(hdl, "Failed to tear down " + lower_name + " module");
+				msa::log::debug(hdl, name + " module's teardown() returned " + std::to_string(ret));
+				return ret;
+			}
+			msa::log::trace(hdl, "Tore down " + lower_name + " module");
 		}
-		msa::log::trace(hdl, "Tore down " + lower_name + " module");
+		else
+		{
+			msa::log::trace(hdl, name + " module not started, no need to teardown");
+		}
 		return ret;
 	}
 	
@@ -225,7 +240,7 @@ namespace msa {
 				msa::log::error(hdl, "Failed to start " + lower_name + " module");
 				msa::log::debug(hdl, name + " module's init() returned " + std::to_string(ret));
 			}
-			stop(hdl);
+			stop(hdl, ret);
 			dispose(hdl);
 			return ret;
 		}

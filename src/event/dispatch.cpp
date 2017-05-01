@@ -149,6 +149,7 @@ namespace msa { namespace event {
 			msa::log::warn(msa, "EDT has not yet set status to RUNNING! Killing anyways");
 			msa::thread::mutex_destroy(&msa->event->queue_mutex);
 			dispose_event_dispatch_context(msa->event);
+			return 0;
 		}
 		// if the quit was initiated by the current event thread,
 		// we must mark it as such so that the EDT knows not to

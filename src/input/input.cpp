@@ -254,7 +254,7 @@ namespace msa { namespace input {
 			// for each of the configs, read it in
 			const std::vector<InputType> types = config.get_all_as_enum("TYPE", INPUT_TYPE_NAMES);
 			const std::vector<std::string> ids = config.get_all("ID");
-			const std::vector<InputHandler*> handlers = config.get_all_as_enum("HANDLER", INPUT_HANDLER_NAMES);
+			const std::vector<InputHandler*> handlers = config.get_all_as_enum("HANDLER", INPUT_HANDLER_NAMES, true);
 			for (size_t i = 0; i < types.size() && i < ids.size() && i < handlers.size(); i++)
 			{
 				std::string id = ids[i];

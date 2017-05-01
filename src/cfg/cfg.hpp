@@ -111,7 +111,7 @@ namespace msa { namespace cfg {
 			 */
 			template<class T> T get_as(const std::string &key) const
 			{
-				static_assert(std::is_same<std::string, T>::value || std::is_arithmetic<T>::value, "for converting values, only arithmetic types are supported");
+				static_assert(std::is_arithmetic<T>::value, "for converting values, only arithmetic types are supported");
 				std::istringstream ss((*this)[key]);
 				T typed;
 				ss >> typed;
@@ -165,7 +165,7 @@ namespace msa { namespace cfg {
 			 */
 			template<class T> std::vector<T> get_all_as(const std::string &key) const
 			{
-				static_assert(std::is_same<std::string, T>::value || std::is_arithmetic<T>::value, "for converting values, only arithmetic types are supported");
+				static_assert(std::is_arithmetic<T>::value, "for converting values, only arithmetic types are supported");
 				std::vector<T> items;
 				const std::vector<std::string> all = get_all(key);
 				for (auto i = all.begin(); i != all.end(); i++)
@@ -205,6 +205,8 @@ namespace msa { namespace cfg {
 			std::string name;
 			std::map<std::string, std::vector<std::string>> entries;
 	};
+	template<> std::string Section::get_as<std::string>(const std::string &key) const;
+	template<> std::vector<std::string> Section::get_all_as<std::string>(const std::string &key) const;
 
 	typedef std::map<std::string, Section> Config;
 

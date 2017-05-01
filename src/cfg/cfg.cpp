@@ -330,6 +330,16 @@ namespace msa { namespace cfg {
 			throw config_error(get_name(), key, "", "key does not exist");
 		}
 	}
+	
+	template<> std::string Section::get_as<std::string>(const std::string &key) const
+	{
+		return (*this)[key];
+	}
+	
+	template<> std::vector<std::string> Section::get_all_as<std::string>(const std::string &key) const
+	{
+		return std::vector<std::string>(get_all(key));
+	}
 
 	config_error::config_error(const std::string &sec, const std::string &key, const std::string &val, const std::string &what) :
 		runtime_error(what),

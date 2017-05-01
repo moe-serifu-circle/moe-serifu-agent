@@ -19,6 +19,12 @@ namespace msa { namespace string {
 	extern bool ends_with(const String &str, const String &suffix);
 	extern bool starts_with(const String &str, const String &prefix);
 
+#ifdef DEBUG
+	// only included for use with gdb in an environment where it doesn't have std::string's
+	// complete type
+	extern const char *dump(const String &str);
+#endif
+
 } }
 
 #endif

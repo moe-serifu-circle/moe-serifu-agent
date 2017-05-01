@@ -107,5 +107,12 @@ namespace msa { namespace string {
 		return (str.compare(0, prefix.size(), prefix) == 0);
 	}
 
+#ifdef DEBUG
+	extern const char *dump(const String &str)
+	{
+		return str.c_str();
+	}
+#endif
+
 } }
 

@@ -302,7 +302,7 @@ namespace msa { namespace event {
 	{
 		config.check_range("IDLE_SLEEP_TIME", 1, 1000, false);
 		int sleep_time = config.get_or("IDLE_SLEEP_TIME", 10);
-		config.check_range("TICK_RESOLUTION", 1, sleep_time, false);
+		config.check_range("TICK_RESOLUTION", sleep_time, 1000, false);
 		int tick_res = config.get_or("TICK_RESOLUTION", 10);
 		hdl->event->sleep_time = sleep_time;
 		hdl->event->tick_resolution = std::chrono::milliseconds(tick_res);

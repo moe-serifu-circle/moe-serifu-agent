@@ -190,7 +190,7 @@ namespace msa { namespace cfg {
 					{
 						msa::string::to_upper(val);
 					}
-					if (enum_map.find(all[i]) == enum_map.end())
+					if (enum_map.find(val) == enum_map.end())
 					{
 						throw config_error(get_name(), key, i, "not a valid kind of " + key);
 					}

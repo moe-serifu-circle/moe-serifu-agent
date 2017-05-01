@@ -328,7 +328,7 @@ namespace msa { namespace output {
 				std::string id_str = ids[i];
 				if (!handler_is_registered(hdl, type, handler_str))
 				{
-					throw msa::cfg::config_error(config.get_name(), "HANDLER", i, "no OutputType::" + std::to_string(type) + " handler registered for \"" + handler_str + "\"");
+					throw msa::cfg::config_error(config.get_name(), "HANDLER", i, handler_str, "no OutputType::" + std::to_string(type) + " handler registered as that");
 				}
 				void *id;
 				uint16_t port = 0;

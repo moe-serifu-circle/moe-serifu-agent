@@ -327,24 +327,26 @@ namespace msa { namespace cfg {
 	{
 		if (!has(key))
 		{
-			throw config_error(get_name(), key, "key does not exist");
+			throw config_error(get_name(), key, "", "key does not exist");
 		}
 	}
 
-	config_error::config_error(const std::string &sec, const std::string &key, const std::string &what) :
+	config_error::config_error(const std::string &sec, const std::string &key, const std::string &val, const std::string &what) :
 		runtime_error(what),
 		_key(key),
 		_section(sec),
 		_index(0),
+		_value(val),
 		_explicit_index(false),
 		_what_cache()
 	{}
 
-	config_error::config_error(const std::string &sec, const std::string &key, size_t index, const std::string &what) :
+	config_error::config_error(const std::string &sec, const std::string &key, size_t index, const std::string &val, const std::string &what) :
 		runtime_error(what),
 		_key(key),
 		_section(sec),
 		_index(index),
+		_value(val),
 		_explicit_index(true),
 		_what_cache()
 	{}
@@ -358,7 +360,7 @@ namespace msa { namespace cfg {
 			{
 				_what_cache += std::string("[") + std::to_string(index()) + std::string("]");
 			}
-			_what_cache += std::string(": ") + runtime_error::what();
+			_what_cache += std::string(" \"") + value() + "\" " + runtime_error::what();
 		}
 		return _what_cache.c_str();
 	}
@@ -371,6 +373,11 @@ namespace msa { namespace cfg {
 	const char *config_error::section() const
 	{
 		return _section.c_str();
+	}
+
+	const char *config_error::value() const
+	{
+		return _value.c_str();
 	}
 
 	size_t config_error::index() const

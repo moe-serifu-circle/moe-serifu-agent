@@ -293,7 +293,7 @@ namespace msa { namespace log {
 				{
 					if (outputs.size() <= i)
 					{
-						throw msa::cfg::config_error(config.get_name(), "FORMAT", i, "TEXT log format requires OUTPUT parameter");
+						throw msa::cfg::config_error(config.get_name(), "FORMAT", i, "TEXT", "log format requires OUTPUT parameter");
 					}
 					output = outputs.at(i);
 				}

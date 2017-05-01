@@ -15,10 +15,11 @@ namespace msa { namespace cfg {
 	class config_error : public std::runtime_error
 	{
 		public:
-			config_error(const std::string &sec, const std::string &key, const std::string &what);
-			config_error(const std::string &sec, const std::string &key, size_t index, const std::string &what);
+			config_error(const std::string &sec, const std::string &key, const std::string &val, const std::string &what);
+			config_error(const std::string &sec, const std::string &key, size_t index, const std::string &val, const std::string &what);
 			virtual const char *what() const throw();
 			const char *key() const;
+			const char *value() const;
 			const char *section() const;
 			size_t index() const;
 
@@ -26,6 +27,7 @@ namespace msa { namespace cfg {
 			const std::string _key;
 			const std::string _section;
 			const size_t _index;
+			const std::string _value;
 			const bool _explicit_index;
 			mutable std::string _what_cache;
 	};
@@ -72,11 +74,11 @@ namespace msa { namespace cfg {
 				T typed = get_as<T>(key);
 				if (typed < min)
 				{
-					throw config_error(get_name(), key, "must be greater than or equal to " + std::to_string(min));
+					throw config_error(get_name(), key, (*this)[key], "must be greater than or equal to " + std::to_string(min));
 				}
 				if (typed > max)
 				{
-					throw config_error(get_name(), key, "must be less than or equal to " + std::to_string(min));
+					throw config_error(get_name(), key, (*this)[key], "must be less than or equal to " + std::to_string(min));
 				}
 			}
 
@@ -93,11 +95,11 @@ namespace msa { namespace cfg {
 				{
 					if (items.at(i) < min)
 					{
-						throw config_error(get_name(), key, i, "must be greater than or equal to " + std::to_string(min));
+						throw config_error(get_name(), key, i, (*this)[key], "must be greater than or equal to " + std::to_string(min));
 					}
 					if (items.at(i) > max)
 					{
-						throw config_error(get_name(), key, i, "must be less than or equal to " + std::to_string(min));
+						throw config_error(get_name(), key, i, (*this)[key], "must be less than or equal to " + std::to_string(min));
 					}
 				}
 			}
@@ -128,7 +130,7 @@ namespace msa { namespace cfg {
 				}
 				if (enum_map.find(val) == enum_map.end())
 				{
-					throw config_error(get_name(), key, "not a valid kind of " + key);
+					throw config_error(get_name(), key, (*this)[key], "not a valid kind of " + key);
 				}
 				return enum_map.at(val);
 			}
@@ -192,7 +194,7 @@ namespace msa { namespace cfg {
 					}
 					if (enum_map.find(val) == enum_map.end())
 					{
-						throw config_error(get_name(), key, i, "not a valid kind of " + key);
+						throw config_error(get_name(), key, i, (*this)[key], "not a valid kind of " + key);
 					}
 					items.push_back(enum_map.at(val));
 				}

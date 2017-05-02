@@ -232,9 +232,9 @@ namespace msa { namespace cmd {
 		else
 		{
 			const Command *cmd = ctx->commands[cmd_name];
-			ParamList params(tokens, cmd->options);
 			try
 			{
+				ParamList params(tokens, cmd->options);
 				cmd->handler(hdl, params, sync);
 			}
 			catch (const std::exception &e)

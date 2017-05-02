@@ -28,15 +28,15 @@ namespace msa { namespace cmd {
 	static int dispose_command_context(CommandContext *ctx);
 
 	// handlers
-	static void help_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
-	static void echo_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
-	static void kill_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
+	static void help_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
+	static void echo_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
+	static void kill_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
 	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
 	static void register_default_commands(msa::Handle hdl);
 	static void unregister_default_commands(msa::Handle hdl);
 	
-	static const struct command_type default_commands[] = {
+	static const Command default_commands[] = {
 		{"KILL", "It shuts down this MSA instance", "", kill_func},
 		{"ECHO", "It outputs its arguments", "echo-args...", echo_func},
 		{"HELP", "With no args, it lists all commands. Otherwise, it displays the help", "[command]", help_func}
@@ -148,7 +148,7 @@ namespace msa { namespace cmd {
 		return 0;
 	}
 
-	static void kill_func(msa::Handle hdl, const ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
+	static void kill_func(msa::Handle hdl, const ParamList & UNUSED(params), msa::event::HandlerSync *const UNUSED(sync))
 	{
 		msa::agent::say(hdl, "Right away, $USER_TITLE, I will terminate my EDT for you now!");
 		int status = msa::stop(hdl);
@@ -158,12 +158,12 @@ namespace msa { namespace cmd {
 		}
 	}
 	
-	static void help_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	static void help_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		CommandContext *ctx = hdl->cmd;
-		if (args.size() > 0)
+		if (params.arg_count() > 0)
 		{
-			std::string cmd_name = args[0];
+			std::string cmd_name = params[0];
 			msa::string::to_upper(cmd_name);
 			if (ctx->commands.find(cmd_name) == ctx->commands.end())
 			{
@@ -195,14 +195,13 @@ namespace msa { namespace cmd {
 		}
 	}
 	
-	static void echo_func(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	static void echo_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
-		std::vector<std::string>::const_iterator iter;
 		std::string echo_string;
-		for (iter = args.begin(); iter != args.end(); iter++)
+		for (size_t i = 0; i < params.arg_count(); i++)
 		{
-			echo_string += *iter;
-			if (iter + 1 != args.end())
+			echo_string += params[i];
+			if (i + 1 < params.arg_count())
 			{
 				echo_string += " ";
 			}
@@ -216,16 +215,15 @@ namespace msa { namespace cmd {
 		auto e_args = dynamic_cast<msa::event::Args<std::string>*>(e->args);
 		std::string str = e_args->get_args();
 		delete e_args;
-		std::vector<std::string> args;
-		msa::string::tokenize(str, ' ', args);
+		std::vector<std::string> tokens;
+		msa::string::tokenize(str, ' ', tokens);
 		// pull out command name and call the appropriate function
-		if (args.size() == 0)
+		if (tokens.size() == 0)
 		{
 			// no command, terminate parsing
 			return;
 		}
-		std::string cmd_name = args[0];
-		args.erase(args.begin());
+		std::string cmd_name = tokens[0];
 		msa::string::to_upper(cmd_name);
 		if (ctx->commands.find(cmd_name) == ctx->commands.end())
 		{
@@ -233,9 +231,11 @@ namespace msa { namespace cmd {
 		}
 		else
 		{
+			const Command *cmd = ctx->commands[cmd_name];
+			ParamList params(tokens, cmd->options);
 			try
 			{
-				ctx->commands[cmd_name]->handler(hdl, args, sync);
+				cmd->handler(hdl, params, sync);
 			}
 			catch (const std::exception &e)
 			{
@@ -246,7 +246,7 @@ namespace msa { namespace cmd {
 
 	static void register_default_commands(msa::Handle hdl)
 	{
-		size_t num_commands = (sizeof(default_commands) / sizeof(struct command_type));
+		size_t num_commands = (sizeof(default_commands) / sizeof(Command));
 		for (size_t i = 0; i < num_commands; i++)
 		{
 			const Command *cmd = &default_commands[i];
@@ -256,12 +256,107 @@ namespace msa { namespace cmd {
 
 	static void unregister_default_commands(msa::Handle hdl)
 	{
-		size_t num_commands = (sizeof(default_commands) / sizeof(struct command_type));
+		size_t num_commands = (sizeof(default_commands) / sizeof(Command));
 		for (size_t i = 0; i < num_commands; i++)
 		{
 			const Command *cmd = &default_commands[i];
 			unregister_command(hdl, cmd);
 		}
+	}
+
+	
+	ParamList::ParamList(const std::vector<std::string> &tokens, const std::string &opts) :
+		_command(tokens[0]),
+		_args(),
+		_options()
+	{
+		// start at 1 to skip the command name
+		for (size_t tok_num = 1; tok_num < tokens.size(); tok_num++)
+		{
+			std::string tok = tokens[tok_num];
+			if (tok[0] == '-' && tok.size() > 1 && tok[1] != '-')
+			{
+				// it's an option
+				for (size_t i = 1; i < tok.size(); i++)
+				{
+					size_t pos;
+					if (tok[i] != ':' && (pos = opts.find(tok[i])) != std::string::npos)
+					{
+						char cur_opt = tok[i];
+						// do we need an option argument?
+						if (opts.size() + 1 > pos && opts[pos + 1] == ':')
+						{
+							// check to make sure we are at the end of the opts string
+							// and that there is at least one more non-opt arg
+							if (i + 1 != tok.size() || tok_num + 1 == tokens.size())
+							{
+								throw std::runtime_error(std::string("option -") + cur_opt + " missing required argument");
+							}
+							// take opt arg, make sure it is not another opt
+							tok_num++;
+							std::string optarg = tokens[tok_num];
+							if (optarg[0] == '-' && optarg.size() > 1 && optarg[1] != '-' && optarg[1] != ':')
+							{
+								throw std::runtime_error(std::string("option -") + cur_opt + " missing required argument");
+							}
+							_options[cur_opt].push_back(optarg);
+						}
+						else
+						{
+							_options[cur_opt].push_back("");
+						}
+					}
+					else
+					{
+						throw std::runtime_error(std::string("unknown option -") + tok[i]);
+					}
+				}
+			}
+			else
+			{
+				_args.push_back(tok);
+			}
+		}
+	}
+
+	const std::string &ParamList::command() const
+	{
+		return _command;
+	}
+
+	const std::string &ParamList::operator[](size_t index) const
+	{
+		return get_arg(index);
+	}
+
+	const std::string &ParamList::get_arg(size_t index) const
+	{
+		return _args.at(index);
+	}
+
+	size_t ParamList::arg_count() const
+	{
+		return _args.size();
+	}
+	
+	bool ParamList::has_option(char opt) const
+	{
+		return _options.find(opt) != _options.end();
+	}
+	
+	const std::string &ParamList::get_option(char opt) const
+	{
+		return _options.at(opt).at(0);
+	}
+	
+	size_t ParamList::option_count(char opt) const
+	{
+		return _options.at(opt).size();
+	}
+	
+	const std::vector<std::string> &ParamList::all_option_args(char opt) const
+	{
+		return _options.at(opt);
 	}
 
 } }

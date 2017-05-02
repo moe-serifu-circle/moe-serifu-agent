@@ -106,8 +106,8 @@ namespace msa { namespace event {
 	static void edt_fire_timers(msa::Handle hdl, chrono_time now);
 	static void dispose_handler_context(HandlerContext *ctx, bool wait);
 
-	static void cmd_timer(msa::Handle hdl, const msa::cmd::ArgList &args, HandlerSync *const sync);
-	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ArgList &args, HandlerSync *const sync);
+	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
+	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
 
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
@@ -277,7 +277,7 @@ namespace msa { namespace event {
 		msa::thread::mutex_init(&edc->timers_mutex, NULL);
 		edc->current_handler = NULL;
 		edc->last_tick_time = chrono_time::min();
-		edc->commands.push_back(new msa::cmd::Command("TIMER", "It schedules a command to execute in the future", "[-r] time-ms command", cmd_timer));
+		edc->commands.push_back(new msa::cmd::Command("TIMER", "It schedules a command to execute in the future", "[-r] time-ms command", "r", cmd_timer));
 		edc->commands.push_back(new msa::cmd::Command("DELTIMER", "It deletes a timer", "timer-id", cmd_deltimer)),
 		*event = edc;
 		return 0;
@@ -566,13 +566,10 @@ namespace msa { namespace event {
 		msa::thread::mutex_unlock(&msa->event->queue_mutex);
 	}
 
-	static void cmd_timer(msa::Handle hdl, const msa::cmd::ArgList &args, HandlerSync *const UNUSED(sync))
+	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
 	{
-		bool recurring = false;
-		size_t cur_arg = 0;
-		recurring = args.size() >= 1 && args[0] == "-r";
-		if (recurring) cur_arg++;
-		if (args.size() < cur_arg + 2)
+		bool recurring = params.has_option('r');
+		if (params.arg_count() < 2)
 		{
 			msa::agent::say(hdl, "You gotta give me a time and a command to execute, $USER_TITLE.");
 			return;
@@ -580,20 +577,19 @@ namespace msa { namespace event {
 		int period = 0;
 		try
 		{
-			period = std::stoi(args[cur_arg]);
+			period = std::stoi(params[0]);
 		}
 		catch (std::exception &e)
 		{
-			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + args[cur_arg] + "' isn't a number of milliseconds.");
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + params[0] + "' isn't a number of milliseconds.");
 			return;
 		}
-		cur_arg++;
 		auto ms = std::chrono::milliseconds(period);
 		std::string cmd_str = "";
-		for (size_t i = cur_arg; i < args.size(); i++)
+		for (size_t i = 1; i < params.arg_count(); i++)
 		{
-			cmd_str += args[i];
-			if (i + 1 < args.size())
+			cmd_str += params[i];
+			if (i + 1 < params.arg_count())
 			{
 				cmd_str += " ";
 			}
@@ -620,9 +616,9 @@ namespace msa { namespace event {
 		}
 	}	
 
-	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ArgList &args, HandlerSync *const UNUSED(sync))
+	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
 	{
-		if (args.size() < 1)
+		if (params.arg_count() < 1)
 		{
 			msa::agent::say(hdl, "Ahh... $USER_TITLE, I need to know which timer I should delete.");
 			return;
@@ -630,11 +626,11 @@ namespace msa { namespace event {
 		int16_t id = 0;
 		try
 		{
-			id = std::stoi(args[0]);
+			id = std::stoi(params[0]);
 		}
 		catch (std::exception &e)
 		{
-			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + args[0] + "' isn't an integer.");
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + params[0] + "' isn't an integer.");
 			return;
 		}
 		remove_timer(hdl, id);

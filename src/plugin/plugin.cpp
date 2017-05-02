@@ -44,10 +44,10 @@ namespace msa { namespace plugin {
 	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry);
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env);
 	static void remove_plugin_commands(msa::Handle hdl, PluginEntry *entry);
-	static void cmd_enable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
-	static void cmd_disable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
-	static void cmd_list(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
-	static void cmd_info(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
+	static void cmd_enable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
+	static void cmd_disable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
+	static void cmd_list(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
+	static void cmd_info(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
 
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
@@ -328,14 +328,14 @@ namespace msa { namespace plugin {
 		return ctx->loaded[id]->info;
 	}
 	
-	static void cmd_enable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	static void cmd_enable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
-		if (args.size() < 1)
+		if (params.arg_count() < 1)
 		{
 			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you want.");
 			return;
 		}
-		std::string plugin_id = args[0];
+		std::string plugin_id = params[0];
 		if (!is_loaded(hdl, plugin_id))
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
@@ -350,14 +350,14 @@ namespace msa { namespace plugin {
 		msa::agent::say(hdl, "All right, $USER_TITLE! I've now enabled the plugin called '" + plugin_id + "'.");
 	}
 	
-	static void cmd_disable(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	static void cmd_disable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
-		if (args.size() < 1)
+		if (params.arg_count() < 1)
 		{
 			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you want.");
 			return;
 		}
-		std::string plugin_id = args[0];
+		std::string plugin_id = params[0];
 		if (!is_loaded(hdl, plugin_id))
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
@@ -372,7 +372,7 @@ namespace msa { namespace plugin {
 		msa::agent::say(hdl, "All right, $USER_TITLE! I've now disabled the plugin called '" + plugin_id + "'.");
 	}
 	
-	static void cmd_list(msa::Handle hdl, const msa::cmd::ArgList & UNUSED(args), msa::event::HandlerSync *const UNUSED(sync))
+	static void cmd_list(msa::Handle hdl, const msa::cmd::ParamList & UNUSED(params), msa::event::HandlerSync *const UNUSED(sync))
 	{
 		std::vector<std::string> ids;
 		get_loaded(hdl, ids);
@@ -391,14 +391,14 @@ namespace msa { namespace plugin {
 		msa::agent::say(hdl, "That's " + std::to_string(ids.size()) + " plugin" + plural + " in total.");
 	}
 
-	static void cmd_info(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const UNUSED(sync))
+	static void cmd_info(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
-		if (args.size() < 1)
+		if (params.arg_count() < 1)
 		{
 			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you wanna know about.");
 			return;
 		}
-		std::string plugin_id = args[0];
+		std::string plugin_id = params[0];
 		if (!is_loaded(hdl, plugin_id))
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");

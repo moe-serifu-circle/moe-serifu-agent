@@ -13,7 +13,7 @@ namespace dekarrin {
 	static int init(msa::Handle hdl, void **env);
 	static int quit(msa::Handle hdl, void *env);
 	static int add_commands(msa::Handle hdl, void *plugin_env, std::vector<msa::cmd::Command *> &new_commands);
-	static void love_func(msa::Handle hdl, const msa::cmd::ArgList &args, msa::event::HandlerSync *const sync);
+	static void love_func(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
 	
 	static const msa::plugin::FunctionTable function_table = {init, quit, NULL, NULL, NULL, add_commands};
 	static const msa::plugin::Info plugin_info = {"example", "Example Plugin", {"dekarrin"}, msa::plugin::Version(1, 0, 0, 0), &function_table};
@@ -47,7 +47,7 @@ namespace dekarrin {
 		return 0;
 	}
 	
-	static void love_func(msa::Handle hdl, const msa::cmd::ArgList &args __attribute__((unused)), msa::event::HandlerSync *const sync __attribute__((unused)))
+	static void love_func(msa::Handle hdl, const msa::cmd::ParamList &args __attribute__((unused)), msa::event::HandlerSync *const sync __attribute__((unused)))
 	{
 		msa_sys->agent->say(hdl, "$USER_TITLE, the new command works!");
 	}

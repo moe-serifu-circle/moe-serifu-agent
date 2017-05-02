@@ -9,23 +9,56 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 namespace msa { namespace cmd {
-	
-	typedef std::vector<std::string> ArgList;
-	typedef void (*CommandHandler)(msa::Handle hdl, const ArgList &args, msa::event::HandlerSync *const sync);
-	
-	typedef struct command_type
+
+	class ParamList
 	{
-		command_type(const std::string &invoke, const std::string &desc, const std::string &usage, CommandHandler handler) :
-			invoke(invoke), desc(desc), usage(usage), handler(handler)
-		{}
+		public:
+			ParamList(const std::vector<std::string> &tokens, const std::string &opts);
+			const std::string &command() const;
+			const std::string &operator[](size_t index) const;
+			const std::string &get_arg(size_t index) const;
+			size_t arg_count() const;
+			bool has_option(char opt) const;
+			const std::string &get_option(char opt) const;
+			size_t option_count(char opt) const;
+			const std::vector<std::string> &all_option_args(char opt) const;
 		
-		std::string invoke;
-		std::string desc;
-		std::string usage;
-		CommandHandler handler;
-	} Command;
+		private:
+			std::string _command;
+			std::vector<std::string> _args;
+			std::map<char, std::vector<std::string>> _options;
+	};
+	
+	typedef void (*CommandHandler)(msa::Handle hdl, const ParamList &args, msa::event::HandlerSync *const sync);
+	
+	class Command
+	{
+		public:
+			Command(const std::string &invoke, const std::string &desc, const std::string &usage, CommandHandler handler) :
+				invoke(invoke),
+				desc(desc),
+				usage(usage),
+				options(""),
+				handler(handler)
+			{}
+			
+			Command(const std::string &invoke, const std::string &desc, const std::string &usage, const std::string &options, CommandHandler handler) :
+				invoke(invoke),
+				desc(desc),
+				usage(usage),
+				options(options),
+				handler(handler)
+			{}
+		
+			std::string invoke;
+			std::string desc;
+			std::string usage;
+			std::string options;
+			CommandHandler handler;
+	};
 	
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config);
 	extern int quit(msa::Handle hdl);

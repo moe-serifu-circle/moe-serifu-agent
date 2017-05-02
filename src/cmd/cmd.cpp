@@ -180,6 +180,17 @@ namespace msa { namespace cmd {
 				{
 					usage_str = " " + cmd->usage;
 				}
+				std::string opt_str;
+				if (cmd->options != "")
+				{
+					opt_str = " [-";
+					std::vector<std::string> arg_opts;
+					for (size_t i = 0; i < cmd->options.size(); i++)
+					{
+						if 
+					}
+					
+				}
 				msa::agent::say(hdl, "You can call it like this: " + cmd_name + usage_str);
 			}
 		}

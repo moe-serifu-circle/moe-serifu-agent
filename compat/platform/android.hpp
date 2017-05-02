@@ -162,8 +162,7 @@ namespace std {
 		// okay, now actually iterate through and get the value
 		int val = 0;
 		size_t start = idx;
-		int digit_val;
-		int num_digits = 0;
+		int digit_val = 0;
 		for (; idx < str.size(); idx++)
 		{
 			char ch = cptr[idx];
@@ -194,15 +193,7 @@ namespace std {
 			}
 
 			// 'shift' all digits by multiplying current value by the base (check all vals for overflow)
-			int multip = base * num_digits;
-			
-			// overflow check
-			if (multip < 0)
-			{
-				throw std::out_of_range("value out of range: " + str);
-			}			
-
-			val *= multip;
+			val *= base;
 
 			// overflow check
 			if (val < 0)
@@ -217,8 +208,6 @@ namespace std {
 			{
 				throw std::out_of_range("value out of range: " + str);
 			}
-
-			num_digits++;
 		}
 		
 		if (idx == start)
@@ -323,9 +312,8 @@ namespace std {
 		// okay, now actually iterate through and get the value
 		long val = 0;
 		size_t start = idx;
-		long digit_val;
+		long digit_val = 0;
 		long lbase = base;
-		long num_digits = 0;
 		for (; idx < str.size(); idx++)
 		{
 			char ch = cptr[idx];
@@ -356,15 +344,7 @@ namespace std {
 			}
 
 			// 'shift' all digits by multiplying current value by the base (check all vals for overflow)
-			long multip = lbase * num_digits;
-			
-			// overflow check
-			if (multip < 0)
-			{
-				throw std::out_of_range("value out of range: " + str);
-			}			
-
-			val *= multip;
+			val *= lbase;
 
 			// overflow check
 			if (val < 0)
@@ -379,8 +359,6 @@ namespace std {
 			{
 				throw std::out_of_range("value out of range: " + str);
 			}
-
-			num_digits++;
 		}
 		
 		if (idx == start)

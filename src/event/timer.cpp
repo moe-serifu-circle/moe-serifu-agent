@@ -1,0 +1,168 @@
+#include "event/timer.hpp"
+#include "event/handler.hpp"
+#include "event/dispatch.hpp"
+
+namespace msa { namespace event {	
+
+	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
+	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
+
+	extern std::vector<msa::cmd::Command *> get_timer_commands()
+	{
+		std::vector<msa::cmd::Command *> cmds;
+		cmds.push_back(new msa::cmd::Command("TIMER", "It schedules a command to execute in the future", "time-ms command", "r", cmd_timer));
+		cmds.push_back(new msa::cmd::Command("DELTIMER", "It deletes a timer", "timer-id", cmd_deltimer));
+		return cmds;
+	}
+
+	extern int16_t schedule(msa::Handle msa, time_t timestamp, const Topic topic, const IArgs &args)
+	{
+		time_t ref_time = time(NULL);
+		if (ref_time >= timestamp)
+		{
+			return -1;
+		}
+		return delay(msa, std::chrono::seconds(timestamp), topic, args);
+	}
+
+	extern int16_t delay(msa::Handle msa, std::chrono::milliseconds delay, const Topic topic, const IArgs &args)
+	{
+		Timer *t = new Timer(delay, topic, args, false);
+		msa::thread::mutex_lock(&msa->event->timers_mutex);
+		t->id = msa->event->timers.size();
+		msa->event->timers[t->id] = t;
+		msa::thread::mutex_unlock(&msa->event->timers_mutex);
+		msa::log::debug(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire in " + std::to_string(delay.count()) + "ms (id = " + std::to_string(t->id) + ")");
+		return t->id;
+	}
+	
+	extern int16_t add_timer(msa::Handle msa, std::chrono::milliseconds period, const Topic topic, const IArgs &args)
+	{
+		Timer *t = new Timer(period, topic, args, true);
+		msa::thread::mutex_lock(&msa->event->timers_mutex);
+		t->id = msa->event->timers.size();
+		msa->event->timers[t->id] = t;
+		msa::thread::mutex_unlock(&msa->event->timers_mutex);
+		msa::log::debug(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id) + ")");
+		return t->id;
+	}
+
+	extern void remove_timer(msa::Handle msa, int16_t id)
+	{
+		EventDispatchContext *ctx = msa->event;
+		msa::thread::mutex_lock(&ctx->timers_mutex);
+		if (ctx->timers.find(id) == ctx->timers.end())
+		{
+			msa::thread::mutex_unlock(&ctx->timers_mutex);
+			throw std::logic_error("no timer with ID: " + std::to_string(id));
+		}
+		Timer *t = ctx->timers[id];
+		ctx->timers.erase(id);
+		msa::thread::mutex_unlock(&ctx->timers_mutex);
+		delete t;
+		msa::log::debug(msa, "Removed timer ID " + std::to_string(id));
+		return;
+	}
+
+	extern void get_timers(msa::Handle msa, std::vector<int16_t> &list)
+	{
+		EventDispatchContext *ctx = msa->event;
+		msa::thread::mutex_lock(&ctx->timers_mutex);
+		std::map<int16_t, Timer*>::const_iterator iter;
+		for (iter = ctx->timers.begin(); iter != ctx->timers.end(); iter++)
+		{
+			list.push_back(iter->first);
+		}
+		msa::thread::mutex_unlock(&ctx->timers_mutex);
+	}
+	
+	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
+	{
+		bool recurring = params.has_option('r');
+		if (params.arg_count() < 2)
+		{
+			msa::agent::say(hdl, "You gotta give me a time and a command to execute, $USER_TITLE.");
+			return;
+		}
+		int period = 0;
+		try
+		{
+			period = std::stoi(params[0]);
+		}
+		catch (std::exception &e)
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + params[0] + "' isn't a number of milliseconds.");
+			return;
+		}
+		if (period < 0)
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, I might be good but I can't go back in time.");
+			msa::agent::say(hdl, "Please give me a positive number of milliseconds.");
+			return;
+		}
+		auto ms = std::chrono::milliseconds(period);
+		std::string cmd_str = "";
+		for (size_t i = 1; i < params.arg_count(); i++)
+		{
+			cmd_str += params[i];
+			if (i + 1 < params.arg_count())
+			{
+				cmd_str += " ";
+			}
+		}
+		std::string plural = ms.count() != 1 ? "s" : "";
+		std::string type = recurring ? "every" : "in";
+		int16_t id = -1;
+		if (recurring)
+		{
+			id = add_timer(hdl, ms, Topic::TEXT_INPUT, wrap(cmd_str));
+		}
+		else
+		{
+			id = delay(hdl, ms, Topic::TEXT_INPUT, wrap(cmd_str));
+		}
+		if (id == -1)
+		{
+			msa::agent::say(hdl, "Oh no! I'm sorry, $USER_TITLE, that didn't work quite right!");
+		}
+		else
+		{
+			msa::agent::say(hdl, "Okay, $USER_TITLE, I will do that " + type + " " + std::to_string(ms.count()) + " millisecond" + plural + "!");
+			msa::agent::say(hdl, "The timer ID is " + std::to_string(id) + ".");
+		}
+	}	
+
+	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
+	{
+		if (params.arg_count() < 1)
+		{
+			msa::agent::say(hdl, "Ahh... $USER_TITLE, I need to know which timer I should delete.");
+			return;
+		}
+		int16_t id = 0;
+		try
+		{
+			id = std::stoi(params[0]);
+		}
+		catch (std::exception &e)
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + params[0] + "' isn't an integer.");
+			return;
+		}
+		remove_timer(hdl, id);
+		msa::agent::say(hdl, "Okay! I stopped timer " + std::to_string(id) + " for you, $USER_TITLE.");
+	}
+
+	bool Timer::ready(chrono_time now) const
+	{
+		return _last_fired + _period <= now;
+	}
+
+	void Timer::fire(msa::Handle hdl, chrono_time now)
+	{
+		generate(hdl, _event_topic, *_event_args);
+		msa::log::debug(hdl, "Fired timer " + std::to_string(id()));
+		_last_fired = now;
+	}
+
+} }

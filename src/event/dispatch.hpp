@@ -3,9 +3,8 @@
 
 #include "msa.hpp"
 #include "event/handler.hpp"
+#include "event/timer.hpp"
 #include "cfg/cfg.hpp"
-
-#include <chrono>
 
 namespace msa { namespace event {
 
@@ -14,6 +13,11 @@ namespace msa { namespace event {
 	extern int setup(msa::Handle hdl);	
 	extern int teardown(msa::Handle hdl);
 	extern const PluginHooks *get_plugin_hooks();
+
+	/**
+	 * This method should only be called from the timer system!
+	 */
+	extern *TimerContext get_timer_context(msa::Handle hdl);
 	
 	#define MSA_MODULE_HOOK(retspec, name, ...)	extern retspec name(__VA_ARGS__);
 	#include "event/hooks.hpp"
@@ -24,6 +28,7 @@ namespace msa { namespace event {
 		#define MSA_MODULE_HOOK(retspec, name, ...)		retspec (*name)(__VA_ARGS__);
 		#include "event/hooks.hpp"
 		#undef MSA_MODULE_HOOK
+		TimerHooks timer;
 	};
 } }
 

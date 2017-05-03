@@ -36,6 +36,7 @@ namespace msa {
 	namespace event {
 		
 		typedef struct event_dispatch_context_type EventDispatchContext;
+		struct TimerContext;
 		typedef struct plugin_hooks_type PluginHooks;
 		
 	}
@@ -80,6 +81,10 @@ namespace msa {
 	{
 		Status status;
 		msa::event::EventDispatchContext *event;
+		// timer is not actually a separate module from event, but we give it special status
+		// because it must be able to get its context without relying on the event dispatch
+		// module.
+		msa::event::TimerContext *timer; 
 		msa::input::InputContext *input;
 		msa::output::OutputContext *output;
 		msa::agent::AgentContext *agent;

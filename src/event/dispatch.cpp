@@ -4,7 +4,6 @@
 #include "cmd/cmd.hpp"
 #include "agent/agent.hpp"
 
-#include <cstdio>
 #include <queue>
 #include <stack>
 #include <map>
@@ -43,7 +42,6 @@ namespace msa { namespace event {
 		std::map<Topic, EventHandler> handlers;
 		std::stack<HandlerContext *> interrupted;
 		int sleep_time;
-		TimerContext timer;
 		std::vector<msa::cmd::Command *> commands;
 	};
 
@@ -61,7 +59,6 @@ namespace msa { namespace event {
 	static void edt_interrupt_handler(msa::Handle hdl);
 	static void edt_spawn_handler(msa::Handle hdl, const Event *e);
 	static void edt_dispatch_event(msa::Handle hdl, const Event *e);
-	static void edt_fire_timers(msa::Handle hdl, chrono_time now);
 	static void dispose_handler_context(HandlerContext *ctx, bool wait);
 
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
@@ -70,6 +67,12 @@ namespace msa { namespace event {
 		if (create_status != 0)
 		{
 			msa::log::error(hdl, "Could not create event context (error " + std::to_string(create_status) + ")");
+			return create_status;
+		}
+		create_status = create_timer_context(&hdl->timer);
+		if (create_status != 0)
+		{
+			msa::log::error(hdl, "Could not create event timer context (error " + std::to_string(create_status) + ")");
 			return create_status;
 		}
 		
@@ -119,6 +122,7 @@ namespace msa { namespace event {
 		msa::thread::join(msa->event->edt, NULL);
 		msa::log::trace(msa, "EDT joined");
 		dispose_event_dispatch_context(msa->event);
+		dispose_timer_context(msa->timer);
 		return 0;
 	}
 	
@@ -147,11 +151,6 @@ namespace msa { namespace event {
 		return &HOOKS;
 	}
 
-	extern TimerContext *get_timer_context(msa::Handle msa)
-	{
-		return msa->event->timer;
-	}
-
 	extern void subscribe(msa::Handle msa, Topic t, EventHandler handler)
 	{
 		msa->event->handlers[t] = handler;
@@ -173,8 +172,6 @@ namespace msa { namespace event {
 	{
 		EventDispatchContext *edc = new EventDispatchContext;
 		msa::thread::mutex_init(&edc->queue_mutex, NULL);
-		msa::thread::mutex_init(&edc->timer.mutex, NULL);
-		edc->timer.last_tick_time = chrono_time::min();
 		edc->current_handler = NULL;
 		edc->commands = get_timer_commands();
 		*event = edc;
@@ -183,8 +180,7 @@ namespace msa { namespace event {
 
 	static int dispose_event_dispatch_context(EventDispatchContext *event)
 	{
-		// it would seem that we should destory our mutexes here, but
-		// that is instead handled in the edt_cleanup function.
+		msa::thread::mutex_destroy(&event->queue_mutex);
 		auto iter = event->commands.begin();
 		while (iter != event->commands.end())
 		{
@@ -203,7 +199,7 @@ namespace msa { namespace event {
 		config.check_range("TICK_RESOLUTION", sleep_time, 1000, false);
 		int tick_res = config.get_or("TICK_RESOLUTION", 10);
 		hdl->event->sleep_time = sleep_time;
-		hdl->event->timer.tick_resolution = std::chrono::milliseconds(tick_res);
+		set_tick_resolution(hdl->timer, tick_res);
 	}
 
 	static void *edt_start(void *args)
@@ -236,21 +232,13 @@ namespace msa { namespace event {
 			ctx->interrupted.pop();
 			dispose_handler_context(intr_ctx, true);
 		}
-		msa::thread::mutex_destroy(&hdl->event->queue_mutex);
-		msa::thread::mutex_destroy(&hdl->event->timer.mutex);
 		while (!hdl->event->queue.empty())
 		{
 			const Event *e = hdl->event->queue.top();
 			hdl->event->queue.pop();
 			delete e;
 		}
-		auto timer_iter = hdl->event->timer.list.begin();
-		while (timer_iter != hdl->event->timer.list.end())
-		{
-			Timer *t = timer_iter->second;
-			timer_iter = hdl->event->timer.list.erase(timer_iter);
-			delete t;
-		}
+		clear_timers(hdl->event->timer_ctx);
 	}
 
 	static void edt_run(msa::Handle hdl) {
@@ -279,37 +267,7 @@ namespace msa { namespace event {
 		}
 		// TODO: Add a synthetic event for when queue has emptied and no events
 
-		// check if we need to do timing tasks
-		chrono_time now = chrono_clock::now();
-		if (edc->timer.last_tick_time + edc->timer.tick_resolution <= now)
-		{
-			edc->timer.last_tick_time = now;
-			edt_fire_timers(hdl, now);
-		}
-	}
-
-	static void edt_fire_timers(msa::Handle hdl, chrono_time now)
-	{
-		EventDispatchContext *ctx = hdl->event;
-		msa::thread::mutex_lock(&ctx->timer.mutex);
-		std::map<int16_t, Timer*>::iterator iter = ctx->timers.begin();
-		while (iter != ctx->timers.end())
-		{
-			Timer *t = iter->second;
-			if (t->ready(now))
-			{
-				t->fire(now);
-				if (!t->recurring())
-				{
-					iter = ctx->timers.erase(iter);
-					delete t;
-					msa::log::debug(hdl, "Completed and removed timer " + std::to_string(iter->first));
-					continue;
-				}
-			}
-			iter++;
-		}
-		msa::thread::mutex_unlock(&ctx->timers_mutex);
+		check_timers(hdl);
 	}
 
 	static const Event *edt_poll_event_queue(msa::Handle hdl)

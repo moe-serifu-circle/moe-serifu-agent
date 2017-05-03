@@ -1,9 +1,114 @@
 #include "event/timer.hpp"
+
 #include "event/handler.hpp"
 #include "event/dispatch.hpp"
+#include "log/log.hpp"
+#include "agent/agent.hpp"
 
-namespace msa { namespace event {	
+#include <map>
 
+#include "platform/thread/thread.hpp"
+
+
+namespace msa { namespace event {
+	
+	typedef std::chrono::high_resolution_clock chrono_clock;
+	typedef chrono_clock::time_point chrono_time;
+	
+	class Timer
+	{
+		public:
+			Timer(int16_t id, std::chrono::milliseconds period, Topic topic, const IArgs &args, bool recurring) :
+				_id(id),
+				_period(period),
+				_last_fired(chrono_clock::now()),
+				_recurring(recurring),
+				_event_args(args.copy()),
+				_event_topic(topic)
+			{}
+			
+			Timer(const Timer &other) :
+				_id(other._id),
+				_period(other._period),
+				_last_fired(other._last_fired),
+				_recurring(other._recurring),
+				_event_args(other._event_args->copy()),
+				_event_topic(other._event_topic)
+			{}
+			
+			~Timer()
+			{
+				delete _event_args;
+			}
+			
+			Timer &operator=(const Timer &other)
+			{
+				delete event_args;
+				_event_args = other._event_args->copy();
+				_id = other._id;
+				_period = other._period;
+				_last_fired = other._last_fired;
+				_event_topic = other._event_topic;
+				return *this;
+			}
+			
+			/**
+			 * Check if the timer is ready to fire at the current time.
+			 *
+			 * Now time is given rather than calculated so that missing
+			 * a fire time does not cause schedule slip.
+			 */
+			bool ready(chrono_time now) const
+			{
+				return _last_fired + _period <= now;
+			}
+
+			/**
+			 * Fires the timer, causing its event to be generated.
+			 *
+			 * Now time is given rather than calculated so that missing
+			 * a fire time does not cause schedule slip.
+			 */
+			void fire(msa::Handle hdl, chrono_time now)
+			{
+				generate(hdl, _event_topic, *_event_args);
+				msa::log::debug(hdl, "Fired timer " + std::to_string(id()));
+				_last_fired = now;
+			}
+			
+			bool recurring() const
+			{
+				return _recurring;
+			}
+			
+			int16_t id() const
+			{
+				return _id;
+			}
+			
+			Topic topic() const
+			{
+				return _event_topic;
+			}
+
+		private:
+			int16_t _id;
+			std::chrono::milliseconds _period;
+			std::chrono::high_resolution_clock::time_point _last_fired;
+			bool _recurring;
+			IArgs *_event_args;
+			Topic _event_topic;
+	};
+	
+	struct TimerContext
+	{
+		std::chrono::milliseconds tick_resolution;
+		chrono_time last_tick_time;
+		std::map<int16_t, Timer*> timers;
+		msa::thread::Mutex mutex;
+	};
+	
+	static void fire_timers(msa::Handle hdl, chrono_time now)
 	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
 	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
 
@@ -27,38 +132,38 @@ namespace msa { namespace event {
 
 	extern int16_t delay(msa::Handle msa, std::chrono::milliseconds delay, const Topic topic, const IArgs &args)
 	{
-		Timer *t = new Timer(delay, topic, args, false);
-		msa::thread::mutex_lock(&msa->event->timers_mutex);
-		t->id = msa->event->timers.size();
-		msa->event->timers[t->id] = t;
-		msa::thread::mutex_unlock(&msa->event->timers_mutex);
-		msa::log::debug(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire in " + std::to_string(delay.count()) + "ms (id = " + std::to_string(t->id) + ")");
+		msa::thread::mutex_lock(&msa->timer->mutex);
+		int16_t id = msa->timer->list.size();
+		Timer *t = new Timer(id, delay, topic, args, false);
+		msa->timer->list[t->id] = t;
+		msa::thread::mutex_unlock(&msa->timer->mutex);
+		msa::log::debug(msa, "Scheduled a " + topic_str(topic) + " event to fire in " + std::to_string(delay.count()) + "ms (id = " + std::to_string(t->id()) + ")");
 		return t->id;
 	}
 	
 	extern int16_t add_timer(msa::Handle msa, std::chrono::milliseconds period, const Topic topic, const IArgs &args)
 	{
+		msa::thread::mutex_lock(&msa->timer->mutex);
+		int16_t id = msa->timer->list.size();
 		Timer *t = new Timer(period, topic, args, true);
-		msa::thread::mutex_lock(&msa->event->timers_mutex);
-		t->id = msa->event->timers.size();
-		msa->event->timers[t->id] = t;
-		msa::thread::mutex_unlock(&msa->event->timers_mutex);
-		msa::log::debug(msa, "Scheduled a " + topic_str(t->event_topic) + " event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id) + ")");
+		msa->timer->list[t->id] = t;
+		msa::thread::mutex_unlock(&msa->timer->mutex);
+		msa::log::debug(msa, "Scheduled a " + topic_str(topic) + " event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id()) + ")");
 		return t->id;
 	}
 
 	extern void remove_timer(msa::Handle msa, int16_t id)
 	{
-		EventDispatchContext *ctx = msa->event;
-		msa::thread::mutex_lock(&ctx->timers_mutex);
-		if (ctx->timers.find(id) == ctx->timers.end())
+		TimerContext *ctx = msa->timer;
+		msa::thread::mutex_lock(&ctx->mutex);
+		if (ctx->list.find(id) == ctx->list.end())
 		{
-			msa::thread::mutex_unlock(&ctx->timers_mutex);
+			msa::thread::mutex_unlock(&ctx->mutex);
 			throw std::logic_error("no timer with ID: " + std::to_string(id));
 		}
-		Timer *t = ctx->timers[id];
-		ctx->timers.erase(id);
-		msa::thread::mutex_unlock(&ctx->timers_mutex);
+		Timer *t = ctx->list[id];
+		ctx->list.erase(id);
+		msa::thread::mutex_unlock(&ctx->mutex);
 		delete t;
 		msa::log::debug(msa, "Removed timer ID " + std::to_string(id));
 		return;
@@ -66,14 +171,83 @@ namespace msa { namespace event {
 
 	extern void get_timers(msa::Handle msa, std::vector<int16_t> &list)
 	{
-		EventDispatchContext *ctx = msa->event;
-		msa::thread::mutex_lock(&ctx->timers_mutex);
+		TimerContext *ctx = msa->timer;
+		msa::thread::mutex_lock(&ctx->mutex);
 		std::map<int16_t, Timer*>::const_iterator iter;
-		for (iter = ctx->timers.begin(); iter != ctx->timers.end(); iter++)
+		for (iter = ctx->list.begin(); iter != ctx->list.end(); iter++)
 		{
 			list.push_back(iter->first);
 		}
-		msa::thread::mutex_unlock(&ctx->timers_mutex);
+		msa::thread::mutex_unlock(&ctx->mutex);
+	}
+	
+	extern int create_timer_context(TimerContext **ctx)
+	{	
+		TimerContext *t = new TimerContext;
+		t->last_tick_time = chrono_time::min();
+		msa::thread::mutex_init(&t->mutex, NULL);
+		t->tick_resolution = 1;
+		*ctx = t;
+		return 0;
+	}
+	
+	extern void dispose_timer_context(TimerContext *ctx)
+	{	
+		msa::thread::mutex_destroy(ctx->mutex);
+		delete ctx;
+	}
+	
+	extern void set_tick_resolution(TimerContext *ctx, int res)
+	{
+		ctx->tick_resolution = std::chrono::milliseconds(res);
+	}
+	
+	extern void clear_timers(TimerContext *ctx)
+	{
+		auto timer_iter = ctx->list.begin();
+		while (timer_iter != ctx->list.end())
+		{
+			Timer *t = timer_iter->second;
+			timer_iter = ctx->list.erase(timer_iter);
+			delete t;
+		}
+	}
+	
+	extern void check_timers(msa::Handle hdl)
+	{
+		TimerContext *ctx = hdl->timer;
+		
+		// check if we need to do timing tasks
+		chrono_time now = chrono_clock::now();
+		if (ctx->last_tick_time + ctx->tick_resolution <= now)
+		{
+			ctx->last_tick_time = now;
+			fire_timers(hdl, now);
+		}
+	}
+
+	static void fire_timers(msa::Handle hdl, chrono_time now)
+	{
+		TimerContext *ctx = hdl->timer;
+		msa::thread::mutex_lock(&ctx->mutex);
+		std::map<int16_t, Timer*>::iterator iter = ctx->list.begin();
+		while (iter != ctx->list.end())
+		{
+			Timer *t = iter->second;
+			if (t->ready(now))
+			{
+				t->fire(now);
+				if (!t->recurring())
+				{
+					iter = ctx->list.erase(iter);
+					delete t;
+					msa::log::debug(hdl, "Completed and removed timer " + std::to_string(iter->first));
+					continue;
+				}
+			}
+			iter++;
+		}
+		msa::thread::mutex_unlock(&ctx->mutex);
 	}
 	
 	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
@@ -151,18 +325,6 @@ namespace msa { namespace event {
 		}
 		remove_timer(hdl, id);
 		msa::agent::say(hdl, "Okay! I stopped timer " + std::to_string(id) + " for you, $USER_TITLE.");
-	}
-
-	bool Timer::ready(chrono_time now) const
-	{
-		return _last_fired + _period <= now;
-	}
-
-	void Timer::fire(msa::Handle hdl, chrono_time now)
-	{
-		generate(hdl, _event_topic, *_event_args);
-		msa::log::debug(hdl, "Fired timer " + std::to_string(id()));
-		_last_fired = now;
 	}
 
 } }

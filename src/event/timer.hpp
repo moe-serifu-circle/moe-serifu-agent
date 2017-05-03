@@ -14,7 +14,7 @@ namespace msa { namespace event {
 	extern void check_timers(msa::Handle hdl);
 	extern int create_timer_context(TimerContext **ctx);
 	extern void dispose_timer_context(TimerContext *ctx);
-	extern void set_tick_resolution(TimerContext *ctx);
+	extern void set_tick_resolution(TimerContext *ctx, int res);
 	extern void clear_timers(TimerContext *ctx);
 	
 	#define MSA_MODULE_HOOK(retspec, name, ...)	extern retspec name(__VA_ARGS__);

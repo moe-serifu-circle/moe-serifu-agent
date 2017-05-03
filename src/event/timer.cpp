@@ -43,7 +43,7 @@ namespace msa { namespace event {
 			
 			Timer &operator=(const Timer &other)
 			{
-				delete event_args;
+				delete _event_args;
 				_event_args = other._event_args->copy();
 				_id = other._id;
 				_period = other._period;
@@ -104,11 +104,11 @@ namespace msa { namespace event {
 	{
 		std::chrono::milliseconds tick_resolution;
 		chrono_time last_tick_time;
-		std::map<int16_t, Timer*> timers;
+		std::map<int16_t, Timer*> list;
 		msa::thread::Mutex mutex;
 	};
 	
-	static void fire_timers(msa::Handle hdl, chrono_time now)
+	static void fire_timers(msa::Handle hdl, chrono_time now);
 	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
 	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
 
@@ -135,21 +135,21 @@ namespace msa { namespace event {
 		msa::thread::mutex_lock(&msa->timer->mutex);
 		int16_t id = msa->timer->list.size();
 		Timer *t = new Timer(id, delay, topic, args, false);
-		msa->timer->list[t->id] = t;
+		msa->timer->list[t->id()] = t;
 		msa::thread::mutex_unlock(&msa->timer->mutex);
 		msa::log::debug(msa, "Scheduled a " + topic_str(topic) + " event to fire in " + std::to_string(delay.count()) + "ms (id = " + std::to_string(t->id()) + ")");
-		return t->id;
+		return t->id();
 	}
 	
 	extern int16_t add_timer(msa::Handle msa, std::chrono::milliseconds period, const Topic topic, const IArgs &args)
 	{
 		msa::thread::mutex_lock(&msa->timer->mutex);
 		int16_t id = msa->timer->list.size();
-		Timer *t = new Timer(period, topic, args, true);
-		msa->timer->list[t->id] = t;
+		Timer *t = new Timer(id, period, topic, args, true);
+		msa->timer->list[t->id()] = t;
 		msa::thread::mutex_unlock(&msa->timer->mutex);
 		msa::log::debug(msa, "Scheduled a " + topic_str(topic) + " event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id()) + ")");
-		return t->id;
+		return t->id();
 	}
 
 	extern void remove_timer(msa::Handle msa, int16_t id)
@@ -186,14 +186,14 @@ namespace msa { namespace event {
 		TimerContext *t = new TimerContext;
 		t->last_tick_time = chrono_time::min();
 		msa::thread::mutex_init(&t->mutex, NULL);
-		t->tick_resolution = 1;
+		t->tick_resolution = std::chrono::milliseconds(1);
 		*ctx = t;
 		return 0;
 	}
 	
 	extern void dispose_timer_context(TimerContext *ctx)
 	{	
-		msa::thread::mutex_destroy(ctx->mutex);
+		msa::thread::mutex_destroy(&ctx->mutex);
 		delete ctx;
 	}
 	
@@ -236,7 +236,7 @@ namespace msa { namespace event {
 			Timer *t = iter->second;
 			if (t->ready(now))
 			{
-				t->fire(now);
+				t->fire(hdl, now);
 				if (!t->recurring())
 				{
 					iter = ctx->list.erase(iter);

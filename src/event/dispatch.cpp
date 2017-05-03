@@ -238,7 +238,7 @@ namespace msa { namespace event {
 			hdl->event->queue.pop();
 			delete e;
 		}
-		clear_timers(hdl->event->timer_ctx);
+		clear_timers(hdl->timer);
 	}
 
 	static void edt_run(msa::Handle hdl) {

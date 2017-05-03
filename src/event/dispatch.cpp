@@ -584,6 +584,12 @@ namespace msa { namespace event {
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + params[0] + "' isn't a number of milliseconds.");
 			return;
 		}
+		if (period < 0)
+		{
+			msa::agent::say(hdl, "Sorry, $USER_TITLE, I might be good but I can't go back in time.");
+			msa::agent::say(hdl, "Please give me a positive number of milliseconds.");
+			return;
+		}
 		auto ms = std::chrono::milliseconds(period);
 		std::string cmd_str = "";
 		for (size_t i = 1; i < params.arg_count(); i++)

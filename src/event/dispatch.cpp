@@ -277,7 +277,7 @@ namespace msa { namespace event {
 		msa::thread::mutex_init(&edc->timers_mutex, NULL);
 		edc->current_handler = NULL;
 		edc->last_tick_time = chrono_time::min();
-		edc->commands.push_back(new msa::cmd::Command("TIMER", "It schedules a command to execute in the future", "[-r] time-ms command", "r", cmd_timer));
+		edc->commands.push_back(new msa::cmd::Command("TIMER", "It schedules a command to execute in the future", "time-ms command", "r", cmd_timer));
 		edc->commands.push_back(new msa::cmd::Command("DELTIMER", "It deletes a timer", "timer-id", cmd_deltimer)),
 		*event = edc;
 		return 0;

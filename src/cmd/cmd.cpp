@@ -180,18 +180,42 @@ namespace msa { namespace cmd {
 				{
 					usage_str = " " + cmd->usage;
 				}
+				
+				// create the options:
 				std::string opt_str;
 				if (cmd->options != "")
 				{
-					opt_str = " [-";
-					std::vector<std::string> arg_opts;
+					bool has_non_arg_opts = false;
+					opt_str = "";
+					std::vector<char> arg_opts;
 					for (size_t i = 0; i < cmd->options.size(); i++)
 					{
-						if 
+						char ch = cmd->options[i];
+						if (i + 1 < cmd->options.size() && cmd->options[i+1] == ':')
+						{
+							arg_opts.push_back(ch);
+							i++;
+						}
+						else
+						{
+							if (!has_non_arg_opts)
+							{
+								opt_str += " [-";
+								has_non_arg_opts = true;
+							}
+							opt_str += ch;
+						}
 					}
-					
+					if (has_non_arg_opts)
+					{
+						opt_str += "]";
+					}
+					for (auto iter = arg_opts.begin(); iter != arg_opts.end(); iter++)
+					{
+						opt_str += std::string(" [-") + *iter + " ARG]";
+					}
 				}
-				msa::agent::say(hdl, "You can call it like this: " + cmd_name + usage_str);
+				msa::agent::say(hdl, "You can call it like this: " + cmd_name + opt_str + usage_str);
 			}
 		}
 		else

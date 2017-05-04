@@ -25,14 +25,30 @@ namespace msa { namespace cmd {
 			const std::string &get_option(char opt) const;
 			size_t option_count(char opt) const;
 			const std::vector<std::string> &all_option_args(char opt) const;
+			std::string str() const;
 		
 		private:
 			std::string _command;
 			std::vector<std::string> _args;
 			std::map<char, std::vector<std::string>> _options;
 	};
+
+	class Result
+	{
+		public:
+			Result(int status);
+			Result(const std::string &retval);
+			Result(int status, const std::string &retval);
+			const std::string &value() const;
+			int status() const;
+
+		private:
+			int _status;
+			std::string _value;
+		
+	};
 	
-	typedef void (*CommandHandler)(msa::Handle hdl, const ParamList &args, msa::event::HandlerSync *const sync);
+	typedef Result (*CommandHandler)(msa::Handle hdl, const ParamList &args, msa::event::HandlerSync *const sync);
 	
 	class Command
 	{

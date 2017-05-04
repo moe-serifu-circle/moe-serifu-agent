@@ -19,7 +19,8 @@ namespace msa { namespace cmd {
 
 	struct command_context_type
 	{
-		bool running;
+		int last_status;
+		bool last_threw_exception;
 		std::map<std::string, const Command *> commands;
 	};
 
@@ -137,7 +138,8 @@ namespace msa { namespace cmd {
 	static int create_command_context(CommandContext **ctx)
 	{
 		CommandContext *c = new CommandContext;
-		c->running = true;
+		c->last_status = 0;
+		c->last_threw_exception = false;
 		*ctx = c;
 		return 0;
 	}
@@ -267,15 +269,20 @@ namespace msa { namespace cmd {
 		else
 		{
 			const Command *cmd = ctx->commands[cmd_name];
+			Result result(-1);
 			try
 			{
 				ParamList params(tokens, cmd->options);
-				cmd->handler(hdl, params, sync);
+				result = cmd->handler(hdl, params, sync);
+				ctx->last_threw_exception = false;
 			}
 			catch (const std::exception &e)
 			{
-				msa::agent::say(hdl, "Oh no! I'm sorry, but I failed: " + std::string(e.what()));
+				msa::log::error(hdl, "Command ''");
+				msa::agent::say(hdl, "Oh no! I'm sorry, but I couldn't do that. Take a look at my log file.");
+				ctx->last_threw_exception = true;
 			}
+			ctx->last_status = result.status();
 		}
 	}
 
@@ -354,6 +361,43 @@ namespace msa { namespace cmd {
 		}
 	}
 
+	std::string ParamList::str() const
+	{
+		std::string str = command() + "(";
+		for (size_t i = 0; i < arg_count(); i++)
+		{
+			str += std::string("\"") + get_arg(i) + "\"";
+			if (i + 1 < arg_count())
+			{
+				str += ", ";
+			}
+		}
+		if (!_options.empty())
+		{
+			str += " : "
+			size_t num_opts = 0;
+			for (auto i = _options.begin(); i != _options.end(); i++)
+			{
+				for (size_t j = 0; j < i->second.size(); j++)
+				{
+					str += "-" + i->first;
+					const std::string &opt_arg = i->second[j];
+					if (!i->second[j]->empty())
+					{
+						str += std::string("=\"") + *j + "\"";
+					}
+					if (j + 1 < i->second.size() || num_opts + 1 < _options.size())
+					{
+						str += " ";
+					}
+				}
+				num_opts++;	
+			}
+			str += "]"
+		}
+		str += ")";
+	}
+
 	const std::string &ParamList::command() const
 	{
 		return _command;
@@ -392,6 +436,31 @@ namespace msa { namespace cmd {
 	const std::vector<std::string> &ParamList::all_option_args(char opt) const
 	{
 		return _options.at(opt);
+	}
+
+	Result::Result(int status) :
+		_status(status),
+		_value()
+	{}
+
+	Result::Result(int status, const std::string &retval) :
+		_status(status),
+		_value(retval)
+	{}
+	
+	Result::Result(const std::string &retval) :
+		_status(0),
+		_value(retval)
+	{}
+
+	int Result::status() const
+	{
+		return _status;
+	}
+
+	const std::string &Result::value() const
+	{
+		return _value;
 	}
 
 } }

@@ -352,11 +352,17 @@ namespace msa { namespace cmd {
 		_args(),
 		_options()
 	{
+		bool parse_opts = true;
 		// start at 1 to skip the command name
 		for (size_t tok_num = 1; tok_num < tokens.size(); tok_num++)
 		{
 			std::string tok = tokens[tok_num];
-			if (tok[0] == '-' && tok.size() > 1 && tok[1] != '-')
+			if (parse_opts && tok[0] == '-' && tok.size() == 2 && tok[1] == '-')
+			{
+				// then it's the special '--', and we must stop parsing options.
+				parse_opts = false;
+			}
+			else if (parse_opts && tok[0] == '-' && tok.size() > 1 && tok[1] != '-')
 			{
 				// it's an option
 				for (size_t i = 1; i < tok.size(); i++)

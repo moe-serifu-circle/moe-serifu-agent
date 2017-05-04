@@ -44,10 +44,10 @@ namespace msa { namespace plugin {
 	static bool call_plugin_add_commands(msa::Handle hdl, PluginEntry *entry);
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env);
 	static void remove_plugin_commands(msa::Handle hdl, PluginEntry *entry);
-	static void cmd_enable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
-	static void cmd_disable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
-	static void cmd_list(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
-	static void cmd_info(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
+	static msa::cmd::Result cmd_enable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
+	static msa::cmd::Result cmd_disable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
+	static msa::cmd::Result cmd_list(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
+	static msa::cmd::Result cmd_info(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const sync);
 
 	extern int init(msa::Handle hdl, const msa::cfg::Section &config)
 	{
@@ -328,58 +328,60 @@ namespace msa { namespace plugin {
 		return ctx->loaded[id]->info;
 	}
 	
-	static void cmd_enable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
+	static msa::cmd::Result cmd_enable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		if (params.arg_count() < 1)
 		{
 			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you want.");
-			return;
+			return msa::cmd::Result(1);
 		}
 		std::string plugin_id = params[0];
 		if (!is_loaded(hdl, plugin_id))
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
-			return;
+			return msa::cmd::Result(2);
 		}
 		if (is_enabled(hdl, plugin_id))
 		{
 			msa::agent::say(hdl, "Ooh! I already enabled that plugin for you, $USER_TITLE.");
-			return;
+			return msa::cmd::Result(3);
 		}
 		enable(hdl, plugin_id);
 		msa::agent::say(hdl, "All right, $USER_TITLE! I've now enabled the plugin called '" + plugin_id + "'.");
+		return msa::cmd::Result(0);
 	}
 	
-	static void cmd_disable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
+	static msa::cmd::Result cmd_disable(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		if (params.arg_count() < 1)
 		{
 			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you want.");
-			return;
+			return msa::cmd::Result(1);
 		}
 		std::string plugin_id = params[0];
 		if (!is_loaded(hdl, plugin_id))
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
-			return;
+			return msa::cmd::Result(2);
 		}
 		if (!is_enabled(hdl, plugin_id))
 		{
 			msa::agent::say(hdl, "Ooh! That plugin is already disabled, $USER_TITLE.");
-			return;
+			return msa::cmd::Result(3);
 		}
 		disable(hdl, plugin_id);
 		msa::agent::say(hdl, "All right, $USER_TITLE! I've now disabled the plugin called '" + plugin_id + "'.");
+		return msa::cmd::Result(0);
 	}
 	
-	static void cmd_list(msa::Handle hdl, const msa::cmd::ParamList & UNUSED(params), msa::event::HandlerSync *const UNUSED(sync))
+	static msa::cmd::Result cmd_list(msa::Handle hdl, const msa::cmd::ParamList & UNUSED(params), msa::event::HandlerSync *const UNUSED(sync))
 	{
 		std::vector<std::string> ids;
 		get_loaded(hdl, ids);
 		if (ids.empty())
 		{
 			msa::agent::say(hdl, "Hmm, I actually haven't loaded any plugins at all.");
-			return;
+			return msa::cmd::Result(0);
 		}
 		msa::agent::say(hdl, "Okay, $USER_TITLE. Here are the plugins that I've loaded:");
 		for (size_t i = 0; i < ids.size(); i++)
@@ -389,20 +391,21 @@ namespace msa { namespace plugin {
 		}
 		std::string plural = ids.size() > 1 ? "s" : "";
 		msa::agent::say(hdl, "That's " + std::to_string(ids.size()) + " plugin" + plural + " in total.");
+		return msa::cmd::Result(0);
 	}
 
-	static void cmd_info(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
+	static msa::cmd::Result cmd_info(msa::Handle hdl, const msa::cmd::ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		if (params.arg_count() < 1)
 		{
 			msa::agent::say(hdl, "Well sure, but you gotta tell me which plugin you wanna know about.");
-			return;
+			return msa::cmd::Result(1);
 		}
 		std::string plugin_id = params[0];
 		if (!is_loaded(hdl, plugin_id))
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but I never loaded a plugin called '" + plugin_id + "'.");
-			return;
+			return msa::cmd::Result(2);
 		}
 		const Info *info = get_info(hdl, plugin_id);
 		std::string ver_str;
@@ -434,6 +437,7 @@ namespace msa { namespace plugin {
 		msa::agent::say(hdl, "");
 		msa::agent::say(hdl, "Loaded with ID '" + info->id + "'.");
 		msa::agent::say(hdl, "Plugin is currently " + std::string(is_enabled(hdl, plugin_id) ? "ENABLED" : "DISABLED") + ".");
+		return msa::cmd::Result(0);
 	}
 	
 	static bool call_plugin_func(msa::Handle hdl, const std::string &id, const std::string &func_name, Func func, void *local_env)

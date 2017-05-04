@@ -34,7 +34,7 @@ $(ODIR)/util/string.o: $(SDIR)/util/string.cpp $(SDIR)/util/string.hpp
 $(ODIR)/cfg/cfg.o: $(SDIR)/cfg/cfg.cpp $(SDIR)/cfg/cfg.hpp $(SDIR)/util/string.hpp
 	$(CXX) -c -o $@ $(SDIR)/cfg/cfg.cpp $(CXXFLAGS)
 
-$(ODIR)/cmd/cmd.o: $(SDIR)/cmd/cmd.cpp $(SDIR)/cmd/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/util/string.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/cmd/hooks.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/event/timer.hpp $(SDIR)/event/timer_hooks.hpp $(SDIR)/event/hooks.hpp $(SDIR)/agent/agent.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp
+$(ODIR)/cmd/cmd.o: $(SDIR)/cmd/cmd.cpp $(SDIR)/cmd/cmd.hpp $(SDIR)/msa.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/util/string.hpp $(SDIR)/event/handler.hpp $(SDIR)/event/event.hpp $(SDIR)/event/topics.hpp $(SDIR)/cmd/hooks.hpp $(SDIR)/event/dispatch.hpp $(SDIR)/event/timer.hpp $(SDIR)/event/timer_hooks.hpp $(SDIR)/event/hooks.hpp $(SDIR)/agent/agent.hpp $(SDIR)/agent/hooks.hpp $(SDIR)/log/log.hpp $(SDIR)/log/hooks.hpp $(SDIR)/util/util.hpp
 	$(CXX) -c -o $@ $(SDIR)/cmd/cmd.cpp $(CXXFLAGS)
 
 $(ODIR)/log/log.o: $(SDIR)/log/log.cpp $(SDIR)/log/log.hpp $(SDIR)/msa.hpp $(SDIR)/cfg/cfg.hpp $(SDIR)/util/string.hpp $(SDIR)/log/hooks.hpp $(SDIR)/util/util.hpp

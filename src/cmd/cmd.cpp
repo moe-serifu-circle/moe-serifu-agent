@@ -3,6 +3,7 @@
 #include "util/string.hpp"
 #include "agent/agent.hpp"
 #include "log/log.hpp"
+#include "util/util.hpp"
 
 #include <cstdio>
 #include <stdexcept>
@@ -29,9 +30,9 @@ namespace msa { namespace cmd {
 	static int dispose_command_context(CommandContext *ctx);
 
 	// handlers
-	static void help_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
-	static void echo_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
-	static void kill_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
+	static Result help_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
+	static Result echo_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
+	static Result kill_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
 	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync);
 
 	static void register_default_commands(msa::Handle hdl);
@@ -150,17 +151,23 @@ namespace msa { namespace cmd {
 		return 0;
 	}
 
-	static void kill_func(msa::Handle hdl, const ParamList & UNUSED(params), msa::event::HandlerSync *const UNUSED(sync))
+	static Result kill_func(msa::Handle hdl, const ParamList & UNUSED(params), msa::event::HandlerSync *const UNUSED(sync))
 	{
 		msa::agent::say(hdl, "Right away, $USER_TITLE, I will terminate my EDT for you now!");
 		int status = msa::stop(hdl);
 		if (status != 0)
 		{
-			fprintf(stderr, "Shutdown error: %d\n", status);
+			if (status != MSA_ERR_LOG)
+			{
+				msa::log::error(hdl, "Shutdown error: " + std::to_string(status));
+				msa::util::sleep_milli(250); // give log a chance to get the error
+			}
+			return Result(1, std::string("Shutdown error ") + std::to_string(status));
 		}
+		return Result(0);
 	}
 	
-	static void help_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
+	static Result help_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		CommandContext *ctx = hdl->cmd;
 		if (params.arg_count() > 0)
@@ -171,6 +178,7 @@ namespace msa { namespace cmd {
 			{
 				msa::agent::say(hdl, "I'm sorry, $USER_TITLE, but I don't know about the command '" + cmd_name + "'.");
 				msa::agent::say(hdl, "But if you do HELP with no args, I'll list the commands I do know!");
+				return Result(1);
 			}
 			else
 			{
@@ -218,6 +226,7 @@ namespace msa { namespace cmd {
 					}
 				}
 				msa::agent::say(hdl, "You can call it like this: " + cmd_name + opt_str + usage_str);
+				return Result(0);
 			}
 		}
 		else
@@ -229,10 +238,11 @@ namespace msa { namespace cmd {
 				msa::agent::say(hdl, iter->first);
 			}
 			msa::agent::say(hdl, "You can do HELP followed by the name of a command to find out more.");
+			return Result(0);
 		}
 	}
 	
-	static void echo_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
+	static Result echo_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const UNUSED(sync))
 	{
 		std::string echo_string;
 		for (size_t i = 0; i < params.arg_count(); i++)
@@ -244,6 +254,7 @@ namespace msa { namespace cmd {
 			}
 		}
 		msa::agent::say(hdl, echo_string);
+		return Result(0);
 	}
 	
 	static void parse_command(msa::Handle hdl, const msa::event::Event *const e, msa::event::HandlerSync *const sync)
@@ -269,20 +280,44 @@ namespace msa { namespace cmd {
 		else
 		{
 			const Command *cmd = ctx->commands[cmd_name];
-			Result result(-1);
+			
+			// parse params
+			ParamList params;
 			try
 			{
-				ParamList params(tokens, cmd->options);
-				result = cmd->handler(hdl, params, sync);
-				ctx->last_threw_exception = false;
+				params = ParamList(tokens, cmd->options);
 			}
 			catch (const std::exception &e)
 			{
-				msa::log::error(hdl, "Command ''");
+				msa::log::error(hdl, "Param parsing for command '" + cmd_name + "' failed: " + e.what());
+				msa::agent::say(hdl, "Oh no! I'm sorry, but there was a problem with those arguments: " + std::string(e.what()));
+				// doesn't count as the command itself throwing an exception...
+				ctx->last_threw_exception = false;
+				// ...but does count as a failure status
+				ctx->last_status = -2;
+				return;
+			}
+			
+			// execute command
+			Result result(-1);
+			try
+			{
+				result = cmd->handler(hdl, params, sync);
+				
+				// special case for the KILL command, since after it executes we
+				// cannot use the state of the system anymore
+				if (cmd_name != "KILL")
+				{
+					ctx->last_threw_exception = false;
+					ctx->last_status = result.status();
+				}
+			}
+			catch (const std::exception &e)
+			{
+				msa::log::error(hdl, "Command " + params.str() + " failed with exception: " + e.what());
 				msa::agent::say(hdl, "Oh no! I'm sorry, but I couldn't do that. Take a look at my log file.");
 				ctx->last_threw_exception = true;
 			}
-			ctx->last_status = result.status();
 		}
 	}
 
@@ -305,7 +340,12 @@ namespace msa { namespace cmd {
 			unregister_command(hdl, cmd);
 		}
 	}
-
+	
+	ParamList::ParamList() :
+		_command(""),
+		_args(),
+		_options()
+	{}
 	
 	ParamList::ParamList(const std::vector<std::string> &tokens, const std::string &opts) :
 		_command(tokens[0]),
@@ -374,7 +414,7 @@ namespace msa { namespace cmd {
 		}
 		if (!_options.empty())
 		{
-			str += " : "
+			str += " : ";
 			size_t num_opts = 0;
 			for (auto i = _options.begin(); i != _options.end(); i++)
 			{
@@ -382,9 +422,9 @@ namespace msa { namespace cmd {
 				{
 					str += "-" + i->first;
 					const std::string &opt_arg = i->second[j];
-					if (!i->second[j]->empty())
+					if (!opt_arg.empty())
 					{
-						str += std::string("=\"") + *j + "\"";
+						str += std::string("=\"") + opt_arg + "\"";
 					}
 					if (j + 1 < i->second.size() || num_opts + 1 < _options.size())
 					{
@@ -393,9 +433,10 @@ namespace msa { namespace cmd {
 				}
 				num_opts++;	
 			}
-			str += "]"
+			str += "]";
 		}
 		str += ")";
+		return str;
 	}
 
 	const std::string &ParamList::command() const

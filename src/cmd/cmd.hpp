@@ -16,6 +16,7 @@ namespace msa { namespace cmd {
 	class ParamList
 	{
 		public:
+			ParamList();
 			ParamList(const std::vector<std::string> &tokens, const std::string &opts);
 			const std::string &command() const;
 			const std::string &operator[](size_t index) const;

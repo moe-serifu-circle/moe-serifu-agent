@@ -109,8 +109,8 @@ namespace msa { namespace event {
 	};
 	
 	static void fire_timers(msa::Handle hdl, chrono_time now);
-	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
-	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
+	static msa::cmd::Result cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
+	static msa::cmd::Result cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const sync);
 
 	extern std::vector<msa::cmd::Command *> get_timer_commands()
 	{
@@ -250,13 +250,13 @@ namespace msa { namespace event {
 		msa::thread::mutex_unlock(&ctx->mutex);
 	}
 	
-	static void cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
+	static msa::cmd::Result cmd_timer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
 	{
 		bool recurring = params.has_option('r');
 		if (params.arg_count() < 2)
 		{
 			msa::agent::say(hdl, "You gotta give me a time and a command to execute, $USER_TITLE.");
-			return;
+			return msa::cmd::Result(1);
 		}
 		int period = 0;
 		try
@@ -266,13 +266,13 @@ namespace msa { namespace event {
 		catch (std::exception &e)
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + params[0] + "' isn't a number of milliseconds.");
-			return;
+			return msa::cmd::Result(2);
 		}
 		if (period < 0)
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, I might be good but I can't go back in time.");
 			msa::agent::say(hdl, "Please give me a positive number of milliseconds.");
-			return;
+			return msa::cmd::Result(3);
 		}
 		auto ms = std::chrono::milliseconds(period);
 		std::string cmd_str = "";
@@ -298,20 +298,22 @@ namespace msa { namespace event {
 		if (id == -1)
 		{
 			msa::agent::say(hdl, "Oh no! I'm sorry, $USER_TITLE, that didn't work quite right!");
+			return msa::cmd::Result(4);
 		}
 		else
 		{
 			msa::agent::say(hdl, "Okay, $USER_TITLE, I will do that " + type + " " + std::to_string(ms.count()) + " millisecond" + plural + "!");
 			msa::agent::say(hdl, "The timer ID is " + std::to_string(id) + ".");
+			return msa::cmd::Result(0);
 		}
 	}	
 
-	static void cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
+	static msa::cmd::Result cmd_deltimer(msa::Handle hdl, const msa::cmd::ParamList &params, HandlerSync *const UNUSED(sync))
 	{
 		if (params.arg_count() < 1)
 		{
 			msa::agent::say(hdl, "Ahh... $USER_TITLE, I need to know which timer I should delete.");
-			return;
+			return msa::cmd::Result(1);
 		}
 		int16_t id = 0;
 		try
@@ -321,10 +323,11 @@ namespace msa { namespace event {
 		catch (std::exception &e)
 		{
 			msa::agent::say(hdl, "Sorry, $USER_TITLE, but '" + params[0] + "' isn't an integer.");
-			return;
+			return msa::cmd::Result(2);
 		}
 		remove_timer(hdl, id);
 		msa::agent::say(hdl, "Okay! I stopped timer " + std::to_string(id) + " for you, $USER_TITLE.");
+		return msa::cmd::Result(0);
 	}
 
 } }

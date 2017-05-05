@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <map>
-#include <chrono>
+#include <cctype>
 
 namespace msa { namespace cmd {
 
@@ -28,6 +28,7 @@ namespace msa { namespace cmd {
 	static void read_config(msa::Handle hdl, const msa::cfg::Section &config);
 	static int create_command_context(CommandContext **ctx);
 	static int dispose_command_context(CommandContext *ctx);
+	static void shell_tokenize(const std::string &str, std::vector<std::string> &output);
 
 	// handlers
 	static Result help_func(msa::Handle hdl, const ParamList &params, msa::event::HandlerSync *const sync);
@@ -264,7 +265,7 @@ namespace msa { namespace cmd {
 		std::string str = e_args->get_args();
 		delete e_args;
 		std::vector<std::string> tokens;
-		msa::string::tokenize(str, ' ', tokens);
+		shell_tokenize(str, tokens);
 		// pull out command name and call the appropriate function
 		if (tokens.size() == 0)
 		{
@@ -338,6 +339,75 @@ namespace msa { namespace cmd {
 		{
 			const Command *cmd = &default_commands[i];
 			unregister_command(hdl, cmd);
+		}
+	}
+
+	static void shell_tokenize(const std::string &str, std::vector<std::string> &output)
+	{
+		enum class Mode { NORMAL, SINGLE_QUOTED, DOUBLE_QUOTED, ESCAPED };
+		std::string cur_str;
+		Mode mode = Mode::NORMAL;
+		for (size_t i = 0; i < str.size(); i++)
+		{
+			char ch = str[i];
+			if (mode == Mode::NORMAL)
+			{
+				if (std::isspace(ch) != 0)
+				{
+					if (!cur_str.empty())
+					{
+						output.push_back(cur_str);
+						cur_str.clear();
+					}
+				}
+				else if (ch == '\\')
+				{
+					mode = Mode::ESCAPED;
+				}
+				else if (ch == '\'')
+				{
+					mode = Mode::SINGLE_QUOTED;
+				}
+				else if (ch == '"')
+				{
+					mode = Mode::DOUBLE_QUOTED;
+				}
+				else
+				{
+					cur_str += ch;
+				}
+			}
+			else if (mode == Mode::SINGLE_QUOTED)
+			{
+				if (ch == '\'')
+				{
+					mode = Mode::NORMAL;
+				}
+				else
+				{
+					cur_str += ch;
+				}
+			}
+			else if (mode == Mode::DOUBLE_QUOTED)
+			{
+				if (ch == '"')
+				{
+					mode = Mode::NORMAL;
+				}
+				else
+				{
+					cur_str += ch;
+				}
+			}
+			if (mode == Mode::ESCAPED)
+			{
+				cur_str += ch;
+				mode = Mode::NORMAL;
+			}
+		}
+		if (!cur_str.empty())
+		{
+			output.push_back(cur_str);
 		}
 	}
 	

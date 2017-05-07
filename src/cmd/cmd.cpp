@@ -555,29 +555,4 @@ namespace msa { namespace cmd {
 		return _options.at(opt);
 	}
 
-	Result::Result(int status) :
-		_status(status),
-		_value()
-	{}
-
-	Result::Result(int status, const std::string &retval) :
-		_status(status),
-		_value(retval)
-	{}
-	
-	Result::Result(const std::string &retval) :
-		_status(0),
-		_value(retval)
-	{}
-
-	int Result::status() const
-	{
-		return _status;
-	}
-
-	const std::string &Result::value() const
-	{
-		return _value;
-	}
-
 } }

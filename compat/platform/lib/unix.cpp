@@ -11,6 +11,9 @@ namespace msa { namespace lib {
 		void *handle_ptr = dlopen(path.c_str(), RTLD_NOW);
 		if (handle_ptr == NULL)
 		{
+#ifdef DEBUG
+			printf("%s\n", dlerror());
+#endif
 			throw library_error(name, "could not load library");
 		}
 		Library *lib = new Library;

@@ -37,11 +37,30 @@ namespace msa { namespace cmd {
 	class Result
 	{
 		public:
-			Result(int status);
-			Result(const std::string &retval);
-			Result(int status, const std::string &retval);
-			const std::string &value() const;
-			int status() const;
+			Result(int status) :
+				_status(status),
+				_value()
+			{}
+			
+			Result(const std::string &retval) :
+				_status(0),
+				_value(retval)
+			{}
+			
+			Result(int status, const std::string &retval) :
+				_status(status),
+				_value(retval)
+			{}
+			
+			const std::string &value() const
+			{
+				return _value;
+			}
+			
+			int status() const
+			{
+				return _status;
+			}
 
 		private:
 			int _status;

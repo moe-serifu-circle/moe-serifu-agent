@@ -18,13 +18,14 @@ namespace msa { namespace event {
 	class Timer
 	{
 		public:
-			Timer(int16_t id, std::chrono::milliseconds period, Topic topic, const IArgs &args, bool recurring) :
+			Timer(int16_t id, std::chrono::milliseconds period, Topic topic, const IArgs &args, bool recurring, bool system) :
 				_id(id),
 				_period(period),
 				_last_fired(chrono_clock::now()),
 				_recurring(recurring),
 				_event_args(args.copy()),
-				_event_topic(topic)
+				_event_topic(topic),
+				_system(system)
 			{}
 			
 			Timer(const Timer &other) :
@@ -33,7 +34,8 @@ namespace msa { namespace event {
 				_last_fired(other._last_fired),
 				_recurring(other._recurring),
 				_event_args(other._event_args->copy()),
-				_event_topic(other._event_topic)
+				_event_topic(other._event_topic),
+				_system(other._system)
 			{}
 			
 			~Timer()
@@ -49,6 +51,7 @@ namespace msa { namespace event {
 				_period = other._period;
 				_last_fired = other._last_fired;
 				_event_topic = other._event_topic;
+				_system = other._system;
 				return *this;
 			}
 			
@@ -91,6 +94,11 @@ namespace msa { namespace event {
 				return _event_topic;
 			}
 
+			bool is_system() const
+			{
+				return _system;
+			}
+
 		private:
 			int16_t _id;
 			std::chrono::milliseconds _period;
@@ -98,6 +106,7 @@ namespace msa { namespace event {
 			bool _recurring;
 			IArgs *_event_args;
 			Topic _event_topic;
+			bool _system;
 	};
 	
 	struct TimerContext
@@ -134,7 +143,7 @@ namespace msa { namespace event {
 	{
 		msa::thread::mutex_lock(&msa->timer->mutex);
 		int16_t id = msa->timer->list.size();
-		Timer *t = new Timer(id, delay, topic, args, false);
+		Timer *t = new Timer(id, delay, topic, args, false, true);
 		msa->timer->list[t->id()] = t;
 		msa::thread::mutex_unlock(&msa->timer->mutex);
 		msa::log::debug(msa, "Scheduled a " + topic_str(topic) + " event to fire in " + std::to_string(delay.count()) + "ms (id = " + std::to_string(t->id()) + ")");
@@ -145,10 +154,21 @@ namespace msa { namespace event {
 	{
 		msa::thread::mutex_lock(&msa->timer->mutex);
 		int16_t id = msa->timer->list.size();
-		Timer *t = new Timer(id, period, topic, args, true);
+		Timer *t = new Timer(id, period, topic, args, true, true);
 		msa->timer->list[t->id()] = t;
 		msa::thread::mutex_unlock(&msa->timer->mutex);
 		msa::log::debug(msa, "Scheduled a " + topic_str(topic) + " event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id()) + ")");
+		return t->id();
+	}
+	
+	extern int16_t sys_add_timer(msa::Handle msa, std::chrono::milliseconds period, const Topic topic, const IArgs &args)
+	{
+		msa::thread::mutex_lock(&msa->timer->mutex);
+		int16_t id = msa->timer->list.size();
+		Timer *t = new Timer(id, period, topic, args, true, false);
+		msa->timer->list[t->id()] = t;
+		msa::thread::mutex_unlock(&msa->timer->mutex);
+		msa::log::debug(msa, "Scheduled a " + topic_str(topic) + " system event to fire every " + std::to_string(period.count()) + "ms (id = " + std::to_string(t->id()) + ")");
 		return t->id();
 	}
 
@@ -162,8 +182,21 @@ namespace msa { namespace event {
 			throw std::logic_error("no timer with ID: " + std::to_string(id));
 		}
 		Timer *t = ctx->list[id];
-		ctx->list.erase(id);
+		if (t->is_system())
+		{
+			msa::thread::mutex_unlock(&ctx->mutex);
+			throw std::logic_error("cannot remove system timer");
+		}
+		sys_remove_timer(msa, id);
 		msa::thread::mutex_unlock(&ctx->mutex);
+		return;
+	}
+
+	extern void sys_remove_timer(msa::Handle msa, int16_t id)
+	{
+		TimerContext *ctx = msa->timer;
+		Timer *t = ctx->list[id];
+		ctx->list.erase(id);
 		delete t;
 		msa::log::debug(msa, "Removed timer ID " + std::to_string(id));
 		return;

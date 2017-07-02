@@ -1,5 +1,6 @@
-# Moe Serifu Agent
 [![Build Status](https://travis-ci.org/dekarrin/moe-serifu-agent.svg?branch=master)](https://travis-ci.org/dekarrin/moe-serifu-agent)
+![logo](https://raw.githubusercontent.com/wiki/dekarrin/moe-serifu-agent/assets/logo/logo-en-700w.png "MSA Logo")
+---
 
 Moe Serifu Agent (MSA) is an event-driven personal assistant system that
 presents itself as existing in a particular location (like a house or a

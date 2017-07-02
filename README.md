@@ -33,6 +33,8 @@ consumes anime tends to have a lower barrier to their willing suspension of
 disbelief in ascribing emotions to fictional characters than that of the
 general population.
 
+<div style="text-align:center"><img alt="mascot-vsign" src="https://raw.githubusercontent.com/wiki/dekarrin/moe-serifu-agent/assets/mascot/vsign-150w.png" title="Masa-Chan" /></div>
+
 ## Exchangable Personality and Appearance
 
 The MSA system at its core represents itself as an anime-themed character. An
@@ -81,6 +83,8 @@ used as an output device. In this case, the avatar could travel directly to the
 user in order to interact with them. The MSA system would use a variety of
 sensors in order to detect the physical location of the mobile device and track
 which other output devices it should be considered adjacent to.
+
+<div style="text-align:center"><img alt="mascot-chibi" src="https://raw.githubusercontent.com/wiki/dekarrin/moe-serifu-agent/assets/mascot/chibi-100w.png" title="Masa-Chan Chibi" /></div>
 
 *******
 

@@ -477,6 +477,7 @@ namespace msa { namespace output {
 			throw std::logic_error("cannot print to TTY terminal: " + *dev->device_name);
 		}
 		printf("%s", ch->text->c_str());
+        fflush(stdout);
 	}
 
 	static void create_default_handlers(msa::Handle hdl)

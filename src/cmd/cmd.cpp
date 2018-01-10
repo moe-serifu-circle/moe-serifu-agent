@@ -277,6 +277,7 @@ namespace msa { namespace cmd {
 		if (ctx->commands.find(cmd_name) == ctx->commands.end())
 		{
 			msa::agent::say(hdl, "I'm sorry, $USER_TITLE. I don't know what you mean by '" + cmd_name + "'.");
+            msa::agent::prompt(hdl);
 		}
 		else
 		{
@@ -311,6 +312,7 @@ namespace msa { namespace cmd {
 				{
 					ctx->last_threw_exception = false;
 					ctx->last_status = result.status();
+                    msa::agent::prompt(hdl);
 				}
 			}
 			catch (const std::exception &e)

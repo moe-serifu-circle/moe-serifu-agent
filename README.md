@@ -1,5 +1,7 @@
-# Moe Serifu Agent
-[![Build Status](https://travis-ci.org/dekarrin/moe-serifu-agent.svg?branch=master)](https://travis-ci.org/dekarrin/moe-serifu-agent)
+[![Build Status](https://travis-ci.org/moe-serifu-circle/moe-serifu-agent.svg?branch=master)](https://travis-ci.org/dekarrin/moe-serifu-agent)
+![logo](https://raw.githubusercontent.com/wiki/dekarrin/moe-serifu-agent/assets/logo/logo-en-700w.png "MSA Logo")
+---
+[Project Website](http://www.moeserifu.moe)
 
 Moe Serifu Agent (MSA) is an event-driven personal assistant system that
 presents itself as existing in a particular location (like a house or a
@@ -31,6 +33,8 @@ The anime theme was chosen because the author believes that the demograph that
 consumes anime tends to have a lower barrier to their willing suspension of
 disbelief in ascribing emotions to fictional characters than that of the
 general population.
+
+![mascot-vsign](https://raw.githubusercontent.com/wiki/dekarrin/moe-serifu-agent/assets/mascot/vsign-150w.png "Masa-Chan")
 
 ## Exchangable Personality and Appearance
 
@@ -80,6 +84,8 @@ used as an output device. In this case, the avatar could travel directly to the
 user in order to interact with them. The MSA system would use a variety of
 sensors in order to detect the physical location of the mobile device and track
 which other output devices it should be considered adjacent to.
+
+![mascot-chibi](https://raw.githubusercontent.com/wiki/dekarrin/moe-serifu-agent/assets/mascot/chibi-100w.png "Masa-Chan Chibi")
 
 *******
 

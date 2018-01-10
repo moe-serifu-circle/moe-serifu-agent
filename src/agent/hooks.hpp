@@ -10,7 +10,7 @@
 #endif
 
 MSA_MODULE_HOOK(void, say, msa::Handle hdl, const std::string &text)
-MSA_MODULE_HOOK(void, prompt, msa::Handle hdl)
+MSA_MODULE_HOOK(void, print_prompt_char, msa::Handle hdl)
 MSA_MODULE_HOOK(void, register_substitution, msa::Handle hdl, const std::string &name)
 MSA_MODULE_HOOK(void, set_substitution, msa::Handle hdl, const std::string &name, const std::string &value)
 MSA_MODULE_HOOK(void, unregister_substitution, msa::Handle hdl, const std::string &name)

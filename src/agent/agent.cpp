@@ -74,16 +74,17 @@ namespace msa { namespace agent {
 		return hdl->agent->agent;
 	}
 
-	extern void prompt(msa::Handle hdl)
+	extern void print_prompt_char(msa::Handle hdl)
 	{
-        std::string output_text = "> ";
+		std::string output_text = "> ";
 		msa::var::expand(hdl->agent->expander, output_text);
 		msa::output::write_text(hdl, output_text);
+        fflush(stdout);
 	}
 
 	extern void say(msa::Handle hdl, const std::string &text)
 	{
-        std::string output_text = "$AGENT_NAME: \"" + text + "\"\n";
+		std::string output_text = "$AGENT_NAME: \"" + text + "\"\n";
 		msa::var::expand(hdl->agent->expander, output_text);
 		msa::output::write_text(hdl, output_text);
 	}

@@ -1,7 +1,8 @@
 class config_error(Exception):
     def __init__(self, sec, key, val, msg, index=0):
         cache = str(sec)+"."+str(key)
-        if index: cache+="["+str(index)+"]"
+        if index != 0:
+            cache += "[" + str(index) + "]"
         cache += " \""+str(val)+"\" " + msg
         super().__init__(cache)
         self._sec = sec

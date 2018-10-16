@@ -1,3 +1,31 @@
+class Section():
+    def __init__(self, name):
+        self._name = name
+        self._arr = {}
+
+    def set(self, key, val):
+        self._arr[key] = [val]
+
+    def push(self, key, val):
+        if not self.has(key):
+            self.create_key(key)
+        self._arr[key].append(val)
+
+    def create_key(self, key):
+        self._arr[key] = []
+
+    def has(self, key):
+        keys = list(self._arr.keys())
+        if key in keys:
+            return True
+        return False
+
+    def __getitem__(self, key):
+        try:
+            return str(self._arr[key][0])
+        except (KeyError, IndexError):
+            raise IndexError("Key "+str(key)+" either contains no values, or does not exist yet")
+
 class ConfigError(Exception):
     def __init__(self, sec, key, val, msg, index=0):
         cache = str(sec)+"."+str(key)

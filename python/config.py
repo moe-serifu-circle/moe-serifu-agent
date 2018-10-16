@@ -1,4 +1,4 @@
-class config_error(Exception):
+class ConfigError(Exception):
     def __init__(self, sec, key, val, msg, index=0):
         cache = str(sec)+"."+str(key)
         if index != 0:

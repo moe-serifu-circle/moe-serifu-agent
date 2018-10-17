@@ -12,10 +12,10 @@ def load(filepath):
     for line in lines:
         line = line.strip()
         if len(line) == 0 or line[0] == COMMENT_CHAR: #checking for whitespace only
-            pass
+            continue
         elif line[0] == SECTION_HEADER_START_CHAR and line[-1] == SECTION_HEADER_END_CHAR:
             cur_sect = line[1:-1]
-            if cur_sect not in list(sections.keys()):
+            if cur_sect not in sections:
                 sections[cur_sect] = Section(cur_sect)
         elif "=" in line:
             split = line.index("=")
@@ -27,12 +27,13 @@ def load(filepath):
                 try:
                     index = int(key[starti:-1])
                     if index < 0:
-                        raise Exception()
-                    key = key[:starti]
+                        raise Exception() #Only used to run code in the exception block, alongside any exception raised by the previous line
                 except:
                     raise ValueError("Key index must be a non-negative integer")
+                else:
+                    key = key[:starti]
 
-            if len(key)==0:
+            if len(key) == 0:
                 raise ValueError("Key must not be blank")
 
             sect = sections[cur_sect]
@@ -76,7 +77,7 @@ class Section():
         if not self.has(key):
             self.create_key(key)
         if len(self.get_all(key)) < index+1:
-            self._arr[key] += [""]*((index+1)-len(self._arr[key]))
+            self._arr[key] += [""] * ((index + 1) - len(self._arr[key])) #if list is smaller than required, initialize values up to required index to ""
         self._arr[key][index] = val
 
     def push(self, key, val):

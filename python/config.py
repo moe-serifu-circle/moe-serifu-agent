@@ -58,7 +58,7 @@ def save(config, filepath):
                 if use_index:
                     line += "["+str(index)+"]"
                 line += " = " + entry
-            file.write(line + "\n")
+                file.write(line + "\n")
         file.write("\n")
     file.close()
 

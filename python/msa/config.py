@@ -46,10 +46,10 @@ def save(config, filepath):
         raise TypeError("Can only save instances of Config")
 
     file = open(filepath, "w")
-    for section_name in config.sections:
+    for section_name in sorted(config.sections.keys()):
         section = config.sections[section_name]
         file.write(SECTION_HEADER_START_CHAR + section_name + SECTION_HEADER_END_CHAR + "\n")
-        for key in section.get_entries():
+        for key in sorted(section.get_entries()):
             entries = section.get_all(key)
             use_index = False
             if len(entries) > 1:

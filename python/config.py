@@ -1,3 +1,8 @@
+class Config():
+    def __init__(self, config_file, sections):
+        self.filepath = config_file
+        self.sections = sections #a dict where the keys are the names of the Sections
+
 class Section():
     def __init__(self, name):
         self._name = name

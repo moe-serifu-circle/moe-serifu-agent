@@ -25,7 +25,7 @@ def load(filepath):
             if "[" in key and key[-1] == "]":
                 starti = key.index("[")
                 try:
-                    index = int(key[starti:-1])
+                    index = int(key[starti+1:-1])
                     if index < 0:
                         raise Exception() #Only used to run code in the exception block, alongside any exception raised by the previous line
                 except:

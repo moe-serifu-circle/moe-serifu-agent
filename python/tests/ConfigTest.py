@@ -1,6 +1,8 @@
 import sys
 sys.path.append('../')
 from config import *
+#only used * for simple namespace usage within this file only
+#don't use in other files if possible as a general rule
 
 try:
     cfg = load("../../msa.cfg")

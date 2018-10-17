@@ -1,5 +1,3 @@
-import io
-
 COMMENT_CHAR = '#'
 SECTION_HEADER_START_CHAR = '['
 SECTION_HEADER_END_CHAR = ']'
@@ -12,21 +10,35 @@ def load(filepath):
     cur_sect = None
     sections = {}
     for line in lines:
-        if line[0] == COMMENT_CHAR or len(line.strip()) == 0: #checking for whitespace only
+        line = line.strip()
+        if len(line) == 0 or line[0] == COMMENT_CHAR: #checking for whitespace only
             pass
-        elif line[0] == SECTION_HEADER_START_CHAR and line.strip()[-1] == SECTION_HEADER_END_CHAR:
+        elif line[0] == SECTION_HEADER_START_CHAR and line[-1] == SECTION_HEADER_END_CHAR:
             cur_sect = line[1:-1]
             if cur_sect not in list(sections.keys()):
                 sections[cur_sect] = Section(cur_sect)
         elif "=" in line:
-            index = line.index("=")
-            key = line[:index].strip()
-            val = line[index+1:].strip()
-            if "[" in val and val[-1] == "]":
-                starti = (len(val)-1)-val[::-1].index("[") #finds final instance of '[' in line, in case another instance is within val
+            split = line.index("=")
+            key = line[:split].strip()
+            val = line[split+1:].strip()
+            index = 0
+            if "[" in key and key[-1] == "]":
+                starti = key.index("[")
                 try:
-                    #end of point I can write here
-            
+                    index = int(key[starti:-1])
+                    if index < 0:
+                        raise Exception()
+                    key = key[:starti]
+                except:
+                    raise ValueError("Key index must be a positive integer")
+
+            if len(key)==0:
+                raise ValueError("Key must not be blank")
+
+            sect = sections[cur_sect]
+            sect.push(key, val) #index implementation not possible with Section yet
+
+    return Config(filepath, sections)
 
 def save(config, filepath):
     if type(config) != Config:

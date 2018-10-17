@@ -30,19 +30,37 @@ def load(filepath):
                         raise Exception()
                     key = key[:starti]
                 except:
-                    raise ValueError("Key index must be a positive integer")
+                    raise ValueError("Key index must be a non-negative integer")
 
             if len(key)==0:
                 raise ValueError("Key must not be blank")
 
             sect = sections[cur_sect]
-            sect.push(key, val) #index implementation not possible with Section yet
+            sect.set(key, index, val)
 
     return Config(filepath, sections)
 
 def save(config, filepath):
     if type(config) != Config:
         raise TypeError("Can only save instances of Config")
+
+    file = open(filepath, "w")
+    for section_name in config.sections:
+        section = config.sections[section_name]
+        file.write(SECTION_HEADER_START_CHAR + section_name + SECTION_HEADER_END_CHAR + "\n")
+        for key in section.get_entries():
+            entries = section.get_all(key)
+            use_index = False
+            if len(entries) > 1:
+                use_index = True
+            for index, entry in enumerate(entries):
+                line = key
+                if use_index:
+                    line += "["+str(index)+"]"
+                line += " = " + entry
+            file.write(line + "\n")
+        file.write("\n")
+    file.close()
 
 class Config():
     def __init__(self, config_file, sections):
@@ -54,8 +72,12 @@ class Section():
         self._name = name
         self._arr = {}
 
-    def set(self, key, val):
-        self._arr[key] = [val]
+    def set(self, key, index, val):
+        if not self.has(key):
+            self.create_key(key)
+        if len(self.get_all(key)) < index+1:
+            self._arr[key] += [""]*((index+1)-len(self._arr[key]))
+        self._arr[key][index] = val
 
     def push(self, key, val):
         if not self.has(key):
@@ -70,6 +92,15 @@ class Section():
         if key in keys:
             return True
         return False
+
+    def get_entries(self):
+        return list(self._arr.keys())
+
+    def get_all(self, key):
+        try:
+            return list(self._arr[key])
+        except KeyError:
+            raise IndexError("Key "+str(key)+" does not exist")
 
     def __getitem__(self, key):
         try:

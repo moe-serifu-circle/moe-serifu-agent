@@ -5,48 +5,24 @@ import asyncio
 
 from wrapper import reschedule
 from prompt import Prompt
+from coroutine import HelloWorldCoroutine, KeyboardInputCoroutine
+
 
 loop = asyncio.get_event_loop()
 
-handlers = []
 
+coroutines = []
 
 def init():
 
-    # init all handlers
-    # in practice these should all be methods on classes
-    class a:
-        def __init__(self):
-            self.prompt = Prompt()
+    coroutines.append(KeyboardInputCoroutine())
+    coroutines.append(HelloWorldCoroutine())
 
-        @reschedule
-        async def handle(self, *args):
-
-            msg = await self.prompt("prompt: ", wait=True)
-            print(msg)
-
-            await asyncio.sleep(0.5)
-
-    class b:
-        @reschedule
-        async def handle(self, *args):
-            print("hello world 2")
-            sys.stdout.flush()
-
-            await asyncio.sleep(3)
-
-
-    _a = a()
-    _b = b()
-
-
-    handlers.append(_b)
-    handlers.append(_a)
 
 
 def main_coro():
-    for obj in handlers:
-        asyncio.ensure_future(obj.handle(), loop=loop)
+    for coro in coroutines:
+        asyncio.ensure_future(coro.work(), loop=loop)
 
 def start():
     main_coro()

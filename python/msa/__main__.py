@@ -3,33 +3,7 @@ import sys
 import click
 import asyncio
 
-from wrapper import reschedule
-from prompt import Prompt
-from coroutine import HelloWorldCoroutine, KeyboardInputCoroutine
-
-
-loop = asyncio.get_event_loop()
-
-
-coroutines = []
-
-def init():
-
-    coroutines.append(KeyboardInputCoroutine())
-    coroutines.append(HelloWorldCoroutine())
-
-
-
-def main_coro():
-    for coro in coroutines:
-        asyncio.ensure_future(coro.work(), loop=loop)
-
-def start():
-    main_coro()
-    loop.run_forever()
-
-def quit():
-    pass
+import supervisor
 
 
 @click.command()
@@ -41,12 +15,10 @@ def main(cfg, debug):
         print(f"Using config file '{cfg}'")
 
     # perform msa::init() equivalent here
-    init()
+    supervisor.init()
 
     # perform msa::start() equivalent here
-    start()
-
-    # perform msa::quit() equivalent here
+    supervisor.start()
 
 
 if __name__ == "__main__":

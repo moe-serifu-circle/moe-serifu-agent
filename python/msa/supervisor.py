@@ -18,7 +18,7 @@ stop_future = None
 def init():
 
     plugins = [
-        "conversation_module"
+        "conversation"
     ]
 
     plugin_modules = []

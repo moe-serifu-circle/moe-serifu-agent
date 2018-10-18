@@ -33,4 +33,6 @@ class KeyboardInputCoroutine(Coroutine):
         else:
             print(f"Well I don't know what {msg} is but it sounds like you enjoy it!")
 
+        print() # add an extra line for visibility
+
         await asyncio.sleep(0.5)

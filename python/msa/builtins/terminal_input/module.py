@@ -1,6 +1,6 @@
 
-from msa.plugins.terminal_input import event
-from msa.plugins.terminal_input import coroutine
+from msa.builtins.terminal_input import event
+from msa.builtins.terminal_input import coroutine
 
 
 class PluginModule:

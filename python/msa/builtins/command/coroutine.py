@@ -4,7 +4,7 @@ import sys
 from msa import supervisor
 from msa.coroutine import Coroutine, reschedule
 
-from msa.builtins.terminal_input.event import TextInputEvent
+from msa.plugins.terminal_input.event import TextInputEvent
 
 class ConversationCoroutine(Coroutine):
 

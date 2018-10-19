@@ -19,19 +19,25 @@ subscriptions = {}
 event_queues = {}
 
 def init():
+    builtins = [
+        "terminal_input",
+    ]
 
     plugins = [
-        "terminal_input",
-        "conversation"
+        "conversation",
     ]
 
     plugin_modules = []
 
-    # load modules
+    # load built in modules
+    for module_name in builtins:
+        module = importlib.import_module("msa.builtins." + module_name + ".module")
+        plugin_modules.append(module.PluginModule)
+
+    # load plugin modules
     for module_name in plugins:
         module = importlib.import_module("msa.plugins." + module_name + ".module")
         plugin_modules.append(module.PluginModule)
-
 
     # register coroutines
     for module in plugin_modules:

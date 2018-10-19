@@ -4,7 +4,7 @@ from msa import supervisor
 from msa.coroutine import Coroutine, reschedule
 from msa.prompt import Prompt
 
-from msa.plugins.terminal_input.event import TextInputEvent
+from msa.builtins.terminal_input.event import TextInputEvent
 
 class KeyboardInputCoroutine(Coroutine):
 

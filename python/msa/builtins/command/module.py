@@ -1,12 +1,9 @@
 
-from msa.plugins.conversation import event
-from msa.plugins.conversation import coroutine
+from msa.builtins.command import coroutine
 
 class PluginModule:
 
     coroutines = [
-        coroutine.ConversationCoroutine()
+        coroutine.CommandCoroutine()
     ]
-
-    events = []
 

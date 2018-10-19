@@ -2,9 +2,8 @@ import datetime
 
 class Event:
 
-    def __init__(self, event_type, priority, data=None):
+    def __init__(self, priority, data=None):
 
-        self.type = event_type
         self.generation_time = datetime.datetime.now()
         self.priority = priority
         self.data = data

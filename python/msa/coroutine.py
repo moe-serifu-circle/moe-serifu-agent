@@ -8,6 +8,9 @@ class Coroutine:
     def __init__(self):
         self.loop = asyncio.get_event_loop()
 
+    async def init(self):
+        pass
+
     async def work(self, event):
         raise NotImplementedError
 

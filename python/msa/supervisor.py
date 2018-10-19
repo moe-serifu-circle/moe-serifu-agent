@@ -15,12 +15,12 @@ stop_main_coro = False
 stop_future = None
 
 registered_coroutines = []
-subscriptions = {}
 event_queues = {}
 
 def init():
     builtins = [
         "terminal_input",
+        "command",
     ]
 
     plugins = [
@@ -66,6 +66,9 @@ async def propogate_event(new_event):
 
 async def main_coro():
     # "paralellizes" tasks, scheduling them on the event loop
+
+    init_coroutines = [coro["coroutine"].init() for coro in registered_coroutines]
+    await asyncio.gather(*init_coroutines, return_exceptions=True)
 
     primed_coroutines = [coro["coroutine"].work(coro["event_queue"]) for coro in registered_coroutines]
     futures = asyncio.gather(*primed_coroutines, return_exceptions=True)

@@ -4,41 +4,69 @@ import sys
 from msa import supervisor
 from msa.coroutine import Coroutine, reschedule
 
-from msa.plugins.terminal_input.event import TextInputEvent
+from msa.builtins.terminal_input.event import TextInputEvent
+from msa.builtins.command.event import RegisterCommandEvent
 
-class ConversationCoroutine(Coroutine):
+class CommandCoroutine(Coroutine):
 
     def __init__(self):
         super().__init__()
 
+        self.event_factories = []
+
+
     @reschedule
     async def work(self, event_queue):
-        print("What would you like to eat?\n1)Apples\n2)Pears")
+
+
         event = await event_queue.get()
+        event_queue.task_done()
 
-        if not isinstance(event, TextInputEvent) or not event.propogate:
-            await asyncio.sleep(0.1)
+
+        if not event.propogate:
+            await asyncio.sleep(0.01)
             return
 
-        msg = event.data["text"]
+        if isinstance(event, RegisterCommandEvent):
+            self.register_factory(event)
 
-        msg = msg.lower()
+        elif isinstance(event, TextInputEvent):
+            await self.parse_text_input(event.data["text"])
 
-        if msg == "pears":
-            print("Yummy, yummy pears!")
+        await asyncio.sleep(0.1)
 
-        elif msg == "apples":
-            print("Keeping the doctor away and all that :D")
 
-        elif msg == "quit":
-            print("Well if you insist... Bye, bye!", flush=True)
-            from msa.supervisor import stop
-            stop()
-            return
+    def register_factory(self, event):
+            new_factory = event.data["factory"]
 
-        else:
-            print(f"Well I don't know what {msg} is but it sounds like you enjoy it!")
+            # verify that no other commands utilize the same invoke keyword
+            for event_facory in self.event_factories:
+                if event_factory.invoke.lower() == new_factory_invoke.lower():
+                    print(f"Command with invoke keyword '{new_factory.invoke}' already defined")
 
-        print() # add an extra line for visibility
+            self.event_factories.append(new_factory)
 
-        await asyncio.sleep(0.5)
+
+    async def parse_text_input(self, raw_text):
+        # tokenize
+        tokens = raw_text.split()
+
+        invoke_keyword = tokens[0]
+
+        # search event factories for one that corresponds to invoke_keyword
+        for event_factory in self.event_factories:
+            if invoke_keyword == event_factory.invoke:
+
+
+                new_event = event_factory.create_event({
+                        "raw_text_input": raw_text,
+                        "tokens": tokens
+                    })
+
+                # found appropriate event type
+                await supervisor.propogate_event(new_event)
+
+                break # break out as we are done here
+
+
+

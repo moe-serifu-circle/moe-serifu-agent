@@ -22,8 +22,8 @@ class ConversationCoroutine(Coroutine):
         factory = CommandEventFactory(
                 event_constructor=ConverseCommandEvent,
                 invoke="conv",
-                describe="",
-                usage=""
+                describe="Have a nice conversation with your AI.",
+                usage="$conv [response]\ne.g. $conv apple"
                 )
 
         register_event = RegisterCommandEvent(factory)

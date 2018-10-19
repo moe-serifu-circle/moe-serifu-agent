@@ -37,14 +37,14 @@ class CommandCoroutine(Coroutine):
 
 
     def register_factory(self, event):
-            new_factory = event.data["factory"]
+        new_factory = event.data["factory"]
 
-            # verify that no other commands utilize the same invoke keyword
-            for event_facory in self.event_factories:
-                if event_factory.invoke.lower() == new_factory_invoke.lower():
-                    print(f"Command with invoke keyword '{new_factory.invoke}' already defined")
+        # verify that no other commands utilize the same invoke keyword
+        for event_factory in self.event_factories:
+            if event_factory.invoke.lower() == new_factory.invoke.lower():
+                print(f"Command with invoke keyword '{new_factory.invoke}' already defined")
 
-            self.event_factories.append(new_factory)
+        self.event_factories.append(new_factory)
 
 
     async def parse_text_input(self, raw_text):

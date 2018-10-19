@@ -21,6 +21,7 @@ def init():
     builtins = [
         "terminal_input",
         "command",
+        "help",
     ]
 
     plugins = [

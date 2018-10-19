@@ -9,15 +9,19 @@ from msa.coroutine import HelloWorldCoroutine
 
 loop = asyncio.get_event_loop()
 
-registered_coroutines = []
 event_queue = asyncio.Queue()
 stop_loop = False
 stop_main_coro = False
 stop_future = None
 
+registered_coroutines = []
+subscriptions = {}
+event_queues = {}
+
 def init():
 
     plugins = [
+        "terminal_input",
         "conversation"
     ]
 
@@ -32,10 +36,24 @@ def init():
     # register coroutines
     for module in plugin_modules:
         for coro in module.coroutines:
-            registered_coroutines.append(coro)
+            registered_coroutines.append({
+                "coroutine": coro,
+                "event_queue": asyncio.Queue()
+            })
 
 
-    registered_coroutines.append(HelloWorldCoroutine())
+    registered_coroutines.append({
+        "coroutine": HelloWorldCoroutine(),
+        "event_queue": asyncio.Queue()
+    })
+
+
+
+async def propogate_event(new_event):
+    global registered_coroutines
+
+    for coro in registered_coroutines:
+        coro["event_queue"].put_nowait(new_event)
 
 
 
@@ -43,7 +61,7 @@ def init():
 async def main_coro():
     # "paralellizes" tasks, scheduling them on the event loop
 
-    primed_coroutines = [coro.work() for coro in registered_coroutines]
+    primed_coroutines = [coro["coroutine"].work(coro["event_queue"]) for coro in registered_coroutines]
     futures = asyncio.gather(*primed_coroutines, return_exceptions=True)
 
     while not stop_main_coro:

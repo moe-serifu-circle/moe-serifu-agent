@@ -1,20 +1,26 @@
 import asyncio
+import sys
 
+from msa import supervisor
 from msa.coroutine import Coroutine, reschedule
-from msa.prompt import Prompt
 
+from msa.plugins.terminal_input.event import TextInputEvent
 
-class KeyboardInputCoroutine(Coroutine):
+class ConversationCoroutine(Coroutine):
 
     def __init__(self):
         super().__init__()
-        self.prompt = Prompt()
-
-        self.printed_prompt = False
 
     @reschedule
-    async def work(self, *args):
-        msg = await self.prompt("What would you like to eat?:\n1)Pears\n2)Apples\n> ", end="", wait=True)
+    async def work(self, event_queue):
+        print("What would you like to eat?\n1)Apples\n2)Pears")
+        event = await event_queue.get()
+
+        if not isinstance(event, TextInputEvent) or not event.propogate:
+            await asyncio.sleep(0.1)
+            return
+
+        msg = event.data["text"]
 
         msg = msg.lower()
 
@@ -25,7 +31,7 @@ class KeyboardInputCoroutine(Coroutine):
             print("Keeping the doctor away and all that :D")
 
         elif msg == "quit":
-            print("Well if you insist... Bye, bye!")
+            print("Well if you insist... Bye, bye!", flush=True)
             from msa.supervisor import stop
             stop()
             return

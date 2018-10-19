@@ -1,19 +1,12 @@
 
 from msa.plugins.conversation import event
 from msa.plugins.conversation import coroutine
-from msa.module import Module
 
-class PluginModule(Module):
+class PluginModule:
 
     coroutines = [
-        coroutine.KeyboardInputCoroutine()
+        coroutine.ConversationCoroutine()
     ]
 
-
-    def register(self):
-        pass
-
-
-    def unregister(self):
-        pass
+    events = []
 

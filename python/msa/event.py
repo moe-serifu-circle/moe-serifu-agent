@@ -2,14 +2,14 @@ import datetime
 
 class Event:
 
-    def __init__(self, priority):
+    def __init__(self, event_type, priority, data=None):
 
+        self.type = event_type
         self.generation_time = datetime.datetime.now()
         self.priority = priority
+        self.data = data
+        self.propogate = True
 
-
-    def get_priority(self):
-        return priority
 
     def __eq__(self, other):
         return self.priority == other.priority

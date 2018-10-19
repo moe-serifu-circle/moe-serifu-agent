@@ -5,7 +5,7 @@ SECTION_HEADER_START_CHAR = '['
 SECTION_HEADER_END_CHAR = ']'
 
 
-class Section():
+class Section:
     """Holds a group of keys, each key can have multiple or no values assigned"""
 
     def __init__(self, name: str):
@@ -53,7 +53,7 @@ class Section():
             raise IndexError("Key "+str(key)+" either contains no values, or does not exist yet")
 
 
-class Config():
+class Config:
     """A wrapper class for storing and accessing multiple sections"""
 
     def __init__(self, config_file: str, sections: Dict[str, Section]):

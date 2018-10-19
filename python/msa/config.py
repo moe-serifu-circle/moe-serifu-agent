@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 COMMENT_CHAR = '#'
 SECTION_HEADER_START_CHAR = '['
 SECTION_HEADER_END_CHAR = ']'
@@ -7,9 +9,6 @@ class Section():
     """Holds a group of keys, each key can have multiple or no values assigned"""
 
     def __init__(self, name: str):
-        """
-        :param name:
-        """
         self._name = name
         self._arr = {}
 
@@ -21,6 +20,7 @@ class Section():
         self._arr[key][index] = val
 
     def push(self, key: str, val: str) -> None:
+        """Adds a value to the end of a key, even if there are empty values"""
         if not self.has(key):
             self.create_key(key)
         self._arr[key].append(val)
@@ -34,16 +34,19 @@ class Section():
             return True
         return False
 
-    def get_entries(self) -> list[str]:
+    def get_entries(self) -> List[str]:
+        """Returns a list of all existing keys, even if the keys are empty"""
         return list(self._arr.keys())
 
-    def get_all(self, key: str) -> list[str]:
+    def get_all(self, key: str) -> List[str]:
+        """Returns a list of all values within a given key"""
         try:
             return list(self._arr[key])
         except KeyError:
             raise IndexError("Key "+str(key)+" does not exist")
 
     def __getitem__(self, key: str) -> str:
+        """For use with the [] operator, returns first value within a key"""
         try:
             return str(self._arr[key][0])
         except (KeyError, IndexError):
@@ -53,20 +56,14 @@ class Section():
 class Config():
     """A wrapper class for storing and accessing multiple sections"""
 
-    def __init__(self, config_file: str, sections: dict[Section]):
-        """
-        :param config_file:
-        :param sections:
-        """
+    def __init__(self, config_file: str, sections: Dict[str, Section]):
         self.filepath = config_file
         self.sections = sections  # a dict where the keys are the names of the Sections
 
 
 def load(filepath: str) -> Config:
-    """
-    :param filepath:
-    :return: Config
-    """
+    """Loads a configuration file into a Config object for use within the code"""
+
     file = open(filepath, "r")
     lines = file.readlines()
     file.close()
@@ -107,10 +104,8 @@ def load(filepath: str) -> Config:
 
 
 def save(config: Config, filepath: str) -> None:
-    """
-    :param config:
-    :param filepath:
-    """
+    """Saves a Config object as a file to the provided file path"""
+
     if type(config) != Config:
         raise TypeError("Can only save instances of Config")
 
@@ -134,14 +129,9 @@ def save(config: Config, filepath: str) -> None:
 
 
 class ConfigError(Exception):
+    """A type of exception to be used when encountering invalid configuration settings"""
+
     def __init__(self, sec: str, key: str, val: str, msg: str, index: int = 0):
-        """
-        :param sec:
-        :param key:
-        :param val:
-        :param msg:
-        :param index:
-        """
         cache = str(sec)+"."+str(key)
         if index != 0:
             cache += "[" + str(index) + "]"

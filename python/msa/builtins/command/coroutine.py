@@ -49,6 +49,9 @@ class CommandCoroutine(Coroutine):
 
     async def parse_text_input(self, raw_text):
         # tokenize
+        if len(raw_text) == 0:
+            return
+
         tokens = raw_text.split()
 
         invoke_keyword = tokens[0]

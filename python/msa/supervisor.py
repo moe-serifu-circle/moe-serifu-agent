@@ -22,6 +22,7 @@ def init():
         "terminal_input",
         "command",
         "help",
+        "quit",
     ]
 
     plugins = [

@@ -23,6 +23,7 @@ def init():
         "command",
         "help",
         "quit",
+        "print",
     ]
 
     plugins = [

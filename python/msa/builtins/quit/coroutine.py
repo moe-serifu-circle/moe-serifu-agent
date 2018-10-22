@@ -42,41 +42,9 @@ class QuitCoroutine(Coroutine):
 
         if isinstance(event, QuitCommandEvent):
             from msa.supervisor import stop
-            print("Ok, shutting down...")
+            print("Ok, shutting down...") # leave as print as events will be ignored after stop
             stop()
 
         await asyncio.sleep(0.1)
-
-
-    def register_factory(self, event):
-        new_factory = event.data["factory"]
-
-        # verify that no other commands utilize the same invoke keyword
-        for event_factory in self.event_factories:
-            if event_factory.invoke.lower() == new_factory.invoke.lower():
-                print(f"Command with invoke keyword '{new_factory.invoke}' already defined")
-
-        self.event_factories.append(new_factory)
-
-
-    def display_help(self, event):
-
-        command = event.data["command"]
-
-        if command is None:
-            # print availiable commands
-
-            print("Availiable commands:")
-            for event_factory in self.event_factories:
-                print(f"{event_factory.invoke}: {event_factory.describe}")
-            print()
-
-
-        else:
-            for event_factory in self.event_factories:
-                if command == event_factory.invoke:
-                    print(f"Help text for command '{command}':\n{event_factory.describe}\n{event_factory.usage}\n")
-
-
 
 

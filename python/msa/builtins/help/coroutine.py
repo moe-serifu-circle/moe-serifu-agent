@@ -6,6 +6,7 @@ from msa.coroutine import Coroutine, reschedule
 
 from msa.builtins.command.event import RegisterCommandEvent, CommandEventFactory
 from msa.builtins.help.event import HelpCommandEvent
+from msa.builtins.print.event import PrintTextEvent
 
 class HelpCoroutine(Coroutine):
 
@@ -42,42 +43,48 @@ class HelpCoroutine(Coroutine):
             return
 
         if isinstance(event, RegisterCommandEvent):
-            self.register_factory(event)
+            await self.register_factory(event)
         elif isinstance(event, HelpCommandEvent):
-            self.display_help(event)
+            await self.display_help(event)
 
 
         await asyncio.sleep(0.1)
 
 
-    def register_factory(self, event):
+    async def register_factory(self, event):
         new_factory = event.data["factory"]
 
         # verify that no other commands utilize the same invoke keyword
         for event_factory in self.event_factories:
             if event_factory.invoke.lower() == new_factory.invoke.lower():
-                print(f"Command with invoke keyword '{new_factory.invoke}' already defined")
+                print_event = PrintTextEvent(f"Command with invoke keyword '{new_factory.invoke}' already defined")
+                await supervisor.propogate_event(print_event)
 
         self.event_factories.append(new_factory)
 
 
-    def display_help(self, event):
+    async def display_help(self, event):
 
         command = event.data["command"]
 
         if command is None:
             # print availiable commands
 
-            print("Availiable commands:")
-            for event_factory in self.event_factories:
-                print(f"{event_factory.invoke}: {event_factory.describe}")
-            print()
 
+            out = "Availiable commands:\n"
+            for event_factory in self.event_factories:
+                out += f"{event_factory.invoke}: {event_factory.describe}"
+            out += "\n"
+
+            print_event = PrintTextEvent(out)
+            await supervisor.propogate_event(print_event)
 
         else:
             for event_factory in self.event_factories:
                 if command == event_factory.invoke:
-                    print(f"Help text for command '{command}':\n{event_factory.describe}\n{event_factory.usage}\n")
+                    out = f"Help text for command '{command}':\n{event_factory.describe}\n{event_factory.usage}\n"
+                    print_event = PrintTextEvent(out)
+                    await supervisor.propogate_event(print_event)
 
 
 

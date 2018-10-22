@@ -1,4 +1,6 @@
-from python.msa.config import *  # python is the toplevel package name, change when rebaseing the python version
+import sys
+sys.path.append('../')
+from msa.config import *
 # only used * for simple namespace usage within this file only
 # don't use in other files if possible as a general rule
 

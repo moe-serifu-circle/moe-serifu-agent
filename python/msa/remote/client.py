@@ -47,15 +47,21 @@ def start(ctx):
     wrapped_handler = functools.partial(handler, connected, wrapped_producer, wrapped_consumer)
 
 
-    async def start_client():
+    async def start_client(host, port):
         async with websockets.connect(
-                'ws://127.0.0.1:8765') as websocket:
+                f'ws://{host}:{port}') as websocket:
 
             # register shudown handler
             cb = functools.partial(client_shutdown_handler, websocket)
             supervisor.register_shutdown_handler(cb)
 
             await wrapped_handler(websocket, "")
+
+
+    if ctx.obj["debug"]:
+        print(f"Starting client on ws://{ctx.obj['host']}:{ctx.obj['port']}")
+
+    start_client = functools.partial(start_client, ctx.obj["host"], ctx.obj["port"])
 
     supervisor.init(Modes.client)
     supervisor.start(additional_coros=[start_client()])

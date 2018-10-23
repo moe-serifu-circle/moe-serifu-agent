@@ -1,6 +1,6 @@
-# Please reference an issue, or fill out the below information
+### Please reference an issue, or fill out the below information
 
-Issue: 
+- Issue: 
 
 ---
 

@@ -16,13 +16,17 @@ stop_future = None
 
 registered_coroutines = []
 event_queues = {}
+registered_event_types = {}
+propogation_hooks = []
+shutdown_callbacks = []
 
-def init():
+def init(mode):
     builtins = [
         "terminal_input",
         "command",
         "help",
         "quit",
+        "print",
     ]
 
     plugins = [
@@ -39,7 +43,10 @@ def init():
     # load plugin modules
     for module_name in plugins:
         module = importlib.import_module("msa.plugins." + module_name + ".module")
-        plugin_modules.append(module.PluginModule)
+
+        if mode in module.PluginModule.allowed_modes:
+            plugin_modules.append(module.PluginModule)
+
 
     # register coroutines
     for module in plugin_modules:
@@ -48,6 +55,11 @@ def init():
                 "coroutine": coro,
                 "event_queue": asyncio.Queue()
             })
+
+    # register event types
+    for module in plugin_modules:
+        global registered_event_types
+        registered_event_types = {**registered_event_types, **module.events}
 
 
     registered_coroutines.append({
@@ -63,16 +75,20 @@ async def propogate_event(new_event):
     for coro in registered_coroutines:
         coro["event_queue"].put_nowait(new_event)
 
+    for hook in propogation_hooks:
+        hook.put_nowait(new_event)
 
 
 
-async def main_coro():
+async def main_coro(additional_coros=[]):
     # "paralellizes" tasks, scheduling them on the event loop
 
     init_coroutines = [coro["coroutine"].init() for coro in registered_coroutines]
     await asyncio.gather(*init_coroutines, return_exceptions=True)
 
     primed_coroutines = [coro["coroutine"].work(coro["event_queue"]) for coro in registered_coroutines]
+    if len(additional_coros) > 0:
+        primed_coroutines.extend(additional_coros)
     futures = asyncio.gather(*primed_coroutines, return_exceptions=True)
 
     while not stop_main_coro:
@@ -87,12 +103,23 @@ async def main_coro():
             stop_future.cancel()
             await stop_future
 
+def create_event_queue():
+    new_queue = asyncio.Queue()
 
-def start():
+    global propogation_hooks
+    propogation_hooks.append(new_queue)
+
+    return new_queue
+
+def register_shutdown_handler(callback):
+    shutdown_callbacks.append(callback)
+
+def start(additional_coros=[]):
 
     try:
         with suppress(asyncio.CancelledError):
-            loop.run_until_complete(main_coro())
+            primed_coro = main_coro(additional_coros)
+            loop.run_until_complete(primed_coro)
     finally:
         loop.close()
 
@@ -104,6 +131,9 @@ def stop():
 async def exit():
     global stop_loop
     stop_loop = True
+
+    for cb in shutdown_callbacks:
+        cb()
 
     await asyncio.sleep(1)
 

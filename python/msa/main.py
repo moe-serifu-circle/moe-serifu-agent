@@ -4,7 +4,7 @@ import sys
 import click
 import asyncio
 
-from msa import supervisor
+import msa.supervisor
 
 
 @click.command()

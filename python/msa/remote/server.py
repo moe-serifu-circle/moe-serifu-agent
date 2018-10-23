@@ -46,11 +46,16 @@ def start(ctx):
     wrapped_handler = functools.partial(handler, connected, wrapped_producer, wrapped_consumer)
 
 
-    async def start_server():
-        ws_server = await websockets.serve(wrapped_handler, '127.0.0.1', 8765)
+    async def start_server(host, port):
+        ws_server = await websockets.serve(wrapped_handler, host, port)
 
         cb = functools.partial(server_shutdown_handler, ws_server)
         supervisor.register_shutdown_handler(cb)
+
+    if ctx.obj["debug"]:
+        print(f"Starting server on ws://{ctx.obj['host']}:{ctx.obj['port']}")
+
+    start_server = functools.partial(start_server, ctx.obj["host"], ctx.obj["port"])
 
     supervisor.init(Modes.server)
     supervisor.start(additional_coros=[start_server()])

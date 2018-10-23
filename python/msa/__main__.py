@@ -31,14 +31,24 @@ def cli(ctx):
     supervisor.start(Modes.cli)
 
 @main.command()
+@click.option("--host", default="127.0.0.1", help="The ip the server should listen to.")
+@click.option("--port", default=8765, help="The port the server should listen to.")
 @click.pass_context
-def server(ctx):
+def server(ctx, host, port):
+    ctx.obj["host"] = host
+    ctx.obj["port"] = port
+
     from msa.remote import server
     server.start(ctx)
 
 @main.command()
+@click.option("--host", default="127.0.0.1", help="The ip the server should listen to.")
+@click.option("--port", default=8765, help="The port the server should listen to.")
 @click.pass_context
-def client(ctx):
+def client(ctx, host, port):
+    ctx.obj["host"] = host
+    ctx.obj["port"] = port
+
     from msa.remote import client
     client.start(ctx)
 

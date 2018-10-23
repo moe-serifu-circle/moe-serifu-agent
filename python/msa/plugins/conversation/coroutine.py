@@ -28,7 +28,8 @@ class ConversationCoroutine(Coroutine):
                 usage="$conv [response]\ne.g. $conv apple"
                 )
 
-        register_event = RegisterCommandEvent(factory)
+        register_event = RegisterCommandEvent()
+        register_event.init(factory)
 
         await supervisor.propogate_event(register_event)
 
@@ -37,7 +38,8 @@ class ConversationCoroutine(Coroutine):
     @reschedule
     async def work(self, event_queue):
         if not self.prompted:
-            print_event = PrintTextEvent("What would you like to eat?\n1)Apples\n2)Pears")
+            print_event = PrintTextEvent()
+            print_event.init("What would you like to eat?\n1)Apples\n2)Pears")
             await supervisor.propogate_event(print_event)
             self.prompted = True
 
@@ -61,11 +63,13 @@ class ConversationCoroutine(Coroutine):
         msg = msg.lower()
 
         if msg == "pears":
-            print_event = PrintTextEvent("Yummy, yummy pears!\n")
+            print_event = PrintTextEvent()
+            print_event.init("Yummy, yummy pears!\n")
             await supervisor.propogate_event(print_event)
 
         elif msg == "apples":
-            print_event = PrintTextEvent("Keeping the doctor away and all that :D\n")
+            print_event = PrintTextEvent()
+            print_event.init("Keeping the doctor away and all that :D\n")
             await supervisor.propogate_event(print_event)
 
         elif msg == "quit":
@@ -75,7 +79,8 @@ class ConversationCoroutine(Coroutine):
             return
 
         else:
-            print_event = PrintTextEvent(f"Well I don't know what {msg} is but it sounds like you enjoy it!\n")
+            print_event = PrintTextEvent()
+            print_event.init(f"Well I don't know what {msg} is but it sounds like you enjoy it!\n")
             await supervisor.propogate_event(print_event)
 
 

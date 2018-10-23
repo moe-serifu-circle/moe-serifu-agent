@@ -23,7 +23,8 @@ class QuitCoroutine(Coroutine):
                 describe="Exits the msa.",
                 usage="$quit")
 
-        register_event = RegisterCommandEvent(factory)
+        register_event = RegisterCommandEvent()
+        register_event.init(factory)
 
         await supervisor.propogate_event(register_event)
 

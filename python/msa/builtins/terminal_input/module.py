@@ -9,6 +9,9 @@ class PluginModule:
         coroutine.KeyboardInputCoroutine()
     ]
 
+    events = {
+        "TextInputEvent": event.TextInputEvent
+    }
 
 
 

@@ -2,12 +2,14 @@ import datetime
 
 class Event:
 
-    def __init__(self, priority, data=None):
+
+    def __init__(self, priority):
 
         self.generation_time = datetime.datetime.now()
         self.priority = priority
-        self.data = data
+        self.data = None
         self.propogate = True
+        self.propogateRemote = True
 
 
     def __eq__(self, other):
@@ -27,3 +29,9 @@ class Event:
 
     def __ge__(self, other):
         return self.priority >= other.priority
+
+    def init(self, data=None):
+        self.data = data
+
+    def load(self, data=None):
+        self.data = data

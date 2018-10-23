@@ -24,7 +24,8 @@ class HelpCoroutine(Coroutine):
                 describe="Display help for a given command",
                 usage="$help [command]\ne.g. $help help")
 
-        register_event = RegisterCommandEvent(factory)
+        register_event = RegisterCommandEvent()
+        register_event.init(factory)
 
         await supervisor.propogate_event(register_event)
 
@@ -57,7 +58,8 @@ class HelpCoroutine(Coroutine):
         # verify that no other commands utilize the same invoke keyword
         for event_factory in self.event_factories:
             if event_factory.invoke.lower() == new_factory.invoke.lower():
-                print_event = PrintTextEvent(f"Command with invoke keyword '{new_factory.invoke}' already defined")
+                print_event = PrintTextEvent()
+                print_event.init(f"Command with invoke keyword '{new_factory.invoke}' already defined")
                 await supervisor.propogate_event(print_event)
 
         self.event_factories.append(new_factory)
@@ -76,14 +78,16 @@ class HelpCoroutine(Coroutine):
                 out += f"{event_factory.invoke}: {event_factory.describe}"
             out += "\n"
 
-            print_event = PrintTextEvent(out)
+            print_event = PrintTextEvent()
+            print_event.init(out)
             await supervisor.propogate_event(print_event)
 
         else:
             for event_factory in self.event_factories:
                 if command == event_factory.invoke:
                     out = f"Help text for command '{command}':\n{event_factory.describe}\n{event_factory.usage}\n"
-                    print_event = PrintTextEvent(out)
+                    print_event = PrintTextEvent()
+                    print_event.init(out)
                     await supervisor.propogate_event(print_event)
 
 

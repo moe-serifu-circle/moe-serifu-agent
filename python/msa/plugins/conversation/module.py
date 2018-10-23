@@ -8,5 +8,7 @@ class PluginModule:
         coroutine.ConversationCoroutine()
     ]
 
-    events = []
+    events = {
+        "ConverseCommandEvent": event.ConverseCommandEvent
+    }
 

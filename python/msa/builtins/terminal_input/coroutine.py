@@ -18,7 +18,9 @@ class KeyboardInputCoroutine(Coroutine):
     async def work(self, event_queue):
         msg = await self.prompt("", end="", wait=True)
 
-        await supervisor.propogate_event(TextInputEvent(msg))
+        new_event = TextInputEvent()
+        new_event.init(msg)
+        await supervisor.propogate_event(new_event)
 
         await asyncio.sleep(0.1)
 

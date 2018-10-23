@@ -11,14 +11,18 @@ class CommandEventFactory:
         self.options = options
 
     def create_event(self, data):
-        return self.event_constructor(data)
+        new_event = self.event_constructor()
+        new_event.init(data)
+        return new_event
 
 
 class RegisterCommandEvent(Event):
-    def __init__(self, command_event_factory):
-        super().__init__(priority=5, data={
-            "factory": command_event_factory
-        })
+    def __init__(self):
+        super().__init__(priority=5)
 
+    def init(self, command_event_factory):
+        self.data = {
+            "factory": command_event_factory
+        }
 
 

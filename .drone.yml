@@ -1,0 +1,37 @@
+
+pipeline:
+  test-moeserifu-release:
+    image: gcc:5
+    commands:
+      - make
+      - make clean
+    when:
+      event: [pull_request, push]
+      branch: master
+
+  test-moeserifu-debug:
+    image: gcc:5
+    commands:
+      - make debug
+      - make clean
+    when:
+      event: [pull_request, push]
+      branch: master
+
+  test-plugins-release:
+    image: gcc:5
+    commands:
+      - make plugins
+      - make clean-plugins
+    when:
+      event: [pull_request, push]
+      branch: master
+
+  test-plugins-debug:
+    image: gcc:5
+    commands:
+      - make debug plugins
+      - make clean
+    when:
+      event: [pull_request, push]
+      branch: master

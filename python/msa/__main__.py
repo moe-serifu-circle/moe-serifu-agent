@@ -1,6 +1,7 @@
 import click
 
 from msa import supervisor
+from msa.modes import Modes
 
 
 @click.group(invoke_without_command=True)
@@ -27,7 +28,7 @@ def cli(ctx):
     supervisor.init()
 
     # perform msa::start() equivalent here
-    supervisor.start()
+    supervisor.start(Modes.cli)
 
 @main.command()
 @click.pass_context

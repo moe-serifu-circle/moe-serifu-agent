@@ -1,13 +1,22 @@
 import asyncio
 import json
+
+try:
+    import websockets
+except:
+    raise Exception("The server command requires the websockets library to be installed")
+
 from msa.builtins.command.event import RegisterCommandEvent
 
 from msa import supervisor
 
 async def consumer_handler(consumer, websocket, path):
     # Use functools.partial to add consumer
-    async for message in websocket:
-        await consumer(message)
+    try:
+        async for message in websocket:
+            await consumer(message)
+    except websockets.exceptions.ConnectionClosed:
+        pass
 
 async def producer_handler(producer, websocket, path):
     # Use functools.partial to add producer
@@ -54,6 +63,13 @@ def deserialize_event(raw_event):
             new_event.load(raw_event["data"])
             new_event.propogateRemote = False
             return new_event
+    return None
 
 
 
+def client_shutdown_handler(websocket):
+    websocket.close()
+
+def server_shutdown_handler(websocket):
+    websocket.close()
+    websocket.wait_closed()

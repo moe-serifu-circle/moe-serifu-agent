@@ -3,6 +3,7 @@ import asyncio
 
 from msa.remote.generic_producer_consumer import *
 from msa import supervisor
+from msa.modes import Modes
 
 try:
     import websockets
@@ -19,18 +20,20 @@ async def producer():
         event = await event_queue.get()
         #print("client sending event", event)
 
-        if event.propogateRemote:
-            break # we have a valid event to propogate, prevents events from going back and fourth
+        if event != None and event.propogateRemote:
+            serialized_event = serialize_event(event)
+            if serialized_event is not None:
+                break # we have a valid event to propogate, prevents events from going back and fourth
 
-    # serialize event
-    return serialize_event(event)
+    return serialized_event
 
 async def consumer(message):
     #print("client recieving event", message)
 
     new_event = deserialize_event(message)
 
-    await supervisor.propogate_event(new_event)
+    if new_event is not None:
+        await supervisor.propogate_event(new_event)
 
 
 
@@ -47,9 +50,14 @@ def start(ctx):
     async def start_client():
         async with websockets.connect(
                 'ws://127.0.0.1:8765') as websocket:
+
+            # register shudown handler
+            cb = functools.partial(client_shutdown_handler, websocket)
+            supervisor.register_shutdown_handler(cb)
+
             await wrapped_handler(websocket, "")
 
-    supervisor.init()
+    supervisor.init(Modes.client)
     supervisor.start(additional_coros=[start_client()])
 
 

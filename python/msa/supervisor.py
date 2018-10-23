@@ -18,8 +18,9 @@ registered_coroutines = []
 event_queues = {}
 registered_event_types = {}
 propogation_hooks = []
+shutdown_callbacks = []
 
-def init():
+def init(mode):
     builtins = [
         "terminal_input",
         "command",
@@ -42,7 +43,9 @@ def init():
     # load plugin modules
     for module_name in plugins:
         module = importlib.import_module("msa.plugins." + module_name + ".module")
-        plugin_modules.append(module.PluginModule)
+
+        if mode in module.PluginModule.allowed_modes:
+            plugin_modules.append(module.PluginModule)
 
 
     # register coroutines
@@ -108,6 +111,9 @@ def create_event_queue():
 
     return new_queue
 
+def register_shutdown_handler(callback):
+    shutdown_callbacks.append(callback)
+
 def start(additional_coros=[]):
 
     try:
@@ -125,6 +131,9 @@ def stop():
 async def exit():
     global stop_loop
     stop_loop = True
+
+    for cb in shutdown_callbacks:
+        cb()
 
     await asyncio.sleep(1)
 

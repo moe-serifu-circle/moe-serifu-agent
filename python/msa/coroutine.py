@@ -31,19 +31,3 @@ def reschedule(fn):
 
 
 
-class HelloWorldCoroutine(Coroutine):
-
-    def __init__(self):
-        super().__init__()
-
-        self.counter = 0
-
-    @reschedule
-    async def work(self, event):
-
-        self.counter += 1
-        if self.counter >= 30:
-            print("hello world")
-            self.counter = 0
-
-        await asyncio.sleep(0.1)

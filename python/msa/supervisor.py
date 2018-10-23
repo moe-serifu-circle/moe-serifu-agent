@@ -62,13 +62,6 @@ def init(mode):
         registered_event_types = {**registered_event_types, **module.events}
 
 
-    registered_coroutines.append({
-        "coroutine": HelloWorldCoroutine(),
-        "event_queue": asyncio.Queue()
-    })
-
-
-
 async def propogate_event(new_event):
     global registered_coroutines
 

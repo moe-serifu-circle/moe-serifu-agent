@@ -4,7 +4,6 @@ from contextlib import suppress
 import importlib
 
 
-from msa.coroutine import HelloWorldCoroutine
 
 
 loop = asyncio.get_event_loop()

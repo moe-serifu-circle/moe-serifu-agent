@@ -18,13 +18,17 @@ async def consumer_handler(consumer, websocket, path):
     except websockets.exceptions.ConnectionClosed:
         pass
 
-async def producer_handler(producer, websocket, path):
+async def producer_handler(producer, connected, websocket, path):
     # Use functools.partial to add producer
     while True:
         message = await producer()
 
         if message is not None:
-            await websocket.send(message)
+            if connected is None:
+                await websocket.send(message)
+            else:
+                await asyncio.wait([con.send(message) for con in connected])
+
 
 async def handler(connected, consumer_handler, producer_handler, websocket, path):
     # use functools.partial to add reference to connected set

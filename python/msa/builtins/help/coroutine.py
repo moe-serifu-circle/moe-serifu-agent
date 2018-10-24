@@ -72,10 +72,9 @@ class HelpCoroutine(Coroutine):
         if command is None:
             # print availiable commands
 
-
             out = "Availiable commands:\n"
             for event_factory in self.event_factories:
-                out += f"{event_factory.invoke}: {event_factory.describe}"
+                out += f"{event_factory.invoke}: {event_factory.describe}\n"
             out += "\n"
 
             print_event = PrintTextEvent()

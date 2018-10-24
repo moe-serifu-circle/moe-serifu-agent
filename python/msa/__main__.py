@@ -25,10 +25,10 @@ def main(ctx, cfg, debug):
 def cli(ctx):
 
     # perform msa::init() equivalent here
-    supervisor.init()
+    supervisor.init(Modes.cli)
 
     # perform msa::start() equivalent here
-    supervisor.start(Modes.cli)
+    supervisor.start()
 
 @main.command()
 @click.option("--host", default="127.0.0.1", help="The ip the server should listen to.")

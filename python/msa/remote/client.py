@@ -41,7 +41,7 @@ def start(ctx):
 
     connected = set()
 
-    wrapped_producer = functools.partial(producer_handler, producer)
+    wrapped_producer = functools.partial(producer_handler, producer, None)
     wrapped_consumer = functools.partial(consumer_handler, consumer)
 
     wrapped_handler = functools.partial(handler, connected, wrapped_producer, wrapped_consumer)

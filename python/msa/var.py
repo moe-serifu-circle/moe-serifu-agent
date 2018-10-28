@@ -35,7 +35,7 @@ class Expander:
             raise NameError("Variable " + var + " does not exist")
         if self.substitutions[var][1]:
             raise Exception("Cannot change " + var + ", variable is protected")
-        self.substitutions[var] = val
+        self.substitutions[var] = (val, False)
 
     def get_value(self, var: str) -> str:
         if var in self.substitutions:
@@ -55,7 +55,7 @@ class Expander:
                 skip = True
                 replace.append((index+1, index+1))  # this is a somewhat dirty way of removing escape characters, but works since an empty string cannot be a variable,
             elif char == "$":
-                if text[index + 1].isidentifier():
+                if index + 1 != len(text) and text[index + 1].isidentifier():
                     end = index + 2
                     while text[index + 1:end + 1].isidentifier() and end < len(text):
                         end += 1
@@ -73,4 +73,4 @@ class Expander:
         start -= last_end
         end -= last_end
         var = text[start:end]
-        return text[:start - 1] + self.get_value(var) + self._replace(end, text[end:], group[1:])
+        return text[:start - 1] + self.get_value(var) + self._replace((end + last_end), text[end:], group[1:])

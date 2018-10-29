@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/moe-serifu-circle/moe-serifu-agent.svg?branch=master)](https://travis-ci.org/dekarrin/moe-serifu-agent)
+[![Build Status](https://moedrone.dekarrin.com/api/badges/moe-serifu-circle/moe-serifu-agent/status.svg?branch=master)](https://moedrone.dekarrin.com/api/badges/moe-serifu-circle/moe-serifu-agent)
 ![logo](https://raw.githubusercontent.com/wiki/dekarrin/moe-serifu-agent/assets/logo/logo-en-700w.png "MSA Logo")
 ---
 [Project Website](http://www.moeserifu.moe)

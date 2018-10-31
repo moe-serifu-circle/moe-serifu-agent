@@ -14,7 +14,7 @@ class ConfigTest(unittest.TestCase):
         print("saved new config file, check file to confirm correct output")
 
         new_cfg = load("tests/test.cfg")  # testing loading with multiple values
-        self.assertTrue(len(new_cfg.sections["agent"].get_all("user_title")) == 2, "test failed with multiple value assignments")
+        self.assertEqual(len(new_cfg.sections["agent"].get_all("user_title")), 2, "test failed with multiple value assignments")
 
 
 if __name__ == '__main__':

@@ -35,3 +35,13 @@ pipeline:
     when:
       event: [pull_request, push]
       branch: master
+
+  run-python-tests:
+    image: python:3
+    commands:
+      - cd python
+      - "python -m unittest discover tests \"*Test.py\""
+    when:
+      event: [pull_request, push]
+      branch: master
+

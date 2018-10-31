@@ -1,38 +1,25 @@
 from msa.var import Expander
-import sys
+import sys, unittest
 
-try:
-    ex = Expander()
-    ex.register_var("test")
-    ex.set_value("test", "something")
-    success = ""
-    failed = False
+class ExpanderTest(unittest.TestCase):
 
-    if ex.expand("$test") == "something":
-        success = "passed"
-    else:
-        success = "failed"
-        failed = True
-    print("test", success, "with basic expanding")
+    def test_basic(self):
+        ex = Expander()
+        ex.register_var("test")
+        ex.set_value("test", "something")
+        self.assertEqual(ex.expand("$test"), "something")
 
-    if ex.expand("\\\\\$\$\\\\") == "\\$$\\":
-        success = "passed"
-    else:
-        success = "failed"
-        failed = True
-    print("test", success, "with escape character abuse")
+    def test_abuse(self):
+        ex = Expander()
+        ex.register_var("test")
+        ex.set_value("test", "something")
+        self.assertEqual(ex.expand("\\\\\$\$\\\\"), "\\$$\\")
 
-    if ex.expand("$test, \$test") == "something, $test":
-        success = "passed"
-    else:
-        success = "failed"
-        failed = True
-    print("test", success, "with complex expanding")
-    
-    if failed:
-        sys.exit(1)
-except Exception as e:
-    print(e)
-    sys.exit(1)
+    def test_complex(self):
+        ex = Expander()
+        ex.register_var("test")
+        ex.set_value("test", "something")
+        self.assertEqual(ex.expand("$test, \$test") == "something, $test")
 
-
+if __name__ == '__main__':
+    unittest.main()

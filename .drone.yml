@@ -40,7 +40,7 @@ pipeline:
     image: python:3
     commands:
       - cd python
-      - "python -m unittest discover tests \"*Test.py\""
+      - "python -m unittest discover tests \"*_test.py\""
     when:
       event: [pull_request, push]
       branch: master

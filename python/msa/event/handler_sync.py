@@ -1,7 +1,7 @@
 import threading
 
 
-class Handler:
+class HandlerSync:
     """A primitive object for managing whether or not an
     event handler should run."""
 
@@ -13,7 +13,7 @@ class Handler:
         self.in_wait_loop = False
         self.syscall_origin = False
 
-    def dispose(self) -> None:
+    def close(self) -> None:
         """Dispose of this handler object's locks."""
         del self.resume_cond
         del self.suspend_lock
@@ -43,15 +43,11 @@ class Handler:
         self.suspend_lock.release()
         return suspended
 
-    def set_syscall_origin(self) -> None:
-        """Sets syscall_origin to True."""
-        self.syscall_origin = True
+    def set_skip_edt_join(self, shouldJoin: bool) -> None:
+        """Enables and disables joining to the edt during cleanup."""
+        self.syscall_origin = shouldJoin
 
-    def clear_syscall_origin(self) -> None:
-        """Sets syscall_origin to False."""
-        self.syscall_origin = False
-
-    def interrupt_point(self):
+    def allow_pending_suspension(self):
         """Indicate a point where the handler can be interrupted
         and suspended."""
         self.suspend_lock.acquire()

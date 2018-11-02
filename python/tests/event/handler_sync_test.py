@@ -2,12 +2,12 @@ import unittest
 import threading
 import time
 
-from msa.event.handler import Handler
+from msa.event.handler_sync import HandlerSync
 
-class HandlerTest(unittest.TestCase):
+class HandlerSyncTest(unittest.TestCase):
 
     def setUp(self):
-        self.handler = Handler()
+        self.handler = HandlerSync()
 
     def test_suspend(self):
 
@@ -32,7 +32,7 @@ class HandlerTest(unittest.TestCase):
 
         assert not self.handler.suspended()
 
-        t = threading.Thread(target=lambda: self.handler.interrupt_point())
+        t = threading.Thread(target=lambda: self.handler.allow_pending_suspension())
         t.start()
 
         # wait to give the thread a chance to start
@@ -44,7 +44,7 @@ class HandlerTest(unittest.TestCase):
         t.join()
 
 
-    def test_suspended_and_interrupt_point__suspend_called(self):
+    def test_suspended_and_allow_pending_suspensions__suspend_called(self):
 
         assert not self.handler.suspended()
 
@@ -54,7 +54,7 @@ class HandlerTest(unittest.TestCase):
 
         assert not self.handler.suspended()
 
-        t = threading.Thread(target=lambda: self.handler.interrupt_point())
+        t = threading.Thread(target=lambda: self.handler.allow_pending_suspension())
         t.start()
 
         # wait to give the thread a chance to start
@@ -70,23 +70,15 @@ class HandlerTest(unittest.TestCase):
         t.join()
 
 
-    def test_set_syscall_origin(self):
-
-        assert not self.handler.syscall_origin
-
-        self.handler.set_syscall_origin()
-
-        assert self.handler.syscall_origin
-
-    def test_clear_syscall_origin(self):
+    def test_set_skip_edit_join(self):
 
         # Set syscall origin so we can clear it
         assert not self.handler.syscall_origin
-        self.handler.set_syscall_origin()
+        self.handler.set_skip_edt_join(True)
         assert self.handler.syscall_origin
 
         # clear syscall origin
-        self.handler.clear_syscall_origin()
+        self.handler.set_skip_edt_join(False)
         assert not self.handler.syscall_origin
 
 

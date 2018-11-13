@@ -25,7 +25,7 @@ def reschedule(fn):
             await fn(self, event_queue)
 
             loop = asyncio.get_event_loop()
-            asyncio.ensure_future(self.work(event_queue), loop=loop)
+            loop.create_task(self.work(event_queue))
 
     return wrapped_cb
 

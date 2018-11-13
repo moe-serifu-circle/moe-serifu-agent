@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 click = "*"
+schema = "*"
 
 [dev-packages]
 

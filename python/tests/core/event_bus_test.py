@@ -3,7 +3,7 @@ from unittest import mock
 
 from msa.core.event_bus import EventBus
 from msa.core.event import Event
-from ..async_test_util import AsyncMock, async_run
+from tests.async_test_util import AsyncMock, async_run
 
 class EventBusTest(unittest.TestCase):
 

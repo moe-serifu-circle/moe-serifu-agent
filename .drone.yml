@@ -41,8 +41,7 @@ pipeline:
     commands:
       - cd python
       - pip install pipenv
-      - pipenv install
-      - pipenv shell
+      - pipenv install --system
       - "python -m unittest discover tests \"*_test.py\""
     when:
       event: [pull_request, push]

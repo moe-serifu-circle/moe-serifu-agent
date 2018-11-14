@@ -42,7 +42,7 @@ pipeline:
       - cd python
       - pip install pipenv
       - pipenv install --system
-      - "python -m unittest discover tests \"*_test.py\""
+      - "python -m unittest discover -p \"*_test.py\""
     when:
       event: [pull_request, push]
       branch: master

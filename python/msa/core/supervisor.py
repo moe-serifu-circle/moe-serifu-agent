@@ -7,6 +7,8 @@ from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
 
 class Supervisor:
+    """The supervisor is responsible for managing the execution of the application and orchestrating the event system.
+    """
 
     def __init__(self):
         self.loop = asyncio.get_event_loop()
@@ -23,6 +25,10 @@ class Supervisor:
 
 
     def init(self, mode):
+        """Initializes the supervisor.
+        Params:
+        - mode (int): A msa.core.RunMode enum value to configure which modules should be started based on the
+        environment the system is being run in."""
         plugin_names = []
 
 
@@ -45,6 +51,10 @@ class Supervisor:
                 self.initialized_event_handlers.append(inited_coro)
 
     def start(self, additional_coros=[]):
+        """Starts the supervisor.
+        Params:
+        - additional_coros (List[Coroutines]): a list of other coroutines to be started. Acts as a hook for specialized
+        startup scenarios."""
 
         try:
             with suppress(asyncio.CancelledError):
@@ -54,9 +64,11 @@ class Supervisor:
             self.loop.close()
 
     def stop(self):
+        """Schedules the supervisor to stop, and exit the application."""
         self.stop_future = asyncio.ensure_future(self.exit())
 
     async def exit(self):
+        """Shuts down running tasks and stops the event loop, exiting the application."""
         self.stop_loop = True
 
         for callback in self.shutdown_callbacks:
@@ -75,10 +87,12 @@ class Supervisor:
                 await task
 
     async def fire_event(self, new_event):
+        """Fires an event to all event listeners."""
         await self.event_bus.fire_event(new_event)
 
 
     async def main_coro(self, additional_coros=[]):
+        """The main coroutine that manages starting the handlers, and waiting for a shutdown signal."""
         # "paralellizes" tasks, scheduling them on the event loop
 
         primed_coros = [

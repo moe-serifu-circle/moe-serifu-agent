@@ -1,8 +1,8 @@
 import asyncio
 from unittest import mock
 
-def async_run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+def async_run(loop, coro):
+    return loop.run_until_complete(coro)
 
 def AsyncMock(*args, **kwargs):
     m = mock.MagicMock(*args, **kwargs)

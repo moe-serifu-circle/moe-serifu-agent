@@ -7,7 +7,7 @@ from msa.builtins.tty.events import *
 
 from msa.core import supervisor
 
-use_asyncio_event_loop()
+use_asyncio_event_loop(supervisor.loop)
 
 class TtyInputHandler(EventHandler):
     """Listens to stdin for terminal input and then fires a TextInputEvent."""
@@ -18,11 +18,9 @@ class TtyInputHandler(EventHandler):
         self.prompt_session = PromptSession()
 
     async def handle(self):
+
         with patch_stdout():
             msg = await self.prompt_session.prompt("$> ", async_=True)
-        print(msg)
-
-
 
         event = TextInputEvent()
         event.init({"message": msg})

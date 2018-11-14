@@ -17,9 +17,9 @@ class EventBus:
 
         return new_queue
 
-    def fire_event(self, new_event):
+    async def fire_event(self, new_event):
         for queue in self.queues:
-            queue.put_nowait((new_event.priority, new_event))
+            await queue.put_nowait((new_event.priority, new_event))
 
 
 

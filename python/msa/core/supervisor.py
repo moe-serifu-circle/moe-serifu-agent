@@ -75,7 +75,7 @@ class Supervisor:
                 await task
 
     async def fire_event(self, new_event):
-        self.event_bus.fire_event(new_event)
+        await self.event_bus.fire_event(new_event)
 
 
     async def main_coro(self, additional_coros=[]):

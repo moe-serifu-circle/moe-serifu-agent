@@ -13,6 +13,7 @@ class EventHandler:
 
         from msa.core import supervisor
 
+
         while not supervisor.should_stop():
             await self.handle()
             await asyncio.sleep(0.01)

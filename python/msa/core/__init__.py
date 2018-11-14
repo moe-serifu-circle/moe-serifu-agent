@@ -1,8 +1,6 @@
 from msa.core.supervisor import Supervisor
 
-
 supervisor = Supervisor()
-
 
 class RunMode:
     CLI = 0

@@ -58,8 +58,5 @@ class Event:
         self.schema.validate(data)
         self.data = data
 
-    def load(self, data=None):
-        self.schema.validate(data)
-        self.data = data
 
 

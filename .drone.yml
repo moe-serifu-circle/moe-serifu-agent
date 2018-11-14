@@ -40,6 +40,9 @@ pipeline:
     image: python:3
     commands:
       - cd python
+      - pip install pipenv
+      - pipenv install
+      - pipenv shell
       - "python -m unittest discover tests \"*_test.py\""
     when:
       event: [pull_request, push]

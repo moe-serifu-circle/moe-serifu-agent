@@ -26,6 +26,7 @@ def init(mode):
         "help",
         "quit",
         "print",
+        "echo",
     ]
 
     plugins = [

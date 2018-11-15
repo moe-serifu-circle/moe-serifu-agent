@@ -8,11 +8,13 @@ from msa.builtins.echo.event import EchoCommandEvent
 from msa.builtins.print.event import PrintTextEvent
 
 class EchoCoroutine(Coroutine):
+    """Checks for EchoCommnadEvents and creates PrintTextEvents for the provided text"""
 
     def __init__(self):
         super().__init__()
 
     async def init(self):
+        """Allow the command module to detect echo while parsing and create appropriate event"""
 
         factory = CommandEventFactory(
                 EchoCommandEvent,
@@ -27,6 +29,8 @@ class EchoCoroutine(Coroutine):
 
     @reschedule
     async def work(self, event_queue):
+        """Implementation of the repeating work command for the Coroutine interface"""
+
         event = await event_queue.get()
         event_queue.task_done()
 
@@ -40,6 +44,8 @@ class EchoCoroutine(Coroutine):
         await asyncio.sleep(0.1)
 
     async def echo_command(self, event):
+        """Parse an EchoCommandEvent"""
+
         text = event.data["text"]
 
         print_event = PrintTextEvent()

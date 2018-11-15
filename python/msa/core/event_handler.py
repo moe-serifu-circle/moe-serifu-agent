@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 
 class EventHandler:
     """The base event handler class, all other event handlers should be a subclass of this type.
@@ -27,9 +28,11 @@ class EventHandler:
 
         from msa.core import supervisor
 
-
         while not supervisor.should_stop():
-            await self.handle()
+            try:
+                await self.handle()
+            except Exception as err:
+                traceback.print_exc()
             await asyncio.sleep(0.01)
 
 

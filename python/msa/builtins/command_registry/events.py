@@ -13,7 +13,7 @@ class RegisterCommandEvent(Event):
                 "invoke": And(str, len),
                 "describe": And(str, len),
                 "usage": And(str, len),
-                Optional("options", default="No available options."): And(str, len)
+                Optional("options", default="No available options."): str
             })
         )
 

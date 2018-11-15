@@ -114,11 +114,10 @@ class HelpCommandHandler(EventHandler):
 
         if tokens is None or not len(tokens):
             # print availiable commands
-            out = "Available Commands: \n"
+            out = "Available Commands:"
 
             for command_name, command_data in self.registered_commands.items():
-                out += "{}: {}\n".format(command_name, command_data["describe"])
-            out += "\n"
+                out += "\n{}: {}".format(command_name, command_data["describe"])
 
             self.print(out)  # TODO refactor to use TTY output event
 
@@ -127,10 +126,10 @@ class HelpCommandHandler(EventHandler):
 
             for command_name, command_data in self.registered_commands.items():
                 if command == command_name:
-                    out = "Help text for command '{}':\nUsage: {}\nOptions: {}\nDescription: {}\n".format(
+                    out = "Help text for command '{}':\nUsage: {}\nOptions: {}\nDescription: {}".format(
                         command_name,
                         command_data["usage"],
-                        command_data["options"],
+                        command_data.get("options", "No available options."),
                         command_data["describe"],
                     )
 

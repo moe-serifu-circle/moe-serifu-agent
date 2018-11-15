@@ -8,14 +8,14 @@ from msa.builtins.echo.events import EchoCommandEvent
 
 
 class EchoHandler(EventHandler):
-    """Checks for EchoCommnadEvents and creates PrintTextEvents for the provided text"""
+    """Checks for EchoCommnadEvents and displays the text provided in them"""
 
     async def init(self):
 
         data = {"event_constructor": EchoCommandEvent,
                 "invoke": "echo",
                 "describe": "Echos provided text back through the terminal",
-                "usage": "$echo [text]"}
+                "usage": "'echo [text]'"}
 
         register_event = RegisterCommandEvent()
         register_event.init(data)
@@ -35,7 +35,12 @@ class EchoHandler(EventHandler):
         await asyncio.sleep(0.1)
 
     async def echo_command(self, event):
+        """Displays th text provided in the EchoCommandEvent"""
 
         text = event.data["raw_text"][5:]
 
-        print(text)  # TODO refactor to use TTY output event
+        self.print(text)  # TODO refactor to use TTY output event
+
+    def print(self, text):
+        """temportary work around to allow unit testing, should instead create TTy out event"""
+        print(text)

@@ -79,8 +79,7 @@ class HelpCommandHandler(EventHandler):
             "event_constructor": HelpCommandEvent,
             "invoke": "help",
             "describe": "Prints available commands and information about command usage.",
-            "usage": "'help'  or 'help [command name]'",
-            "options": "No options available."
+            "usage": "'help'  or 'help [command name]'"
         })
 
         supervisor.fire_event(event)

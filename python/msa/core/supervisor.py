@@ -116,6 +116,7 @@ class Supervisor:
         ]
         await asyncio.gather(*init_coros)
 
+
         primed_coros = [
             handler.handle_wrapper()
             for handler in self.initialized_event_handlers

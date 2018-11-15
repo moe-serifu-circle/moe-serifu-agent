@@ -1,5 +1,6 @@
 
 import click
+from prompt_toolkit.patch_stdout import patch_stdout
 import sys
 
 from msa.core import supervisor, RunMode
@@ -29,4 +30,5 @@ def cli(ctx):
 
 
 if __name__ == "__main__":
-    main(obj={})
+    with patch_stdout():
+        main(obj={})

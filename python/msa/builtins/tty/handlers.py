@@ -1,5 +1,4 @@
 from prompt_toolkit.eventloop import use_asyncio_event_loop
-from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit import PromptSession
 
 from msa.core.event_handler import EventHandler
@@ -19,8 +18,7 @@ class TtyInputHandler(EventHandler):
 
     async def handle(self):
 
-        with patch_stdout():
-            msg = await self.prompt_session.prompt("$> ", async_=True)
+        msg = await self.prompt_session.prompt("$> ", async_=True)
 
         event = TextInputEvent()
         event.init({"message": msg})

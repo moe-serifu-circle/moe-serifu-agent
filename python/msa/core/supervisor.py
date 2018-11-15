@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 import sys
 import signal
 from contextlib import suppress
@@ -109,6 +110,12 @@ class Supervisor:
     async def main_coro(self, additional_coros=[]):
         """The main coroutine that manages starting the handlers, and waiting for a shutdown signal."""
 
+        init_coros = [
+            handler.init()
+            for handler in self.initialized_event_handlers
+        ]
+        await asyncio.gather(*init_coros)
+
         primed_coros = [
             handler.handle_wrapper()
             for handler in self.initialized_event_handlers
@@ -117,7 +124,12 @@ class Supervisor:
         if len(additional_coros) > 0:
             primed_coros.extend(additional_coros)
 
-        futures = asyncio.gather(*primed_coros, return_exceptions=True)
+        try:
+            futures = await asyncio.gather(*primed_coros)
+        except Exception as err:
+            print(err)
+            print(traceback.print_exc())
+            # modify to only raise if in debug mode, otherwise log quietly
 
         while not self.stop_main_coro:
             await asyncio.sleep(0.5)

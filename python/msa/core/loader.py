@@ -4,7 +4,8 @@ import importlib
 # builtin modules to load
 builtin_module_names = [
     "time",
-    "tty"
+    "tty",
+    "command_registry",
 ]
 
 

@@ -35,5 +35,5 @@ class TimeHandler(EventHandler):
 
         print(self.last_tick)
 
-        await supervisor.fire_event(new_event)
+        supervisor.fire_event(new_event)
 

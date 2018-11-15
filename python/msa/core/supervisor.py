@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import signal
 from contextlib import suppress
 import importlib
 
@@ -63,12 +64,15 @@ class Supervisor:
         - additional_coros (List[Coroutines]): a list of other coroutines to be started. Acts as a hook for specialized
         startup scenarios."""
 
+
         try:
             with suppress(asyncio.CancelledError):
                 primed_coro = self.main_coro(additional_coros)
                 self.loop.run_until_complete(primed_coro)
+        except KeyboardInterrupt:
+            print("Ctrl-C Pressed. Quitting...")
         finally:
-            self.loop.close()
+            self.stop()
 
     def stop(self):
         """Schedules the supervisor to stop, and exit the application."""
@@ -104,7 +108,6 @@ class Supervisor:
 
     async def main_coro(self, additional_coros=[]):
         """The main coroutine that manages starting the handlers, and waiting for a shutdown signal."""
-        # "paralellizes" tasks, scheduling them on the event loop
 
         primed_coros = [
             handler.handle_wrapper()
@@ -127,6 +130,7 @@ class Supervisor:
             with suppress(asyncio.CancelledError):
                 self.stop_future.cancel()
                 await self.stop_future
+
 
 
 

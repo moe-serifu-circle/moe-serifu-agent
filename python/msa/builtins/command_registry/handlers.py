@@ -5,8 +5,12 @@ from msa.builtins.command_registry.events import RegisterCommandEvent, HelpComma
 from msa.builtins.tty.events import TextInputEvent
 from msa.core import supervisor
 
+import sys
 
 class CommandRegistryHandler(EventHandler):
+    """This command registers and dispatches commands. When creating a new command, it must create a
+    RegisterCommandEvent. When the user enters text, the command registry handler attempts to parse the text as commands
+    and dispatches command events appropriately. All command events should subclass the CommandEvent type."""
 
     def __init__(self, loop, event_queue):
         super().__init__(loop, event_queue)
@@ -14,8 +18,8 @@ class CommandRegistryHandler(EventHandler):
         self.registered_commands = {}
 
     async def handle(self):
-
         _, event = await self.event_queue.get()
+
 
         if not event.propagate:
             return
@@ -27,6 +31,7 @@ class CommandRegistryHandler(EventHandler):
             self.parse_text_input(event)
 
     def register_command(self, data):
+        """Registers a new command"""
 
         # verify that no other commands utilize the same invoke keyword
         keyword = data["invoke"].lower()
@@ -36,10 +41,9 @@ class CommandRegistryHandler(EventHandler):
 
         self.registered_commands[keyword] = data
 
-
     def parse_text_input(self, event):
+        """Attempts to parse text as a command, an dispatches a new command event appropriately."""
         raw_text = event.data.get("message")
-
 
         if raw_text is None or not len(raw_text):
             return
@@ -60,9 +64,9 @@ class CommandRegistryHandler(EventHandler):
                 return
 
 
-
-
 class HelpCommandHandler(EventHandler):
+    """This handler listens for RegiserCommandEvents and records registered commands. When a help command is issued, it
+    prints the appropriate help text."""
 
     def __init__(self, loop, event_queue):
         super().__init__(loop, event_queue)
@@ -79,14 +83,10 @@ class HelpCommandHandler(EventHandler):
             "options": "No options available."
         })
 
-
         supervisor.fire_event(event)
 
-
     async def handle(self):
-
         _, event = await self.event_queue.get()
-
 
         if not event.propagate:
             return
@@ -98,7 +98,7 @@ class HelpCommandHandler(EventHandler):
             self.display_help(event)
 
     def register_command(self, event):
-
+        """Registers a new command, registered commands are used for resolving help information."""
         data = event.data
 
         # verify that no other commands utilize the same invoke keyword
@@ -109,19 +109,19 @@ class HelpCommandHandler(EventHandler):
 
         self.registered_commands[keyword] = data
 
-
     def display_help(self, event):
+        """Displays help text overview or specific help text if a command is specified."""
         tokens = event.data.get("tokens")
 
         if tokens is None or not len(tokens):
             # print availiable commands
-            out = "Availiable Commands: \n"
+            out = "Available Commands: \n"
 
             for command_name, command_data in self.registered_commands.items():
                 out += "{}: {}\n".format(command_name, command_data["describe"])
             out += "\n"
 
-            print(out) # TODO refactor to use TTY output event
+            self.print(out)  # TODO refactor to use TTY output event
 
         else:
             command = tokens[0]
@@ -135,5 +135,9 @@ class HelpCommandHandler(EventHandler):
                         command_data["describe"],
                     )
 
-                    print(out) # TODO refactor to use TTY output event
+                    self.print(out)  # TODO refactor to use TTY output event
                     return
+
+    def print(self, msg):
+        """temportary work around to allow unit testing, should instead create TTy out event"""
+        print(msg)

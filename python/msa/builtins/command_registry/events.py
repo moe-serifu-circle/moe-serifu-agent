@@ -4,6 +4,7 @@ from msa.core.event import Event
 
 
 class RegisterCommandEvent(Event):
+    """Used for registering a new command type with the Command Registry."""
     def __init__(self):
         super().__init__(
             priority=1,
@@ -18,6 +19,8 @@ class RegisterCommandEvent(Event):
 
 
 class CommandEvent(Event):
+    """The base class for all command based events. All event constructors registered with the CommandRegistry must be
+    as subclass of this class."""
     def __init__(self, priority):
         super().__init__(
             priority=priority,
@@ -28,6 +31,8 @@ class CommandEvent(Event):
 
 
 class HelpCommandEvent(CommandEvent):
+    """A command event handled by the HelpCommandHandler, prompting it to print help text based on parameters provided.
+    """
     def __init__(self):
         super().__init__(priority=9)
 

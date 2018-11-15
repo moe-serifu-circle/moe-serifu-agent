@@ -6,6 +6,7 @@ builtin_module_names = [
     "time",
     "tty",
     "command_registry",
+    "echo",
 ]
 
 

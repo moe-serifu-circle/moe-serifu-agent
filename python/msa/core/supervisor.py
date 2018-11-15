@@ -11,32 +11,38 @@ class Supervisor:
     """
 
     def __init__(self):
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
         self.event_queue = asyncio.Queue()
         self.stop_loop = False
         self.stop_main_coro = None
         self.stop_future = None
 
-        self.event_bus = EventBus()
+        self.event_bus = EventBus(self.loop)
 
         self.loaded_modules = []
 
         self.initialized_event_handlers = []
+
+        self.handler_lookup = {}
+
+        self.shutdown_callbacks = []
 
 
     def init(self, mode):
         """Initializes the supervisor.
         Params:
         - mode (int): A msa.core.RunMode enum value to configure which modules should be started based on the
-        environment the system is being run in."""
-        plugin_names = []
+        environment the system is being run in.
+        """
 
+        plugin_names = []
 
         # load builtin modules
         bultin_modules = load_builtin_modules()
 
         # load plugin modules
         plugin_modules = load_plugin_modules(plugin_names, mode)
+
 
         self.loaded_modules = bultin_modules + plugin_modules
 
@@ -46,9 +52,10 @@ class Supervisor:
 
                 event_queue = self.event_bus.create_event_queue()
 
-                inited_coro = handler(self.loop, event_queue)
+                inited_handler = handler(self.loop, event_queue)
 
-                self.initialized_event_handlers.append(inited_coro)
+                self.initialized_event_handlers.append(inited_handler)
+                self.handler_lookup[handler] = inited_handler
 
     def start(self, additional_coros=[]):
         """Starts the supervisor.
@@ -78,17 +85,21 @@ class Supervisor:
 
         self.stop_main_coro = True
 
-        pending = asyncio.Task.all_tasks() # get all tasks
-        pending.remove(asyncio.Task.current_task()) # except this task
+        pending = asyncio.all_tasks() # get all tasks
+        pending.remove(asyncio.current_task()) # except this task
 
         for task in pending:
             with suppress(asyncio.CancelledError):
                 task.cancel()
                 await task
 
-    async def fire_event(self, new_event):
+    def fire_event(self, new_event):
         """Fires an event to all event listeners."""
-        await self.event_bus.fire_event(new_event)
+        def fire():
+            self.loop.create_task(self.event_bus.fire_event(new_event))
+
+
+        self.loop.call_soon(fire)
 
 
     async def main_coro(self, additional_coros=[]):
@@ -124,3 +135,10 @@ class Supervisor:
         Used for signaling event_handlers to cancel rescheduling.
         """
         return self.stop_loop
+
+    def get_handler(self, handler_type):
+        """"Returns the handler instance for a given type of handler. Used for unit tests.
+        Params:
+        - handler_type: A type of handler."""
+        return self.handler_lookup.get(handler_type)
+

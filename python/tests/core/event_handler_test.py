@@ -7,7 +7,7 @@ from msa.core.event_handler import EventHandler
 class EventHandlerTest(unittest.TestCase):
 
     def setUp(self):
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
         self.event_queue = asyncio.PriorityQueue()
         self.event_handler = DummyEventHandler(self.loop, self.event_queue)
 

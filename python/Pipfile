@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 click = "*"
 schema = "*"
+prompt_toolkit = "*"
 
 [dev-packages]
 

@@ -125,6 +125,8 @@ class Supervisor:
         if len(additional_coros) > 0:
             primed_coros.extend(additional_coros)
 
+        futures = None
+
         try:
             futures = await asyncio.gather(*primed_coros)
         except Exception as err:
@@ -135,8 +137,9 @@ class Supervisor:
         while not self.stop_main_coro:
             await asyncio.sleep(0.5)
 
-        with suppress(asyncio.CancelledError):
-            await futures
+        if futures is not None:
+            with suppress(asyncio.CancelledError):
+                await futures
 
         # cancel and suppress exit future
         if self.stop_future is not None:

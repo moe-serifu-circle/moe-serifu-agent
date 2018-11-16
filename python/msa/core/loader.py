@@ -7,6 +7,7 @@ builtin_module_names = [
     "tty",
     "command_registry",
     "echo",
+    "command",
 ]
 
 

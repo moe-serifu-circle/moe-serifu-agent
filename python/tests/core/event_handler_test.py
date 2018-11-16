@@ -29,10 +29,11 @@ class EventHandlerTest(unittest.TestCase):
             self.loop.create_task(self.insert_into_queue(i))
 
         # queue shutdown later (should be more than enough time to finish work)
-        self.loop.call_later(0.5, lambda: self.loop.stop())
+        self.loop.call_later(1, lambda: self.loop.stop())
 
         # run loop and wait for it to stop
         self.loop.run_forever()
+        self.loop.close()
 
         # verify we read all the numbers
         self.assertEqual(nums_10 + nums_20, self.event_handler.read_from_queue)

@@ -30,5 +30,4 @@ def cli(ctx):
 
 
 if __name__ == "__main__":
-    with patch_stdout():
-        main(obj={})
+    main(obj={})

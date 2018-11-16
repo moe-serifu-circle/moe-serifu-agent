@@ -127,10 +127,11 @@ class HelpCommandTests(unittest.TestCase):
         self.loop.create_task(self.handler.handle_wrapper())
 
         # stop the loop after 0.5 seconds
-        self.loop.call_later(0.5, lambda: self.loop.stop())
+        self.loop.call_later(1, lambda: self.loop.stop())
 
         # begin running loop
         self.loop.run_forever()
+        self.loop.stop()
 
         self.handler.print.assert_called()
 
@@ -173,10 +174,11 @@ class HelpCommandTests(unittest.TestCase):
         self.loop.create_task(self.handler.handle_wrapper())
 
         # stop the loop after 0.5 seconds
-        self.loop.call_later(0.5, lambda: self.loop.stop())
+        self.loop.call_later(1, lambda: self.loop.stop())
 
         # begin running loop
         self.loop.run_forever()
+        self.loop.close()
 
         self.handler.print.assert_called()
 
@@ -188,7 +190,7 @@ class HelpCommandTests(unittest.TestCase):
         self.assertTrue(len(call_args[0]))
         param_1 = call_args[0][0]
 
-        self.assertTrue("Available Commands:" in param_1, param_1)
+        self.assertTrue("Available Commands:" in param_1[0].get("text"), param_1)
 
 
 

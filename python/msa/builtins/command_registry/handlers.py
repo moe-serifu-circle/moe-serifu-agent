@@ -5,6 +5,9 @@ from msa.builtins.command_registry.events import RegisterCommandEvent, HelpComma
 from msa.builtins.tty.events import TextInputEvent
 from msa.core import supervisor
 
+from msa.builtins.tty.events import StyledTextOutputEvent
+from msa.builtins.tty.style import heading, definition
+
 import sys
 
 class CommandRegistryHandler(EventHandler):
@@ -113,29 +116,38 @@ class HelpCommandHandler(EventHandler):
         tokens = event.data.get("tokens")
 
         if tokens is None or not len(tokens):
-            # print availiable commands
-            out = "Available Commands:"
+            # print available commands
+            out = [
+                heading("Available Commands"),
+            ]
 
             for command_name, command_data in self.registered_commands.items():
-                out += "\n{}: {}".format(command_name, command_data["describe"])
+                out.extend(
+                    definition(command_name, command_data["describe"])
+                )
 
-            self.print(out)  # TODO refactor to use TTY output event
+            self.print(out)
 
         else:
             command = tokens[0]
 
             for command_name, command_data in self.registered_commands.items():
                 if command == command_name:
-                    out = "Help text for command '{}':\nUsage: {}\nOptions: {}\nDescription: {}".format(
-                        command_name,
-                        command_data["usage"],
-                        command_data.get("options", "No available options."),
-                        command_data["describe"],
-                    )
+                    out = [
+                        heading("Help text for command '{}'".format(command_name)),
+                        *definition("Usage", command_data["usage"]),
+                        *definition("Options", command_data.get("options", "No available options.")),
+                        *definition("Description", command_data["describe"]),
+                    ]
 
-                    self.print(out)  # TODO refactor to use TTY output event
-                    return
+                    self.print(out)
 
     def print(self, msg):
-        """temportary work around to allow unit testing, should instead create TTy out event"""
-        print(msg)
+        """Submits a TextOutputEvent"""
+        event = StyledTextOutputEvent()
+        event.init({
+            "message": msg
+        })
+
+        supervisor.fire_event(event)
+

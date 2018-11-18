@@ -1,5 +1,7 @@
 import asyncio
 import traceback
+from contextlib import suppress
+import asyncio
 
 class EventHandler:
     """The base event handler class, all other event handlers should be a subclass of this type.
@@ -30,7 +32,8 @@ class EventHandler:
 
         while not supervisor.should_stop():
             try:
-                await self.handle()
+                with suppress(asyncio.CancelledError):
+                    await self.handle()
             except Exception as err:
                 traceback.print_exc()
             await asyncio.sleep(0.01)

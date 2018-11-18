@@ -40,17 +40,17 @@ other commands and immediately presents the Command Line Interface. Prior to
 entering debug state, the MSA will save its current state and resume it once
 the debug state is exited.
 
-### Age-Restricted State
+### Directed-Activity State
 
-This state is age-restricted activity mode. The MSA will undergo a variety of
+This state is activity mode for entertainment. The MSA will undergo a variety of
 interactions and self-directed actions designed to appeal to the user without
 growing too repetitive.
 
-Age-verification can be enabled such that this state cannot be transitioned into
+Verification can be enabled such that this state cannot be transitioned into
 without prior authorization.
 
 This state must be enabled manually while the MSA is in attentive state; the
-only way a transition to Age-Restricted state can be initiated is by explicit
+only way a transition to Directed-Activity state can be initiated is by explicit
 command from the user or explicit scheduling by the user.
 
 ### Conversing State

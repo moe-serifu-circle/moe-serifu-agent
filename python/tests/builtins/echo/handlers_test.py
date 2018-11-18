@@ -8,6 +8,8 @@ from msa.core import supervisor
 from msa.builtins.echo.events import EchoCommandEvent
 from msa.builtins.echo.handlers import EchoHandler
 
+import time
+
 
 class EchoTests(unittest.TestCase):
 
@@ -17,12 +19,12 @@ class EchoTests(unittest.TestCase):
         self.handler = EchoHandler(loop=self.loop, event_queue=self.event_queue)
 
     @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
-    @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, False, True]))
+    @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, True]))
     @mock.patch('msa.builtins.echo.handlers.EchoHandler.print')
     def test_echo(self, mocked_print):
 
         # add handle wrapper to execution loop
-        self.loop.create_task(self.handler.handle_wrapper())
+        self.loop.create_task(self.handler.handle())
 
         # Create echo event
         raw_text = "echo sometext"
@@ -39,6 +41,7 @@ class EchoTests(unittest.TestCase):
         # begin running loop
         self.loop.run_forever()
         self.loop.close()
+
 
         # get call arguments from fire_event mock
         self.handler.print.assert_called()

@@ -1,9 +1,7 @@
 import asyncio
 import traceback
-import sys
-import signal
 from contextlib import suppress
-import importlib
+import prompt_toolkit
 
 from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
@@ -71,7 +69,7 @@ class Supervisor:
                 primed_coro = self.main_coro(additional_coros)
                 self.loop.run_until_complete(primed_coro)
         except KeyboardInterrupt:
-            print("Ctrl-C Pressed. Quitting...")
+            prompt_toolkit.print_formatted_text("Ctrl-C Pressed. Quitting...")
         finally:
             self.stop()
 

@@ -2,6 +2,8 @@ import sys
 import asyncio
 import platform
 
+from msa.core import supervisor
+
 class Prompt:
     def __init__(self, loop):
         self.loop = loop
@@ -17,7 +19,7 @@ class Prompt:
     async def listen(self, wait=False):
 
         if platform.system() == "Windows":
-            return (await asyncio.get_event_loop().run_in_executor(None, sys.stdin.readline)).rstrip()
+            return (await asyncio.get_event_loop().run_in_executor(supervisor.executor, sys.stdin.readline)).rstrip()
 
         # if mac or linux
         if wait:

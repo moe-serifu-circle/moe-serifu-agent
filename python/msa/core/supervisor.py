@@ -4,6 +4,7 @@ import asyncio
 import traceback
 from contextlib import suppress
 import prompt_toolkit
+from concurrent.futures import ThreadPoolExecutor
 
 from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
@@ -31,6 +32,8 @@ class Supervisor:
         self.handler_lookup = {}
 
         self.shutdown_callbacks = []
+
+        self.executor = ThreadPoolExecutor()
 
 
     def init(self, mode):
@@ -88,6 +91,8 @@ class Supervisor:
     async def exit(self):
         """Shuts down running tasks and stops the event loop, exiting the application."""
         self.stop_loop = True
+
+        self.executor.shutdown()
 
         for callback in self.shutdown_callbacks:
             callback()

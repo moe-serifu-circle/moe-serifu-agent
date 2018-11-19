@@ -16,7 +16,7 @@ class TtyInputHandler(EventHandler):
     def __init__(self, loop, event_queue):
         super().__init__(loop, event_queue)
 
-        self.prompt = Prompt()
+        self.prompt = Prompt(loop=loop)
 
         self.first = True
 

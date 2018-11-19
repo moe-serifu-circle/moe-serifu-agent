@@ -3,8 +3,8 @@ import asyncio
 import platform
 
 class Prompt:
-    def __init__(self, loop=None):
-        self.loop = loop or asyncio.get_event_loop()
+    def __init__(self, loop):
+        self.loop = loop
         self.q = asyncio.Queue(loop = self.loop)
 
         if platform.system() != "Windows":

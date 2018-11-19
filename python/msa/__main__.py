@@ -1,7 +1,5 @@
 
 import click
-from prompt_toolkit.patch_stdout import patch_stdout
-import sys
 
 from msa.core import supervisor, RunMode
 

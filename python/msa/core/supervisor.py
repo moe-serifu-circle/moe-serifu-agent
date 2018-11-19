@@ -3,7 +3,6 @@ import os
 import asyncio
 import traceback
 from contextlib import suppress
-import prompt_toolkit
 from concurrent.futures import ThreadPoolExecutor
 
 from msa.core.loader import load_builtin_modules, load_plugin_modules
@@ -77,7 +76,7 @@ class Supervisor:
                 primed_coro = self.main_coro(additional_coros)
                 self.loop.run_until_complete(primed_coro)
         except KeyboardInterrupt:
-            prompt_toolkit.print_formatted_text("Ctrl-C Pressed. Quitting...")
+            print("Ctrl-C Pressed. Quitting...")
         finally:
             self.stop()
             self.loop.run_until_complete(self.loop.shutdown_asyncgens())

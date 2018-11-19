@@ -12,10 +12,10 @@ class ExpanderTest(unittest.TestCase):
         self.assertEqual(self.ex.expand("$test"), "something", "expansion failed with basic input")
 
     def test_abuse(self):
-        self.assertEqual(self.ex.expand("\\\\\$\$\\\\"), "\\$$\\", "expansion failed with escape abuse")
+        self.assertEqual(self.ex.expand(r"\\\\\$\$\\\\"), r"\\$$\\", "expansion failed with escape abuse")
 
     def test_complex(self):
-        self.assertEqual(self.ex.expand("$test, \$test"), "something, $test", "expansion failed with complex input")
+        self.assertEqual(self.ex.expand(r"$test, \$test"), "something, $test", "expansion failed with complex input")
 
 
 if __name__ == '__main__':

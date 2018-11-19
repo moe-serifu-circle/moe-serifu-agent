@@ -9,8 +9,6 @@ from msa.builtins.tty.handlers import TtyInputHandler, TtyOutputHandler
 from msa.builtins.tty.events import TextInputEvent, TextOutputEvent, StyledTextOutputEvent
 
 
-
-
 class TtyInputHandlerTests(unittest.TestCase):
 
     def setUp(self):
@@ -18,9 +16,9 @@ class TtyInputHandlerTests(unittest.TestCase):
         self.event_queue = asyncio.PriorityQueue(loop=self.loop)
         self.handler = TtyInputHandler(loop=self.loop, event_queue=self.event_queue)
 
-    @mock.patch("prompt_toolkit.PromptSession.prompt", new=AsyncMock(return_value="test"))
+    @mock.patch("msa.builtins.tty.prompt.Prompt.listen", new=AsyncMock(return_value="test"))
     @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
-    @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, True]))
+    @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, False, True]))
     def test_create_event_on_input(self):
 
         # add handle wrapper to execution loop
@@ -31,6 +29,7 @@ class TtyInputHandlerTests(unittest.TestCase):
 
         # begin running loop
         self.loop.run_forever()
+        self.loop.close()
 
         # get call arguments from fire_event mock
         call_args = supervisor.fire_event.call_args
@@ -71,6 +70,7 @@ class TtyOutputHandlerTests(unittest.TestCase):
 
         # begin running loop
         self.loop.run_forever()
+        self.loop.stop()
         self.loop.close()
 
         # get call arguments from fire_event mock
@@ -82,11 +82,11 @@ class TtyOutputHandlerTests(unittest.TestCase):
         param_1 = call_args[0][0]
 
         # Validate type and message
-        self.assertEqual(param_1, raw_text + "\n")
+        self.assertEqual(param_1, raw_text)
 
     @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, True]))
     @mock.patch("msa.builtins.tty.handlers.TtyOutputHandler.print", new=mock.MagicMock())
-    def test_print_text_on_styped_text_event(self):
+    def test_print_text_on_styled_text_event(self):
 
         raw_text = "test message"
         event = StyledTextOutputEvent()
@@ -102,10 +102,11 @@ class TtyOutputHandlerTests(unittest.TestCase):
         self.loop.create_task(self.handler.handle_wrapper())
 
         # stop the loop after 0.5 seconds
-        self.loop.call_later(1, lambda: self.loop.stop())
+        self.loop.call_later(0.5, lambda: self.loop.stop())
 
         # begin running loop
         self.loop.run_forever()
+        self.loop.stop()
         self.loop.close()
 
         # get call arguments from fire_event mock
@@ -118,6 +119,7 @@ class TtyOutputHandlerTests(unittest.TestCase):
 
         # Validate type and message
         self.assertTrue(raw_text in param_1)
+
 
 if __name__ == "__main__":
     unittest.main()

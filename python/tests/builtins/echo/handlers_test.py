@@ -20,11 +20,9 @@ class EchoTests(unittest.TestCase):
 
     @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
     @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, True]))
-    @mock.patch('msa.builtins.echo.handlers.EchoHandler.print')
-    def test_echo(self, mocked_print):
+    @mock.patch('msa.builtins.echo.handlers.EchoHandler.print', new=mock.MagicMock())
+    def test_echo(self):
 
-        # add handle wrapper to execution loop
-        self.loop.create_task(self.handler.handle())
 
         # Create echo event
         raw_text = "echo sometext"
@@ -35,11 +33,15 @@ class EchoTests(unittest.TestCase):
         })
         self.event_queue.put_nowait((10, event))  # ensure lower priority
 
+        # add handle wrapper to execution loop
+        self.loop.create_task(self.handler.handle())
+
         # stop the loop after 0.5 seconds
         self.loop.call_later(0.5, lambda:self.loop.stop())
 
         # begin running loop
         self.loop.run_forever()
+        self.loop.stop()
         self.loop.close()
 
 

@@ -174,7 +174,7 @@ class HelpCommandTests(unittest.TestCase):
         self.loop.create_task(self.handler.handle_wrapper())
 
         # stop the loop after 0.5 seconds
-        self.loop.call_later(1, lambda: self.loop.stop())
+        self.loop.call_later(0.5, lambda: self.loop.stop())
 
         # begin running loop
         self.loop.run_forever()

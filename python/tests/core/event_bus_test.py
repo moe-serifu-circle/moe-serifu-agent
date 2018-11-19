@@ -23,6 +23,9 @@ class EventBusTest(unittest.TestCase):
 
         event_queue.put_nowait.assert_called()
 
+        self.loop.stop()
+        self.loop.close()
+
 
 if __name__ == '__main__':
     unittest.main()

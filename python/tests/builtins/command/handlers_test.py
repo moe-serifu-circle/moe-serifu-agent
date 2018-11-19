@@ -18,7 +18,7 @@ class QuitTests(unittest.TestCase):
 
     @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
     @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, True]))
-    @mock.patch('msa.core.supervisor.stop', new=mock.Mock())
+    @mock.patch('msa.core.supervisor.stop', new=mock.MagicMock())
     def test_quit(self):
 
         # add handle wrapper to execution loop
@@ -34,10 +34,11 @@ class QuitTests(unittest.TestCase):
         self.event_queue.put_nowait((10, event))  # ensure lower priority
 
         # stop the loop after 0.5 seconds
-        self.loop.call_later(1, lambda:self.loop.stop())
+        self.loop.call_later(0.5, lambda: self.loop.stop())
 
         # begin running loop
         self.loop.run_forever()
+        self.loop.stop()
         self.loop.close()
 
         # ensure supervisor's stop method was called

@@ -29,6 +29,9 @@ class TtyInputHandler(EventHandler):
             # before we print the prompt
             await asyncio.sleep(0.5)
 
+        if supervisor.should_stop():
+            return # quit because the supervisor may have begun shutting down while we were waiting.
+
         print(">> ", end="", flush=True)
         sys.stdout.flush()
         msg = await self.prompt.listen(wait=True)

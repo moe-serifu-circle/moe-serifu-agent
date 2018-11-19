@@ -32,6 +32,9 @@ class TtyInputHandler(EventHandler):
         print(">> ", end="", flush=True)
         sys.stdout.flush()
         msg = await self.prompt.listen(wait=True)
+        msg = msg.rstrip()
+
+
 
         if msg is None or not len(msg):
             return

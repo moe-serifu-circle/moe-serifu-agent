@@ -16,14 +16,14 @@ class Prompt:
         future = self.q.put(sys.stdin.readline())
         asyncio.ensure_future(future, loop=self.loop)
 
-    async def listen(self, wait=False):
+    def listen(self, wait=False):
 
         if platform.system() == "Windows":
-            return (await asyncio.get_event_loop().run_in_executor(supervisor.executor, sys.stdin.readline)).rstrip()
+            return asyncio.get_event_loop().run_in_executor(supervisor.executor, sys.stdin.readline)
 
         # if mac or linux
         if wait:
-            return (await self.q.get()).strip("\n").rstrip(" ")
+            return self.q.get()
         else:
             try:
                 return self.q.get_nowait()

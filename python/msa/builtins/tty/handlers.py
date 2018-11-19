@@ -65,7 +65,6 @@ class TtyOutputHandler(EventHandler):
     def print(self, *args, **kwargs):
         """A wrapper around print. Helps with unit tests."""
         colorama.init()
-        erase = '\x1b[1A\x1b[2K'
         print(*args, **kwargs, end="")
 
 

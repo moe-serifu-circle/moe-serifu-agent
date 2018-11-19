@@ -9,8 +9,6 @@ from msa.builtins.tty.handlers import TtyInputHandler, TtyOutputHandler
 from msa.builtins.tty.events import TextInputEvent, TextOutputEvent, StyledTextOutputEvent
 
 
-
-
 class TtyInputHandlerTests(unittest.TestCase):
 
     def setUp(self):
@@ -18,10 +16,9 @@ class TtyInputHandlerTests(unittest.TestCase):
         self.event_queue = asyncio.PriorityQueue(loop=self.loop)
         self.handler = TtyInputHandler(loop=self.loop, event_queue=self.event_queue)
 
-
     @mock.patch("msa.builtins.tty.prompt.Prompt.listen", new=AsyncMock(return_value="test"))
     @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
-    @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, True]))
+    @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, False, True]))
     def test_create_event_on_input(self):
 
         # add handle wrapper to execution loop

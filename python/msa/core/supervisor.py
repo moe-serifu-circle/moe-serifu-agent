@@ -172,8 +172,7 @@ class Supervisor:
         if self.stop_future is not None:
             asyncio.gather(self.stop_future)
 
-        print("\nGoodbye!\n")
-        sys.exit(0)
+        print("\rGoodbye!\n")
 
 
 

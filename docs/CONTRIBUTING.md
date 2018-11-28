@@ -86,11 +86,18 @@ one established in the project.
 If there is a significant reason for the style differing from convention, make sure to
 include the reason either in a code comment or in the PR submission.
 
-For this project, the following guidelines are absolute and not likely to be subject to
-change:
+For this project, the following guidelines are in effect:
 
 * Use `snake_case` for the names of functions and local variables.
 * Use `CamelCase` for the names of classes.
+* In general, PEP-8 should be followed, except for where it does not make sense. The
+explicit cases where this can be ignored:
+  * Global exception Handlers that catch all exceptions are permitted (at the top-level
+  of execution only). Ensure that they properly send the exceptions somewhere (e.g.
+  logging), and that they don't just swallow them.
+  * Shadowing global imports with local identifiers (e.g. it's okay to have a parameter
+  called `id`).
+
 
 ### Architecture Changes
 

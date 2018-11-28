@@ -47,9 +47,10 @@ for other people to use.
 You only need to submit the agreement once; this will let you work on all MSC projects.
 
 You can find instructions for filling out the form as well as the form itself
-[here](https://drive.google.com/open?id=1-9HxEtUI1heMHMb50pxvAPKgodrsPdBp). Make sure
-to send it to the email address listed there or to send it directly to a member of MSC's
-board of directors.
+[here](https://goo.gl/forms/hu1hTNZs1xj2mFnF2). If you are filling it out manually, make
+sure to send it to the email address listed there or to send it directly to a member of MSC's
+board of directors. If you use the online form, note that it will not notify us when you
+submit it; you will need to tell us that you submitted it.
 
 ### Contributions Should Be Associated with Issues
 

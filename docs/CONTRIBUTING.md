@@ -63,6 +63,20 @@ submitting a PR without an associated Issue.
 PRs that are not associated with an issue and that do not have reasonable justification given
 in their description are likely to be rejected or sent back for changes.
 
+### Unit Tests and Comments
+
+All PRs that contain changes to code should be accompanied by unit tests that cover the
+change. If unit testing does not apply to the situation given in the PR, reasoning should
+be given in the PR description, or a project maintainer should be notified submitting the
+PR.
+
+All PRs must include properly commented code. The exact definition of what constitutes
+'properly commented' is not well-defined, but at a minimum, there should be a module-level
+or class-level docstring explaining what the module and/or class does.
+
+PRs that do not follow the above guidelines are likely to be rejected or sent back for
+changes.
+
 ### Style
 
 Please be sure to follow coding style practices established in a project. PRs are likely

@@ -13,8 +13,8 @@ from msa.core import supervisor
 class TtyInputHandler(EventHandler):
     """Listens to stdin for terminal input and then fires a TextInputEvent."""
 
-    def __init__(self, loop, event_queue):
-        super().__init__(loop, event_queue)
+    def __init__(self, loop, event_queue, logger):
+        super().__init__(loop, event_queue, logger)
 
         self.prompt = Prompt(loop=loop)
 

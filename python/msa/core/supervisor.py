@@ -2,6 +2,8 @@ import sys
 import os
 import asyncio
 import traceback
+import logging
+import inspect
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
 
@@ -34,35 +36,70 @@ class Supervisor:
 
         self.executor = ThreadPoolExecutor()
 
+        self.root_logger = None
+        self.logger = None
 
-    def init(self, mode):
+    def init(self, mode, cli_config):
         """Initializes the supervisor.
         Params:
         - mode (int): A msa.core.RunMode enum value to configure which modules should be started based on the
         environment the system is being run in.
         """
 
+        # Initialize logging
+        self.root_logger = logging.getLogger("msa")
+        self.root_logger.setLevel(cli_config["log_level"])
+        file_handler = logging.FileHandler("msa.log", mode="w")
+        file_handler.setLevel(cli_config["log_level"])
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        self.root_logger.addHandler(file_handler)
+
+        self.logger = self.root_logger.getChild("supervisor")
+
+        # ### PLACEHOLDER - Load Configuration file here --
+
         plugin_names = []
 
+        # ### Loading Modules
+        self.logger.info("Loading modules.")
+
         # load builtin modules
+        self.logger.debug("Loading builtin modules.")
         bultin_modules = load_builtin_modules()
+        self.logger.debug("Finished loading builtin modules.")
 
         # load plugin modules
+        self.logger.debug("Loading plugin modules.")
         plugin_modules = load_plugin_modules(plugin_names, mode)
+        self.logger.debug("Finished loading plugin modules.")
 
+        self.logger.info("Finished loading modules.")
 
         self.loaded_modules = bultin_modules + plugin_modules
 
+        # ### Registering Handlers
+        self.logger.info("Registering handlers.")
         # register event handlers
         for module in self.loaded_modules:
+            self.logger.debug("Registering handlers for module {}".format(module.__name__))
             for handler in module.handler_factories:
 
+                namespace = "{}.{}".format(module.__name__, handler.__name__)
+                self.logger.debug("Registering handler: {}".format(namespace))
+
+                handler_logger = self.root_logger.getChild(namespace)
                 event_queue = self.event_bus.create_event_queue()
 
-                inited_handler = handler(self.loop, event_queue)
+                inited_handler = handler(self.loop, event_queue, handler_logger)
 
                 self.initialized_event_handlers.append(inited_handler)
                 self.handler_lookup[handler] = inited_handler
+
+                self.logger.debug("Finished registering handler: {}".format(namespace))
+            self.logger.debug("Finished registering handlers for module {}".format(module.__name__))
+
+        self.logger.info("Finished registering handlers.")
 
     def start(self, additional_coros=[]):
         """Starts the supervisor.

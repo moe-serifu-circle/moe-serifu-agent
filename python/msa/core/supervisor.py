@@ -51,7 +51,7 @@ class Supervisor:
         self.root_logger.setLevel(cli_config["log_level"])
         file_handler = logging.FileHandler("msa.log", mode="w")
         file_handler.setLevel(cli_config["log_level"])
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
         file_handler.setFormatter(formatter)
         self.root_logger.addHandler(file_handler)
 

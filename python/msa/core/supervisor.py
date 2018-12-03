@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
+from msa.core.config_manager import ConfigManager
 
 class Supervisor:
     """The supervisor is responsible for managing the execution of the application and orchestrating the event system.
@@ -21,6 +22,7 @@ class Supervisor:
             self.loop = asyncio.new_event_loop()
             self.event_bus = EventBus(self.loop)
             self.event_queue = asyncio.Queue(self.loop)
+        self.config_manager = None
         self.stop_loop = False
         self.stop_main_coro = None
         self.stop_future = None
@@ -40,13 +42,16 @@ class Supervisor:
         self.logger = None
         self.loggers = {}
 
-    def init_logging(self, root_log_level):
+    def init_logging(self, logging_config):
 
         self.root_logger = logging.getLogger("msa")
-        self.root_logger.setLevel(root_log_level)
-        file_handler = logging.FileHandler("msa.log", mode="w")
+        self.root_logger.setLevel(logging_config["global_log_level"])
+
+        file_handler = logging.FileHandler(logging_config["log_file_location"], mode="w")
         file_handler.setLevel(logging.DEBUG)
+
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+
         file_handler.setFormatter(formatter)
         self.root_logger.addHandler(file_handler)
 
@@ -63,8 +68,7 @@ class Supervisor:
         for log_config in granular_level_config:
             for namespace, logger in self.loggers.items():
                 if log_config["namespace"] in namespace:
-                    effective_log_level = (getattr(logging, log_config["level"].upper(), None)
-                                           or logger.getEffectiveLevel())
+                    effective_log_level = log_config.get("level", logger.getEffectiveLevel())
                     logger.setLevel(effective_log_level)
 
         self.logger.info("Finished setting granular log levels.")
@@ -75,19 +79,12 @@ class Supervisor:
         - mode (int): A msa.core.RunMode enum value to configure which modules should be started based on the
         environment the system is being run in.
         """
+        # ### PLACEHOLDER - Load Configuration file here --
+        self.config_manager = ConfigManager(cli_config)
+        config = self.config_manager.get_config()
 
         # Initialize logging
-        self.init_logging(cli_config["log_level"])
-
-        # ### PLACEHOLDER - Load Configuration file here --
-        config = {
-            "granular_logging": [
-                {
-                    "namespace": "msa.builtins.command_registry",
-                    "level": "info",
-                }
-            ]
-        }
+        self.init_logging(config["logging"])
 
         plugin_names = []
 
@@ -116,23 +113,27 @@ class Supervisor:
             for handler in module.handler_factories:
 
                 namespace = "{}.{}".format(module.__name__[4:], handler.__name__)
+                full_namespace = "msa.{}".format(namespace)
                 self.logger.debug("Registering handler: msa.{}".format(namespace))
 
                 handler_logger = self.root_logger.getChild(namespace)
-                self.loggers["msa.{}".format(namespace)] = handler_logger
+                self.loggers[full_namespace] = handler_logger
+
                 event_queue = self.event_bus.create_event_queue()
 
-                inited_handler = handler(self.loop, event_queue, handler_logger)
+                module_config = config["module_config"].get(full_namespace, None)
+
+                inited_handler = handler(self.loop, event_queue, handler_logger, module_config)
 
                 self.initialized_event_handlers.append(inited_handler)
                 self.handler_lookup[handler] = inited_handler
 
-                self.logger.debug("Finished registering handler: msa.{}".format(namespace))
+                self.logger.debug("Finished registering handler: {}".format(full_namespace))
             self.logger.debug("Finished registering handlers for module {}".format(module.__name__))
 
         self.logger.info("Finished registering handlers.")
 
-        self.apply_granular_log_levels(config["granular_logging"])
+        self.apply_granular_log_levels(config["logging"]["granular_log_levels"])
 
 
     def start(self, additional_coros=[]):

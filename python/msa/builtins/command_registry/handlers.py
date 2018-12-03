@@ -15,8 +15,8 @@ class CommandRegistryHandler(EventHandler):
     RegisterCommandEvent. When the user enters text, the command registry handler attempts to parse the text as commands
     and dispatches command events appropriately. All command events should subclass the CommandEvent type."""
 
-    def __init__(self, loop, event_queue, logger):
-        super().__init__(loop, event_queue, logger)
+    def __init__(self, loop, event_queue, logger, config=None):
+        super().__init__(loop, event_queue, logger, config)
 
         self.registered_commands = {}
 
@@ -72,8 +72,8 @@ class HelpCommandHandler(EventHandler):
     """This handler listens for RegiserCommandEvents and records registered commands. When a help command is issued, it
     prints the appropriate help text."""
 
-    def __init__(self, loop, event_queue, logger):
-        super().__init__(loop, event_queue, logger)
+    def __init__(self, loop, event_queue, logger, config=None):
+        super().__init__(loop, event_queue, logger, config)
 
         self.registered_commands = {}
 

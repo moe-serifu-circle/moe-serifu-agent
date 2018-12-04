@@ -25,7 +25,19 @@ def load_builtin_modules():
 
 
 def load_plugin_modules(plugin_module_names, mode):
-    """Loads plugin modules as specified in the configuration file."""
+    """Loads plugin modules as specified in the configuration file.
+
+    Parameters
+    ----------
+    plugin_module_names : List[str]
+        Plugin module names to load. Module names should be fully qualified modules existing in `msa.plugins`.
+    mode : `msa.core.RunMode`
+        The mode the system is being run in.
+
+    Returns
+    -------
+
+    """
 
     plugin_modules = []
 

@@ -11,8 +11,10 @@ from msa.builtins.tty.style import heading, definition
 import sys
 
 class CommandRegistryHandler(EventHandler):
-    """This command registers and dispatches commands. When creating a new command, it must create a
-    RegisterCommandEvent. When the user enters text, the command registry handler attempts to parse the text as commands
+    """Registers and dispatches commands.
+
+    When creating a new command, it must create a RegisterCommandEvent.
+    When the user enters text, the command registry handler attempts to parse the text as commands
     and dispatches command events appropriately. All command events should subclass the CommandEvent type."""
 
     def __init__(self, loop, event_queue, logger, config=None):

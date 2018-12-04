@@ -15,6 +15,8 @@ Welcome to Moe Serifu Agent's documentation!
    :caption: Contents:
 
    readme
+   installation
+   configuration
    changelog
    api/msa
    

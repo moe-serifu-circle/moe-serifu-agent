@@ -3,6 +3,16 @@
 This document lays out some of the ways that you can help out with Moe Serifu Agent and
 other projects under Moe Serifu Circle.
 
+## Team Structure
+Efforts towards MSC projects are lead by a team of volunteers. These volunteers maintain
+the project, and are responsible for deciding whether to accepting PRs or request changes
+on them.
+
+These project maintainers have the final say on whether contributions and PRs meet the
+guidelines outlined in this document; at MSC, we believe that communication is key to a
+well-functioning team and quality software, so we very much encourage contributors to feel
+free to reach out to our maintainers to get help on any issues that are unclear.
+
 ## Finding What to Work On
 
 ### Discord Server
@@ -19,8 +29,9 @@ on.
 
 ### GitHub Issues
 
-All of the items in our backlog are located in the GitHub Issues page for the project;
-from there, you should be able to get a pretty good idea of what needs to be worked on.
+All of the items in our backlog are located in the [GitHub Issues](https://github.com/moe-serifu-circle/moe-serifu-agent/issues)
+page for the project; from there, you should be able to get a pretty good idea of what
+needs to be worked on.
 
 Of course, the recommendation will always be to coordinate activities with project
 maintainers when possible, but if a PR is specifically connected to an extant issue,
@@ -68,8 +79,8 @@ in their description are likely to be rejected or sent back for changes.
 
 All PRs that contain changes to code should be accompanied by unit tests that cover the
 change. If unit testing does not apply to the situation given in the PR, reasoning should
-be given in the PR description, or a project maintainer should be notified submitting the
-PR.
+be given in the PR description; notifying a project maintainer of the lack of testability
+prior to submitting the PR is also advisable.
 
 All PRs must include properly commented code. The exact definition of what constitutes
 'properly commented' is not well-defined, but at a minimum, there should be a module-level
@@ -91,13 +102,18 @@ For this project, the following guidelines are in effect:
 
 * Use `snake_case` for the names of functions and local variables.
 * Use `CamelCase` for the names of classes.
-* In general, PEP-8 should be followed, except for where it does not make sense. The
-explicit cases where this can be ignored:
+* In general, PEP-8 should be followed, except for where it negatively impacts readibility
+and maintainibility in the code. The cases where PEP-8 is explicitly permitted to be ignored,
+in general, are as follows:
   * Global exception Handlers that catch all exceptions are permitted (at the top-level
   of execution only). Ensure that they properly send the exceptions somewhere (e.g.
   logging), and that they don't just swallow them.
   * Shadowing global imports with local identifiers (e.g. it's okay to have a parameter
   called `id`).
+  * A single-line comment that comes after a line of code is permitted to do so with any
+  number of spaces. For example, rather than `x += 4  # adds four` (the standard required
+  by PEP-8), it is permissible to do `x += 4 # adds four`, or any other number of spaces
+  within reason.
 
 
 ### Architecture Changes

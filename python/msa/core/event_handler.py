@@ -1,7 +1,9 @@
 import asyncio
+from typing import Dict, Optional
 import traceback
 from contextlib import suppress
 import asyncio
+import logging
 
 class EventHandler:
     """The base event handler class, all other event handlers should be a subclass of this type.
@@ -10,14 +12,18 @@ class EventHandler:
     - self.event_queue (asyncio.Queue): an event loop that this handler may attempt to read events out of by awaiting on
     it."""
 
-    def __init__(self, loop: asyncio.AbstractEventLoop, event_queue: asyncio.Queue):
+    def __init__(self, loop: asyncio.AbstractEventLoop, event_queue: asyncio.Queue, logger: logging.Logger,
+                 config: Optional[Dict] = None):
         """Creates a new event handler. Subclasses should call the base constructor before setting up their own internal
         state.
         Params:
         - loop (asyncio.AbstractEventLoop): an asyncio event loop.
-        - event_queue (asyncio.Queue): a queue that this handler may attempt to read events out of."""
+        - event_queue (asyncio.Queue): a queue that this handler may attempt to read events out of.
+        - logger (logging.Logger): A logger instance specific to this event handler."""
         self.loop = loop
         self.event_queue = event_queue
+        self.logger = logger
+        self.config = config
 
     async def init(self):
         """An optional initialization hook, may be used for executing setup code before all handlers have benn fully

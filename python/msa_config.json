@@ -1,0 +1,21 @@
+{
+   "agent": {
+       "name": "Masa-chan",
+       "user_title": "Onee-chan"
+   },
+  "plugin_modules": [
+
+  ],
+
+  "module_config": {
+
+  },
+
+  "logging": {
+    "global_log_level": "error",
+    "log_file_location": "msa.log",
+    "granular_log_levels": [
+
+    ]
+  }
+}

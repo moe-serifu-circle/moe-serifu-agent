@@ -9,8 +9,8 @@ from msa.builtins.time.events import TimeEvent
 
 class TimeHandler(EventHandler):
 
-    def __init__(self, loop, event_queue, logger):
-        super().__init__(loop, event_queue, logger)
+    def __init__(self, loop, event_queue, logger, config=None):
+        super().__init__(loop, event_queue, logger, config)
 
         self.last_tick = datetime.now()
 

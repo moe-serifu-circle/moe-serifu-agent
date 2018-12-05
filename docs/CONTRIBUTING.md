@@ -120,7 +120,7 @@ in general, are as follows:
 
 The architecture of the systems in this project should be considered fixed. MSC is not
 opposed to accepting changes to its projects' architectures, but please be aware that
-this will usually not be a simple quick change.
+this will usually not be a trivial change.
 
 To ensure that all engineers are on the same page, major architectural changes should
 be brought up directly with the engineering team. The easiest way to do that is on

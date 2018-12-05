@@ -1,3 +1,9 @@
 # Installation
 
-[[This page is a stub!!]]
+## Windows Installation
+
+**[STUB]**
+
+## Linux/MacOS Installation
+
+**[STUB]**

@@ -16,7 +16,11 @@ Welcome to Moe Serifu Agent's documentation!
 
    readme
    installation
+   getting_started
    configuration
+   builtin_commands
+   architecture
+   plugin_development
    changelog
    api/msa
    

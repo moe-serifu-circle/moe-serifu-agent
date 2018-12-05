@@ -1,3 +1,4 @@
 # Configuration File
 
-Configuration properties
+**[STUB]**
+

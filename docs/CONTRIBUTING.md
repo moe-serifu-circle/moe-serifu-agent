@@ -127,5 +127,5 @@ be brought up directly with the engineering team. The easiest way to do that is 
 [the circle's discord server](https://discord.gg/URAA8SF) Discord server.
 
 PRs that necessitate large changes to architecture that are submitted without prior
-discussion will be rejected.
+discussion will be rejected; the maintaining team may request further action be taken to split the task into smaller sub-tasks.
 

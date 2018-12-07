@@ -100,7 +100,7 @@ include the reason either in a code comment or in the PR submission.
 
 For this project, the following guidelines are in effect:
 
-* Use `snake_case` for the names of functions and local variables.
+* Use `snake_case` for the names of functions, local variables, and modules.
 * Use `CamelCase` for the names of classes.
 * In general, PEP-8 should be followed, except for where it negatively impacts readibility
 and maintainibility in the code. The cases where PEP-8 is explicitly permitted to be ignored,

@@ -43,6 +43,9 @@ class Supervisor:
         self.loggers = {}
 
     def init_logging(self, logging_config):
+        """
+        Initializes application logging, setting up the global log namespace, and the supervisor log namespace.
+        """
 
         self.root_logger = logging.getLogger("msa")
         self.root_logger.setLevel(logging_config["global_log_level"])
@@ -59,6 +62,14 @@ class Supervisor:
         self.loggers["core.supervisor"] = self.logger
 
     def apply_granular_log_levels(self, granular_level_config):
+        """
+        Applies the granular log levels configured in the conficuration file.
+
+        Parameters
+        ----------
+        granular_level_config : List[Dict[String, String]]
+            A list of namespace to log level mappings to be applied.
+        """
         self.logger.info("Setting granular log levels.")
 
         # order by length shortest namespaces will be the highest level, and should be applied first so that lower
@@ -75,9 +86,14 @@ class Supervisor:
 
     def init(self, mode, cli_config):
         """Initializes the supervisor.
-        Params:
-        - mode (int): A msa.core.RunMode enum value to configure which modules should be started based on the
-        environment the system is being run in.
+
+        Parameters
+        ----------
+        mode : int
+            A msa.core.RunMode enum value to configure which modules should be started based on the
+            environment the system is being run in.
+        cli_config: Dict
+            A dictionary containing configuration options derived from the command line interface.
         """
         # ### PLACEHOLDER - Load Configuration file here --
         self.config_manager = ConfigManager(cli_config)
@@ -137,10 +153,14 @@ class Supervisor:
 
 
     def start(self, additional_coros=[]):
-        """Starts the supervisor.
-        Params:
-        - additional_coros (List[Coroutines]): a list of other coroutines to be started. Acts as a hook for specialized
-        startup scenarios."""
+        r"""Starts the supervisor.
+
+        Parameters
+        ----------
+        additional_coros : List[Coroutines]
+            a list of other coroutines to be started. Acts as a hook for specialized
+            startup scenarios.
+        """
 
         self.logger.info("Starting main coroutine.")
 
@@ -205,7 +225,13 @@ class Supervisor:
 
 
     def fire_event(self, new_event):
-        """Fires an event to all event listeners."""
+        """Fires an event to all event listeners.
+
+        Parameters
+        ----------
+        new_event : `Event`
+            A new instance of a subclass of `Event` to be propagated to other event handlers.
+        """
         self.logger.debug("Fire event: {}".format(new_event))
         def fire():
             self.loop.create_task(self.event_bus.fire_event(new_event))
@@ -215,7 +241,14 @@ class Supervisor:
 
 
     async def main_coro(self, additional_coros=[]):
-        """The main coroutine that manages starting the handlers, and waiting for a shutdown signal."""
+        """The main coroutine that manages starting the handlers, and waiting for a shutdown signal.
+
+        Parameters
+        ----------
+        additional_coros : List[Coroutines]
+            Additional coroutines to be run in the event loop.
+
+        """
         self.logger.debug("Main coroutine executing.")
 
         if sys.version_info[0] == 3 and sys.version_info[1] == 6:
@@ -280,8 +313,10 @@ class Supervisor:
         return self.stop_loop
 
     def get_handler(self, handler_type):
-        """"Returns the handler instance for a given type of handler. Used for unit tests.
-        Params:
+        """Returns the handler instance for a given type of handler. Used for unit tests.
+
+        Parameters
+        ----------
         - handler_type: A type of handler."""
         return self.handler_lookup.get(handler_type)
 

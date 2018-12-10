@@ -49,6 +49,7 @@ class TtyInputHandler(EventHandler):
 
 
 class TtyOutputHandler(EventHandler):
+    """Listens to for TextOutputEvents and StyledTextOutputEvents and prints text to TTY."""
 
     async def handle(self):
         _, event = await self.event_queue.get()

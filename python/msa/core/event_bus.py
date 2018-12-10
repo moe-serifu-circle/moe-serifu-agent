@@ -23,7 +23,12 @@ class EventBus:
         return new_queue
 
     async def fire_event(self, new_event):
-        """Fires an event to each event handler via its corresponding event queue."""
+        """Fires an event to each event handler via its corresponding event queue.
+
+        Parameters
+        ----------
+        new_event : msa.core.event.Event
+            A subclass of msa.core.event.Event to propagate to event handlers."""
         for queue in self.queues:
             queue.put_nowait((new_event.priority, new_event))
 

@@ -1,4 +1,5 @@
 import unittest
+import logging
 from unittest import mock
 import asyncio
 
@@ -14,7 +15,8 @@ class TtyInputHandlerTests(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         self.event_queue = asyncio.PriorityQueue(loop=self.loop)
-        self.handler = TtyInputHandler(loop=self.loop, event_queue=self.event_queue)
+        dummy_logger = logging.getLogger('foo').addHandler(logging.NullHandler())
+        self.handler = TtyInputHandler(loop=self.loop, event_queue=self.event_queue, logger=dummy_logger)
 
     @mock.patch("msa.builtins.tty.prompt.Prompt.listen", new=AsyncMock(return_value="test"))
     @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
@@ -49,7 +51,8 @@ class TtyOutputHandlerTests(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         self.event_queue = asyncio.PriorityQueue(loop=self.loop)
-        self.handler = TtyOutputHandler(loop=self.loop, event_queue=self.event_queue)
+        dummy_logger = logging.getLogger('foo').addHandler(logging.NullHandler())
+        self.handler = TtyOutputHandler(loop=self.loop, event_queue=self.event_queue, logger=dummy_logger)
 
     @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, True]))
     @mock.patch("msa.builtins.tty.handlers.TtyOutputHandler.print", new=mock.MagicMock())

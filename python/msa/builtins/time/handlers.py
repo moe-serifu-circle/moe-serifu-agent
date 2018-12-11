@@ -8,9 +8,12 @@ from msa.builtins.time.events import TimeEvent
 
 
 class TimeHandler(EventHandler):
+    """
+    Fires a TimeEvent at the beginning of every minute
+    """
 
-    def __init__(self, loop, event_queue):
-        super().__init__(loop, event_queue)
+    def __init__(self, loop, event_queue, logger, config=None):
+        super().__init__(loop, event_queue, logger, config)
 
         self.last_tick = datetime.now()
 
@@ -32,8 +35,6 @@ class TimeHandler(EventHandler):
         new_event.init({
             "current_time": self.last_tick
         })
-
-        print(self.last_tick)
 
         supervisor.fire_event(new_event)
 

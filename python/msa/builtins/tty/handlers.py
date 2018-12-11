@@ -13,8 +13,8 @@ from msa.core import supervisor
 class TtyInputHandler(EventHandler):
     """Listens to stdin for terminal input and then fires a TextInputEvent."""
 
-    def __init__(self, loop, event_queue):
-        super().__init__(loop, event_queue)
+    def __init__(self, loop, event_queue, logger, config=None):
+        super().__init__(loop, event_queue, logger, config)
 
         self.prompt = Prompt(loop=loop)
 
@@ -49,6 +49,7 @@ class TtyInputHandler(EventHandler):
 
 
 class TtyOutputHandler(EventHandler):
+    """Listens to for TextOutputEvents and StyledTextOutputEvents and prints text to TTY."""
 
     async def handle(self):
         _, event = await self.event_queue.get()

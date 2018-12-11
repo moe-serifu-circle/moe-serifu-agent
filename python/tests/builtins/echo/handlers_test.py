@@ -1,4 +1,5 @@
 import unittest
+import logging
 from unittest import mock
 import asyncio
 
@@ -16,7 +17,8 @@ class EchoTests(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         self.event_queue = asyncio.PriorityQueue(loop=self.loop)
-        self.handler = EchoHandler(loop=self.loop, event_queue=self.event_queue)
+        dummy_logger = logging.getLogger('foo').addHandler(logging.NullHandler())
+        self.handler = EchoHandler(loop=self.loop, event_queue=self.event_queue, logger=dummy_logger)
 
     @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
     @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[False, True]))

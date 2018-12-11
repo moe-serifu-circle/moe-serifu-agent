@@ -11,12 +11,14 @@ from msa.builtins.tty.style import heading, definition
 import sys
 
 class CommandRegistryHandler(EventHandler):
-    """This command registers and dispatches commands. When creating a new command, it must create a
-    RegisterCommandEvent. When the user enters text, the command registry handler attempts to parse the text as commands
+    """Registers and dispatches commands.
+
+    When creating a new command, it must create a RegisterCommandEvent.
+    When the user enters text, the command registry handler attempts to parse the text as commands
     and dispatches command events appropriately. All command events should subclass the CommandEvent type."""
 
-    def __init__(self, loop, event_queue):
-        super().__init__(loop, event_queue)
+    def __init__(self, loop, event_queue, logger, config=None):
+        super().__init__(loop, event_queue, logger, config)
 
         self.registered_commands = {}
 
@@ -43,6 +45,7 @@ class CommandRegistryHandler(EventHandler):
             return
 
         self.registered_commands[keyword] = data
+        self.logger.info("Registered command {}".format(keyword))
 
     def parse_text_input(self, event):
         """Attempts to parse text as a command, an dispatches a new command event appropriately."""
@@ -71,8 +74,8 @@ class HelpCommandHandler(EventHandler):
     """This handler listens for RegiserCommandEvents and records registered commands. When a help command is issued, it
     prints the appropriate help text."""
 
-    def __init__(self, loop, event_queue):
-        super().__init__(loop, event_queue)
+    def __init__(self, loop, event_queue, logger, config=None):
+        super().__init__(loop, event_queue, logger, config)
 
         self.registered_commands = {}
 

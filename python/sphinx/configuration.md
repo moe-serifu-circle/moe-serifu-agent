@@ -106,7 +106,8 @@ Example:
   "logging": { 
     "granular_log_levels": [
       { "namespace": "echo", "log_level": "debug"},
-      { "namespace": "command_registry", "log_level": "error"}
+      { "namespace": "command_registry", "log_level": "error"} 
+    ]
   }
 }
 ```

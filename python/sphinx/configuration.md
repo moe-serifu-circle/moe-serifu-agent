@@ -69,7 +69,7 @@ Example:
 
 ## Logging
 The logging section, allows you to configure how MSA will record information about how well it is running,
-most notably, recording any errors that are encountered.
+It will also record any errors that are encountered.
 
 ### logging.global_log_level
 Sets the global log level. Must be one of "error", "warn", "info", or "debug". The global

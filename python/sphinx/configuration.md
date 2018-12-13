@@ -68,7 +68,7 @@ Example:
 ```
 
 ## Logging
-The logging section, allows you to configure how the MSA will record information about how well the MSA is running,
+The logging section, allows you to configure how MSA will record information about how well it is running,
 most notably, recording any errors that are encountered.
 
 ### logging.global_log_level

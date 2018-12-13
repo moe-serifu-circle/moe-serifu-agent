@@ -15,7 +15,7 @@ JSON value we will use the following naming scheme: `agent.name` to refer to the
 The agent section configures the behavior and appearance of the agent.
 
 ### agent.name
-The name your MSA will refer to itself as.
+The name MSA will refer to itself as.
 
 Example:
 ```json

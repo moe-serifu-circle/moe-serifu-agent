@@ -27,7 +27,7 @@ Example:
 ```
 
 ### agent.user_title
-The name your MSA will refer to you and other users as.
+The name MSA will refer to the user as.
 
 Example:
 ```json

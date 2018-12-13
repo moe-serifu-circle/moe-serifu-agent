@@ -6,7 +6,7 @@ how to write JSON are easily found, we will avoid going into specifics with how 
 know is that JSON is a series of key -> value associations.
 
 This guide will refer to various nested configuration values in the config file, in order to easily reference a given 
-JSON value we will use the following naming schema: `agent.name` to refer to the `"Masa-chan"` value of 
+JSON value we will use the following naming scheme: `agent.name` to refer to the `"Masa-chan"` value of 
 `{"agent": { "name": "Masa-Chan" }}` easily.
  
 # Configuration Values

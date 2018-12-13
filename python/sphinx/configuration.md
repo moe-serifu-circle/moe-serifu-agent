@@ -96,7 +96,7 @@ Example:
 ```
 
 ### logging.granular_log_levels
-A module to log level mapping that overrides `logging.global_log_level` setting for that module. This can be used to 
+A module to log level mapping that overrides the `logging.global_log_level` setting for that module. This can be used to 
 increase logging or suppress a module that is logging too much unneeded information. Log level values must be one of 
 "error", "warn", "info", or "debug". 
 

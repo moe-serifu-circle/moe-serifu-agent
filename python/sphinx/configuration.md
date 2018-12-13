@@ -53,7 +53,7 @@ Example:
  
 
 ## Module Config
-The module config section should be a mapping of module name to JSON object. The JSON object should be configuration
+The module config section is a mapping of module name to JSON object. The JSON object is configuration
 values that will be passed to the module to modify its behavior.
 
 Example:

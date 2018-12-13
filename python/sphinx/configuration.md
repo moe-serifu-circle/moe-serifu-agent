@@ -2,7 +2,7 @@
 
 The configuration file is the easiest way to begin configuring MSA to your liking. The configuration file os a JSON
 file. JSON stands for JavaScript Object Notation, and is a common way of storing structured data. As tutorials on 
-how to write JSOn are easily found, we will avoid going into specifics with how json works here. The most you need to 
+how to write JSON are easily found, we will avoid going into specifics with how json works here. The most you need to 
 know is that JSON is a series of key -> value associations.
 
 This guide will refer to various nested configuration values in the config file, in order to easily reference a given 

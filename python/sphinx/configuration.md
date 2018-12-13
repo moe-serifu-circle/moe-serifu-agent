@@ -39,7 +39,7 @@ Example:
 ```
 
 ## Plugin Modules
-The plugin modules section, allows a user to configure the third-party plugins to load when the MSA starts. It should 
+The plugin modules section, allows a user to configure which third-party plugins to load when MSA starts. It should 
 be a list of plugin modules to load at startup. 
 
 Example:

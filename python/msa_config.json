@@ -12,7 +12,7 @@
   },
 
   "logging": {
-    "global_log_level": "debug",
+    "global_log_level": "error",
     "log_file_location": "msa.log",
     "truncate_log_file": false,
     "granular_log_levels": [

@@ -10,7 +10,8 @@ class EventHandlerTest(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         self.event_queue = asyncio.PriorityQueue()
-        dummy_logger = logging.getLogger('foo').addHandler(logging.NullHandler())
+        dummy_logger = logging.getLogger('foo')
+        dummy_logger.addHandler(logging.NullHandler())
         self.event_handler = DummyEventHandler(self.loop, self.event_queue, dummy_logger)
 
     @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[i >= 20 for i in range(21)]))

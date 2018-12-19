@@ -199,9 +199,12 @@ epub_exclude_files = ['search.html']
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
 
+
 def setup(app):
     app.add_config_value('recommonmark_config', {
+            'url_resolver': lambda url: "docs.moeserifu.moe/" + url,
             'enable_auto_toc_tree': True,
             'auto_toc_tree_section': 'Contents',
+            'enable_auto_doc_ref': False,
             }, True)
     app.add_transform(AutoStructify)

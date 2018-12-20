@@ -1,3 +1,4 @@
+
 # Configuration File
 
 The configuration file is the easiest way to begin configuring MSA to your liking. The configuration file os a JSON
@@ -9,12 +10,12 @@ This guide will refer to various nested configuration values in the config file,
 JSON value we will use the following naming scheme: `agent.name` to refer to the `"Masa-chan"` value of 
 `{"agent": { "name": "Masa-Chan" }}` easily.
  
-# Configuration Values
+## Configuration Values
  
-## Agent
+### Agent
 The agent section configures the behavior and appearance of the agent.
 
-### agent.name
+#### agent.name
 The name MSA will refer to itself as.
 
 Example:
@@ -26,7 +27,7 @@ Example:
 }
 ```
 
-### agent.user_title
+#### agent.user_title
 The name MSA will refer to the user as.
 
 Example:
@@ -38,7 +39,7 @@ Example:
 }
 ```
 
-## Plugin Modules
+### Plugin Modules
 The plugin modules section, allows a user to configure which third-party plugins to load when MSA starts. It should 
 be a list of plugin modules to load at startup. 
 
@@ -52,7 +53,7 @@ Example:
 ```
  
 
-## Module Config
+### Module Config
 The module config section is a mapping of module name to JSON object. The JSON object is configuration
 values that will be passed to the module to modify its behavior.
 
@@ -67,11 +68,11 @@ Example:
 }
 ```
 
-## Logging
+### Logging
 The logging section, allows you to configure how MSA will record information about how well it is running,
 It will also record any errors that are encountered.
 
-### logging.global_log_level
+#### logging.global_log_level
 Sets the global log level. Must be one of "error", "warn", "info", or "debug". The global
 log level defines how verbose all modules will be with their logging.
 
@@ -84,7 +85,7 @@ Example:
 }
 ```
 
-### logging.log_file_location
+#### logging.log_file_location
 The file that the logging output is written to.
 Example:
 ```json
@@ -95,7 +96,7 @@ Example:
 }
 ```
 
-### logging.granular_log_levels
+#### logging.granular_log_levels
 A module to log level mapping that overrides the `logging.global_log_level` setting for that module. This can be used to 
 increase logging or suppress a module that is logging too much unneeded information. Log level values must be one of 
 "error", "warn", "info", or "debug". 
@@ -112,7 +113,7 @@ Example:
 }
 ```
 
-# Example configuration
+## Example configuration
 ```json
 {
    "agent": {
@@ -137,4 +138,5 @@ Example:
   }
 }
 ```
+
 

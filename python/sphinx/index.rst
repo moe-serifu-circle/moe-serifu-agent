@@ -20,7 +20,7 @@ Welcome to Moe Serifu Agent's documentation!
    configuration
    builtin_commands
    architecture
-   plugin_development
+   contributor_guide
    changelog
    api/msa
    

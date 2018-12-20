@@ -96,6 +96,18 @@ Example:
 }
 ```
 
+
+#### logging.truncate_log_file
+Toggles overwriting or truncating the log file when MSA starts up. If `false` log files will be preserved between runs.
+Example:
+```json
+{
+  "logging": { 
+    "truncate_log_file": false
+  }
+}
+```
+
 #### logging.granular_log_levels
 A module to log level mapping that overrides the `logging.global_log_level` setting for that module. This can be used to 
 increase logging or suppress a module that is logging too much unneeded information. Log level values must be one of 
@@ -131,6 +143,7 @@ Example:
   "logging": {
     "global_log_level": "info",
     "log_file_location": "msa.log",
+    "truncate_log_file": false,
     "granular_log_levels": [
       { "namespace": "echo", "log_level": "debug"},
       { "namespace": "command_registry", "log_level": "error"}

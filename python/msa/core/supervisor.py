@@ -50,7 +50,8 @@ class Supervisor:
         self.root_logger = logging.getLogger("msa")
         self.root_logger.setLevel(logging_config["global_log_level"])
 
-        file_handler = logging.FileHandler(logging_config["log_file_location"], mode="w")
+        mode = "w" if logging_config["truncate_log_file"] else "a"
+        file_handler = logging.FileHandler(logging_config["log_file_location"], mode=mode)
         file_handler.setLevel(logging.DEBUG)
 
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')

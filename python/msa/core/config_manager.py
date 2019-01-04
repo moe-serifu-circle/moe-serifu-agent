@@ -30,7 +30,8 @@ CONFIG_SCHEMA = Schema({
                              lambda s: s in ("DEBUG", "INFO", "ERROR", "WARN"),
                              Use(lambda e: getattr(logging, e)))
             }
-        ]
+        ],
+        "truncate_log_file": bool,
     }
 })
 

@@ -41,3 +41,4 @@ Now that we have covered how to get up and running with MSA, here are a few more
 behavior of MSA.
 - [Built-in Commands](builtin_commands): Describes each of the builtin commands and what you can do with them.
 - [Extending MSA with plugins](plugins): Adding additional functionality through MSA plugins.
+

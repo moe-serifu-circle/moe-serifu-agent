@@ -19,6 +19,7 @@ Welcome to Moe Serifu Agent's documentation!
    getting_started
    configuration
    builtin_commands
+   plugins
    architecture
    contributor_guide
    changelog

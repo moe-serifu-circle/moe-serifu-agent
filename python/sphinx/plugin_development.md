@@ -1,3 +1,0 @@
-# Plugin Development
-
-**[STUB]**

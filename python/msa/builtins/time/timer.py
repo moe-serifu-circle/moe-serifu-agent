@@ -209,7 +209,7 @@ class TimerManager(object):
             id = self._reserve_id()
             t = _Timer(id, delay, event_class, event_args, recurring=False, system=False)
             self._timers[id] = t
-        _log.debug("Scheduled a %s event to fire in %dms (id = %d)".format(event_class, delay, id))
+        _log.debug("Scheduled a {!s:s} event to fire in {:d}ms (id = {:d})".format(event_class, delay, id))
         return t.id
 
     async def add_timer(self, period: int, event_class: Type[Event], event_args: Mapping[str, Any]) -> int:
@@ -226,7 +226,7 @@ class TimerManager(object):
             id = self._reserve_id()
             t = _Timer(id, period, event_class, event_args, recurring=True, system=False)
             self._timers[id] = t
-        _log.debug("Scheduled a %s event to fire in %dms (id = %d)".format(event_class, period, id))
+        _log.debug("Scheduled a {!s:s} event to fire in %{:d}ms (id = {:d})".format(event_class, period, id))
         return t.id
 
     async def add_system_timer(self, period: int, event_class: Type[Event], event_args: Mapping[str, Any]) -> int:
@@ -244,7 +244,7 @@ class TimerManager(object):
             id = self._reserve_id()
             t = _Timer(id, period, event_class, event_args, recurring=True, system=True)
             self._timers[id] = t
-        _log.debug("Scheduled a %s event to fire in %dms (id = %d)".format(event_class, period, id))
+        _log.debug("Scheduled a {!s:s} event to fire in {:d}ms (id = {:d})".format(event_class, period, id))
         return t.id
 
     async def remove_timer(self, id: int, protected: bool=True) -> None:
@@ -258,7 +258,7 @@ class TimerManager(object):
             try:
                 t = self._timers[id]
             except KeyError:
-                raise LogicError("no timer with ID: %d".format(id))
+                raise LogicError("no timer with ID: {:d}".format(id))
             if protected and t.is_system:
                 raise ProtectionError("cannot remove system timer")
             del self._timers[id]
@@ -300,7 +300,7 @@ class TimerManager(object):
                     t.fire(now)
                     if not t.is_recurring:
                         self._release_id(tid)
-                        _log.debug("Completed and removed timer %d", tid)
+                        _log.debug("Completed and removed timer {:d}".format(tid))
                     else:
                         self._timers[tid] = t
 

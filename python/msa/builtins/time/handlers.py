@@ -162,12 +162,12 @@ class TimeHandler(EventHandler):
             return 4
 
         e = TextOutputEvent()
-        text = "Okay, $USER_TITLE, I will do that %s %d millisecond%s!\n".format(None, None, None)
+        text = "Okay, $USER_TITLE, I will do that {:s} {:d} millisecond{:s}!\n".format(rec_type, period, plural)
         e.init({'message': text})
         supervisor.fire_event(e)
 
         e = TextOutputEvent()
-        e.init({'message': "The timer ID is %d.\n".format(id)})
+        e.init({'message': "The timer ID is {:d}.\n".format(id)})
         supervisor.fire_event(e)
         return 0
 

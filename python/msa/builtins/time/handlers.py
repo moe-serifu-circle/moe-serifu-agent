@@ -99,7 +99,7 @@ class TimeHandler(EventHandler):
     async def _handle_event(self, event: Event):
         if isinstance(event, DelTimerCommandEvent):
             args = event.data['raw_text'].split()[1:]
-            await self._execute_del_timer_command(args)
+            await self._execute_deltimer_command(args)
         elif isinstance(event, TimerCommandEvent):
             args = event.data['raw_text'].split()[1:]
             await self._execute_timer_command(args)
@@ -172,12 +172,13 @@ class TimeHandler(EventHandler):
         supervisor.fire_event(e)
         return 0
 
-    async def _execute_del_timer_command(self, args):
+    async def _execute_deltimer_command(self, args):
         """
         Command to remove a timer
 
         :param args: Args to this command. Must contain one element, an int ID.
-        :return: Exit status of this command.
+        :return: Exit status of this command. 0 is success, 1 is missing timer, 2 is non-int for timer, 3 is for not a
+        valid id, 4 is for attempting to remove a system timer.
         """
         if len(args) < 1:
             e = TextOutputEvent()

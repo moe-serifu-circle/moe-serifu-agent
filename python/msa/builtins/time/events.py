@@ -10,6 +10,6 @@ class TimeEvent(Event):
         super().__init__(
             priority=100,
             schema=Schema({
-                "current_time": datetime.datetime
+                "current_time": float
             })
         )

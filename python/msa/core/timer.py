@@ -34,6 +34,7 @@ timer_schema = schema.Schema({
     }
 })
 
+
 class _Timer(object):
     """
     Holds a single event construction for future execution. Keeps the time that the command is scheduled for execution

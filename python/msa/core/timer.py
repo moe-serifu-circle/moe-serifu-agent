@@ -7,15 +7,16 @@ Instead, a TimerManager instance is used for maintaining each timer as well as f
 timers.
 """
 
-from typing import Type, Dict, Any
+from typing import Type, Mapping, Any, Sequence, Dict
 
 import time
 import logging
+import random
 import asyncio
 
 import schema
 from .event import Event
-from . import supervisor
+from . import supervisor, LogicError, ProtectionError
 
 
 _log = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class _Timer(object):
     """
 
     def __init__(
-            self, id: int, period: int, event_class: Type[Event], event_data: Dict[str, Any], recurring: bool,
+            self, id: int, period: int, event_class: Type[Event], event_data: Mapping[str, Any], recurring: bool,
             system: bool
     ):
         """
@@ -111,7 +112,7 @@ class _Timer(object):
 
         return self
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Mapping[str, Any]:
         """
         Serialize the properties of this Timer to a dictionary that is safe for conversion to JSON.
 
@@ -150,7 +151,7 @@ class _Timer(object):
         return hash(self.id)
 
     @staticmethod
-    def deserialize(data: Dict[str, Any]) -> '_Timer':
+    def deserialize(data: Mapping[str, Any]) -> '_Timer':
         """
         Create a new timer by reading properties from a data dictionary.
 
@@ -188,14 +189,132 @@ class TimerManager(object):
         self._lock = asyncio.Lock()
         self._tick_resolution = tick_resolution
         self._timers: Dict[int, _Timer] = dict()
+        self._available_ids = set(range(10000))  # reasonable default for max number of timers for now
 
-    async def delay(self, delay: int, event_class: Type[Event], event_args: Dict[str, Any]) -> int:
+    async def delay(self, delay: int, event_class: Type[Event], event_args: Mapping[str, Any]) -> int:
         """
         Delay firing of the given event until after the time has elapsed, then fire it. The event will be created with
         the given args before being fired.
 
+        :param delay: The amount of time in milliseconds before the event should fire.
+        :param event_class: The type of Event that should be fired.
+        :param event_args: The arguments to the new event.
         :return: The ID of the newly-created delay-timer. This can be used to manage it prior to its firing; after the
         firing, the id will no longer be valid.
         """
+        t = None
         async with self._lock:
-            
+            id = self._reserve_id()
+            t = _Timer(id, delay, event_class, event_args, recurring=False, system=False)
+            self._timers[id] = t
+        _log.debug("Scheduled a %s event to fire in %dms (id = %d)".format(event_class, delay, id))
+        return t.id
+
+    async def add_timer(self, period: int, event_class: Type[Event], event_args: Mapping[str, Any]) -> int:
+        """
+        Create a timer that calls the given event every time the period elapses.
+
+        :param period: The amount of time in milliseconds before the event should fire.
+        :param event_class: The type of Event that should be fired.
+        :param event_args: The arguments to the new event.
+        :return: The ID of the newly-created timer. This can be used to manage it prior to it being deleted; after
+        the timer is deleted, the id will no longer be valid.
+        """
+        async with self._lock:
+            id = self._reserve_id()
+            t = _Timer(id, period, event_class, event_args, recurring=True, system=False)
+            self._timers[id] = t
+        _log.debug("Scheduled a %s event to fire in %dms (id = %d)".format(event_class, period, id))
+        return t.id
+
+    async def add_system_timer(self, period: int, event_class: Type[Event], event_args: Mapping[str, Any]) -> int:
+        """
+        Create a timer that calls the given event every time the period elapses, and register it as a protected system
+        timer. Note that this method grants protection to a timer, so it should not be accessible from plugins.
+
+        :param period: The amount of time in milliseconds before the event should fire.
+        :param event_class: The type of Event that should be fired.
+        :param event_args: The arguments to the new event.
+        :return: The ID of the newly-created timer. This can be used to manage it prior to it being deleted; after
+        the timer is deleted, the id will no longer be valid.
+        """
+        async with self._lock:
+            id = self._reserve_id()
+            t = _Timer(id, period, event_class, event_args, recurring=True, system=True)
+            self._timers[id] = t
+        _log.debug("Scheduled a %s event to fire in %dms (id = %d)".format(event_class, period, id))
+        return t.id
+
+    async def remove_timer(self, id: int, protected: bool=True) -> None:
+        """
+        Remove a timer from the system.
+
+        :param id: The ID of the timer to remove.
+        :param protected: Whether protected mode is enabled, which will stop a system timer from being removed.
+        """
+        async with self._lock:
+            try:
+                t = self._timers[id]
+            except KeyError:
+                raise LogicError("no timer with ID: %d".format(id))
+            if protected and t.is_system:
+                raise ProtectionError("cannot remove system timer")
+            del self._timers[id]
+            self._release_id(id)
+
+    async def get_timers(self) -> Sequence[int]:
+        """
+        Get the IDs of all timers currently active.
+
+        :return: The IDs.
+        """
+        async with self._lock:
+            timers = list(self._timers)
+        return timers
+
+    async def check_timers(self):
+        """
+        Check all timers and fire them if it is time to do so.
+
+        :return:
+        """
+        now = time.monotonic()
+        if self._last_tick_time + self._tick_resolution <= now:
+            self._last_tick_time = now
+            await self._fire_timers(now)
+
+    async def _fire_timers(self, now: float):
+        """
+        Fires all timers.
+
+        :param now: The current time to use for reference.
+        """
+        async with self._lock:
+            all_timers = self._timers.copy()
+            self._timers.clear()
+            for tid in all_timers:
+                t = all_timers[tid]
+                if t.is_ready(now):
+                    t.fire(now)
+                    if not t.is_recurring:
+                        self._release_id(tid)
+                        _log.debug("Completed and removed timer %d", tid)
+                    else:
+                        self._timers[tid] = t
+
+
+    @property
+    def tick_resolution(self) -> int:
+        return self._tick_resolution
+
+    @tick_resolution.setter
+    def tick_resolution(self, value: int):
+        self._tick_resolution = value
+
+    def _release_id(self, id: int):
+        self._available_ids.add(id)
+
+    def _reserve_id(self) -> int:
+        ch = random.choice(self._available_ids)
+        self._available_ids.remove(ch)
+        return ch

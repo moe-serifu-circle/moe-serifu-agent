@@ -12,3 +12,9 @@ def AsyncMock(*args, **kwargs):
 
     mock_coro.mock = m
     return mock_coro
+
+
+def AsyncMockWithArgs(*args, **kwargs):
+    def async_mock_wrap():
+        return AsyncMock(*args, **kwargs)
+    return async_mock_wrap

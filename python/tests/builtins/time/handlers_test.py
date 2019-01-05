@@ -3,9 +3,9 @@ import logging
 from unittest import mock
 import asyncio
 
-from tests.async_test_util import AsyncMock
+from tests.async_test_util import AsyncMock, AsyncMockWithArgs
 
-from msa.core import supervisor
+from msa.core import LogicError, ProtectionError
 
 from msa.builtins.time.events import DelTimerCommandEvent, TimerCommandEvent
 from msa.builtins.tty.events import TextInputEvent
@@ -86,6 +86,39 @@ class TimeHandlerTests(unittest.TestCase):
 
         self.assertEqual(status, 0)
         remove_timer_coro.mock.assert_called_once_with(mock.ANY, 25)
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    def test_deltimer_command_missing_id(self):
+        cmd_args = []
+
+        status = self._run_coro(self.handler._execute_deltimer_command(cmd_args))
+
+        self.assertEqual(status, 1)
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    def test_deltimer_command_unparsable_id(self):
+        cmd_args = ['id']
+
+        status = self._run_coro(self.handler._execute_deltimer_command(cmd_args))
+
+        self.assertEqual(status, 2)
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    def test_deltimer_command_invalid_id(self):
+        cmd_args = ['4']
+
+        status = self._run_coro(self.handler._execute_deltimer_command(cmd_args))
+
+        self.assertEqual(status, 3)
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    @mock.patch('msa.builtins.time.timer.TimerManager.remove_timer', new_callable=AsyncMockWithArgs(side_effect=ProtectionError))
+    def test_deltimer_command_system_timer(self, remove_timer_coro):
+        cmd_args = ['4']
+
+        status = self._run_coro(self.handler._execute_deltimer_command(cmd_args))
+
+        self.assertEqual(status, 4)
 
     def _run_coro(self, func):
         result = -1

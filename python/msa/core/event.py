@@ -23,6 +23,10 @@ class Event:
         self.data = None
         self.propagate = True
 
+    def __str__(self):
+        cls_name = self.__class__.__name__
+        msg = "<{:s} priority={:d} generation_time=\"{!s:s}>\" propagate={:b} data={!s:s}>"
+        return msg.format(cls_name, self.priority, self.generation_time, self.propagate, self.data)
 
     def __eq__(self, other):
         return (

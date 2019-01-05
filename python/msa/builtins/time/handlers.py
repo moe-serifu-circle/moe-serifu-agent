@@ -1,14 +1,13 @@
 from msa.core.event import Event
 
 import asyncio
-from datetime import datetime, timedelta
 import time
 import logging
 import math
 
 from msa.core.event_handler import EventHandler
 from msa.core import supervisor
-from msa.core import timer
+from msa.builtins.time import timer
 
 from msa.builtins.time.events import TimeEvent, DelTimerCommandEvent, TimerCommandEvent
 from msa.builtins.command_registry.events import RegisterCommandEvent

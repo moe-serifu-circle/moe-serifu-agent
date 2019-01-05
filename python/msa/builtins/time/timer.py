@@ -15,8 +15,8 @@ import random
 import asyncio
 
 import schema
-from .event import Event
-from . import supervisor, LogicError, ProtectionError
+from msa.core.event import Event
+from msa.core import supervisor, LogicError, ProtectionError
 
 
 _log = logging.getLogger(__name__)
@@ -163,7 +163,9 @@ class _Timer(object):
         global timer_schema
 
         data = timer_schema.validate(data)
-        t = _Timer(data['id'], data['period'], data['event']['class'], data['event']['args'], data['recurring'], data['system'])
+        t = _Timer(
+            data['id'], data['period'], data['event']['class'], data['event']['args'], data['recurring'], data['system']
+        )
         # TODO: check into compatibility of monotonic clocks
         # (python's isn't defined, so serializing 'last_fired' might not make sense; we should look into this)
         t._last_fired = data['last_fired']
@@ -203,7 +205,6 @@ class TimerManager(object):
         :return: The ID of the newly-created delay-timer. This can be used to manage it prior to its firing; after the
         firing, the id will no longer be valid.
         """
-        t = None
         async with self._lock:
             id = self._reserve_id()
             t = _Timer(id, delay, event_class, event_args, recurring=False, system=False)
@@ -302,8 +303,7 @@ class TimerManager(object):
                         _log.debug("Completed and removed timer %d", tid)
                     else:
                         self._timers[tid] = t
-
-
+    
     @property
     def tick_resolution(self) -> int:
         return self._tick_resolution

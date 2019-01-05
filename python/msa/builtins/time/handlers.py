@@ -65,6 +65,7 @@ class TimeHandler(EventHandler):
         except asyncio.QueueEmpty:
             # this is fine; we just don't want to wait
             pass
+
         if e is not None:
             asyncio.ensure_future(self._handle_event(e), loop=self.loop)
 
@@ -141,7 +142,7 @@ class TimeHandler(EventHandler):
             return 3
 
         cmd_str = ""
-        for tok in args:
+        for tok in args[1:]:
             cmd_str += tok + ' '
         cmd_str = cmd_str[:-1]
 

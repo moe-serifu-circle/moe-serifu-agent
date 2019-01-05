@@ -108,8 +108,9 @@ class TimeHandler(EventHandler):
         """
         Command to add a timer
 
-        :param args: Args to this command. Must contain one element, an int ID.
-        :return: Exit status of this command.
+        :param args: Args to this command. Must contain at least two elements.
+        :return: Exit status of this command. Status are 0 on success, 1 if there are missing args, 2 if period is not
+        parsable, and 3 if period is negative, and 4 if there is a problem with the underlying timer manager.
         """
         _log.debug("Args: " + repr(args))
 

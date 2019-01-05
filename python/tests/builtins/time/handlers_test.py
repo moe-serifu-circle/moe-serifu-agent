@@ -120,6 +120,71 @@ class TimeHandlerTests(unittest.TestCase):
 
         self.assertEqual(status, 4)
 
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    @mock.patch('msa.builtins.time.timer.TimerManager.delay', new_callable=AsyncMockWithArgs(return_value=1))
+    def test_timer_command(self, delay_coro):
+        cmd_args = ['1000', 'echo', 'test']
+
+        status = self._run_coro(self.handler._execute_timer_command(cmd_args))
+
+        self.assertEqual(status, 0)
+        delay_coro.mock.assert_called_once_with(mock.ANY, 1000, TextInputEvent, {'message': 'echo test'})
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    @mock.patch('msa.builtins.time.timer.TimerManager.add_timer', new_callable=AsyncMockWithArgs(return_value=1))
+    def test_timer_command_recurring(self, add_timer_coro):
+        cmd_args = ['-r', '1000', 'echo', 'test']
+
+        status = self._run_coro(self.handler._execute_timer_command(cmd_args))
+
+        self.assertEqual(status, 0)
+        add_timer_coro.mock.assert_called_once_with(mock.ANY, 1000, TextInputEvent, {'message': 'echo test'})
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    def test_timer_command_missing_args(self):
+        cases = [
+            ['1000'],
+            ['-r', '1000'],
+            ['1000', '-r'],
+            ['-r'],
+            []
+        ]
+
+        for cmd_args in cases:
+            status = self._run_coro(self.handler._execute_timer_command(cmd_args))
+
+            self.assertEqual(status, 1, 'not detected as invalid case: ' + str(cmd_args))
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    def test_timer_command_unparsable_period(self):
+        cases = [
+            ['', 'echo'],
+            ['-', 'echo'],
+            ['cat', 'echo']
+        ]
+
+        for cmd_args in cases:
+            status = self._run_coro(self.handler._execute_timer_command(cmd_args))
+
+            self.assertEqual(status, 2, 'not detected as invalid case: ' + str(cmd_args))
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    def test_timer_command_negative_period(self):
+        cmd_args = ['-10', 'echo']
+
+        status = self._run_coro(self.handler._execute_timer_command(cmd_args))
+
+        self.assertEqual(status, 3)
+
+    @mock.patch("msa.core.supervisor.fire_event", new=mock.Mock())
+    @mock.patch('msa.builtins.time.timer.TimerManager.delay', new_callable=AsyncMockWithArgs(side_effect=RuntimeError))
+    def test_timer_command_other_problem(self, delay_coro):
+        cmd_args = ['1000', 'echo']
+
+        status = self._run_coro(self.handler._execute_timer_command(cmd_args))
+
+        self.assertEqual(status, 4)
+
     def _run_coro(self, func):
         result = -1
 

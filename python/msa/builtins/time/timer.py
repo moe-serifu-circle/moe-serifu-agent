@@ -303,7 +303,7 @@ class TimerManager(object):
                         _log.debug("Completed and removed timer %d", tid)
                     else:
                         self._timers[tid] = t
-    
+
     @property
     def tick_resolution(self) -> int:
         return self._tick_resolution

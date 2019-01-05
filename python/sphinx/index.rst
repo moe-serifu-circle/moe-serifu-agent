@@ -19,8 +19,9 @@ Welcome to Moe Serifu Agent's documentation!
    getting_started
    configuration
    builtin_commands
+   plugins
    architecture
-   plugin_development
+   contributor_guide
    changelog
    api/msa
    

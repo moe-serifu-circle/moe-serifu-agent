@@ -26,8 +26,13 @@ class TimeHandler(EventHandler):
         super().__init__(loop, event_queue, logger, config)
 
         self.timer_manager = timer.TimerManager()
+        tick_res = 10
+        if config is not None:
+            if 'tick_resolution' in config:
+                tick_res = int(config['tick_resolution'])
+
         # TODO: merge with ctor
-        self.timer_manager.tick_resolution = int(config['tick_resolution'])
+        self.timer_manager.tick_resolution = tick_res
 
     async def init(self):
         # TODO: strictly speaking, this is a type, not a constructor (although it is callable)
@@ -35,7 +40,7 @@ class TimeHandler(EventHandler):
             'event_constructor': TimerCommandEvent,
             'invoke': 'timer',
             'describe': 'Creates a new timer event',
-            'usage': 'timer [-r] [command...]'
+            'usage': 'timer <-r> [command...]'
         }
         deltimer_data = {
             'event_constructor': DelTimerCommandEvent,
@@ -56,12 +61,12 @@ class TimeHandler(EventHandler):
     async def handle(self):
         e = None
         try:
-            e = self.event_queue.get_nowait()
+            _, e = self.event_queue.get_nowait()
         except asyncio.QueueEmpty:
             # this is fine; we just don't want to wait
             pass
         if e is not None:
-            self.loop.call_later(self._handle_event(e))
+            asyncio.ensure_future(self._handle_event(e), loop=self.loop)
 
         delta = await self._handle_timer()
         await asyncio.sleep(delta)
@@ -92,10 +97,10 @@ class TimeHandler(EventHandler):
 
     async def _handle_event(self, event: Event):
         if isinstance(event, DelTimerCommandEvent):
-            args = event.data['raw_text'][1:]
+            args = event.data['raw_text'].split()[1:]
             await self._execute_del_timer_command(args)
         elif isinstance(event, TimerCommandEvent):
-            args = event.data['raw_text'][1:]
+            args = event.data['raw_text'].split()[1:]
             await self._execute_timer_command(args)
 
     async def _execute_timer_command(self, args):
@@ -105,6 +110,8 @@ class TimeHandler(EventHandler):
         :param args: Args to this command. Must contain one element, an int ID.
         :return: Exit status of this command.
         """
+        _log.debug("Args: " + repr(args))
+
         # TODO: better way of parsing command options
         recurring = '-r' in args
         if recurring:
@@ -112,7 +119,7 @@ class TimeHandler(EventHandler):
 
         if len(args) < 2:
             e = TextOutputEvent()
-            e.init({'message': "You gotta give me a time and a command to execute, $USER_TITLE.'"})
+            e.init({'message': "You gotta give me a time and a command to execute, $USER_TITLE.\n"})
             supervisor.fire_event(e)
             return 1
 
@@ -120,16 +127,16 @@ class TimeHandler(EventHandler):
             period = int(args[0])
         except ValueError:
             e = TextOutputEvent()
-            e.init({'message': "Sorry, $USER_TITLE, but " + repr(args[0]) + " isn't a number of milliseconds"})
+            e.init({'message': "Sorry, $USER_TITLE, but " + repr(args[0]) + " isn't a number of milliseconds.\n"})
             supervisor.fire_event(e)
             return 2
 
         if period < 0:
             e = TextOutputEvent()
-            e.init({'message': "Sorry, $USER_TITLE, I might be good but I can't go back in time."})
+            e.init({'message': "Sorry, $USER_TITLE, I might be good but I can't go back in time.\n"})
             supervisor.fire_event(e)
             e = TextOutputEvent()
-            e.init({'message': "Please give me a positive number of milliseconds"})
+            e.init({'message': "Please give me a positive number of milliseconds.\n"})
             supervisor.fire_event(e)
             return 3
 
@@ -150,16 +157,17 @@ class TimeHandler(EventHandler):
         except Exception:
             _log.exception('problem scheduling timer')
             e = TextOutputEvent()
-            e.init({'message': "Oh no! I'm sorry, $USER_TITLE, that didn't work quite right!'"})
+            e.init({'message': "Oh no! I'm sorry, $USER_TITLE, that didn't work quite right!\n"})
             supervisor.fire_event(e)
             return 4
 
         e = TextOutputEvent()
-        e.init({'message': "Okay, $USER_TITLE, I will do that %s %d millisecond%s!".format(rec_type, period, plural)})
+        text = "Okay, $USER_TITLE, I will do that %s %d millisecond%s!\n".format(None, None, None)
+        e.init({'message': text})
         supervisor.fire_event(e)
 
         e = TextOutputEvent()
-        e.init({'message': "The timer ID is %d.".format(id)})
+        e.init({'message': "The timer ID is %d.\n".format(id)})
         supervisor.fire_event(e)
         return 0
 
@@ -172,20 +180,20 @@ class TimeHandler(EventHandler):
         """
         if len(args) < 1:
             e = TextOutputEvent()
-            e.init({'message': "Ahh... $USER_TITLE, I need to know which timer I should delete.'"})
+            e.init({'message': "Ahh... $USER_TITLE, I need to know which timer I should delete.\n'"})
             supervisor.fire_event(e)
             return 1
         try:
             id = int(args[0])
         except ValueError:
             e = TextOutputEvent()
-            e.init({'message': "Sorry, $USER_TITLE, but " + repr(args[0]) + " isn't an integer."})
+            e.init({'message': "Sorry, $USER_TITLE, but " + repr(args[0]) + " isn't an integer.\n"})
             supervisor.fire_event(e)
             return 2
         await self.timer_manager.remove_timer(id)
 
         e = TextOutputEvent()
-        e.init({'message': "Okay! I stopped timer " + str(id) + " for you, $USER_TITLE"})
+        e.init({'message': "Okay! I stopped timer " + str(id) + " for you, $USER_TITLE.\n"})
         supervisor.fire_event(e)
 
         return 0

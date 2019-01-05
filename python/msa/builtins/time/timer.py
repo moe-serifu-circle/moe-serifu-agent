@@ -316,6 +316,6 @@ class TimerManager(object):
         self._available_ids.add(id)
 
     def _reserve_id(self) -> int:
-        ch = random.choice(self._available_ids)
-        self._available_ids.remove(ch)
-        return ch
+        reserved_id = random.sample(self._available_ids, 1)[0]
+        self._available_ids.remove(reserved_id)
+        return reserved_id

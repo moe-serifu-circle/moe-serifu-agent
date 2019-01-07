@@ -38,7 +38,10 @@ timer_schema = schema.Schema({
 class _Timer(object):
     """
     Holds a single event construction for future execution. Keeps the time that the command is scheduled for execution
-    as well as whether it is to be repeated.
+    as well as whether it is to be repeated. Events are not created until the time of timer firing; instead, a Timer
+    instance holds a copy of arguments that should be used to create the event, as well as the event constructor itself.
+
+    Equality is based on ID only; two timers will be considered equal if and only if they have the same ID.
     """
 
     def __init__(

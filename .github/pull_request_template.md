@@ -30,6 +30,6 @@
 
 ---
 
-❗️🖊   If you have not yet, please sign our [Contributor Lisence Agreement](https://docs.google.com/forms/d/e/1FAIpQLSfJPpwIv8MJkzxj41zBhnBDkrziQr9Tn_Z8hl5fRyY0xZnDuQ/viewform). 
+❗️🖊   If you have not yet, please sign our [Contributor License Agreement](https://docs.google.com/forms/d/e/1FAIpQLSfJPpwIv8MJkzxj41zBhnBDkrziQr9Tn_Z8hl5fRyY0xZnDuQ/viewform). 
 Your PR will not be accepted until we have confirmed that you have signed.
 

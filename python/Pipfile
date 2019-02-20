@@ -11,6 +11,9 @@ colorama = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
 recommonmark = "*"
+prompt-toolkit = "*"
+pygments = "*"
+ptpython = "*"
 
 [dev-packages]
 

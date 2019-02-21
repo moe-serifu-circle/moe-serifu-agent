@@ -106,10 +106,12 @@ class Interpreter:
                     self.record_buffer = ""
 
                     editor = os.getenv("EDITOR")
-                    if editor:
-                        os.system('%s %s' % (editor, self.record_buffer_name))
+                    if editor == None or editor == "":
+                        print("Opening {}".format(self.record_buffer_name))
+                        webbrowser.open("file://" + os.path.abspath(self.record_buffer_name))
                     else:
-                        webbrowser.open(self.record_buffer_name)
+                        print("Opening {} via {}".format(self.record_buffer_name, editor))
+                        os.system('%s %s' % (editor, self.record_buffer_name))
 
                     return True
                 else:
@@ -120,6 +122,15 @@ class Interpreter:
                     self.record_buffer_name = tokens[1]
                     self.recording = True
                     return True
+            elif tokens[0] == "clear":
+                print(chr(27) + "[2J")
+
+            elif tokens[0] == "help":
+                print('\n'.join(("MSA Interpreter Help:",
+                        " Availiable Commands:",
+                        "  # help: Show this help text",
+                        "  # record <file name>: Begin recording commands to a script.",
+                        "  # record stop: stop recording commands, save the script, and open to review.")))
 
         return False
 

@@ -19,13 +19,13 @@ s->>hdlr1: Tell handler to register event type subscriptions
 hdlr1->>eb: Register subscriptions
 s->>hdlr2:Tell handler to register event type subscriptions
 hdlr2->>eb: Register subscriptions
-loop supervisor wait
 s->>hdlr1:Signal start corioutine
 s->>hdlr2:Signal start corioutine
 hdlr1->b:await event
 hdlr1->>a:yield
 hdlr2->b:await event
 hdlr2->>a:yield
+loop supervisor wait
  s->>s:Wait for shutdown
 end
 u->>a:Input
@@ -34,5 +34,4 @@ hdlr1->>eb:Create event and propagate
 eb->eb:Search for handlers subscribed to event type
 eb->>hdlr2:Propogate event to handler subscribed to event type
 hdlr2->hdlr2:Handle event
-
 

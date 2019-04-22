@@ -21,9 +21,9 @@ s->>hdlr2:Tell handler to register event type subscriptions
 hdlr2->>eb: Register subscriptions
 s->>hdlr1:Signal start corioutine
 s->>hdlr2:Signal start corioutine
-hdlr1->b:await event
+hdlr1->eb:await event
 hdlr1->>a:yield
-hdlr2->b:await event
+hdlr2->eb:await event
 hdlr2->>a:yield
 loop supervisor wait
  s->>s:Wait for shutdown

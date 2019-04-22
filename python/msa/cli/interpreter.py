@@ -8,14 +8,21 @@ from pygments.lexers.python import Python3Lexer, Python3TracebackLexer
 from pygments.formatters import TerminalFormatter
 from pygments import highlight
 
+from msa.api import MsaApi
+
+
 
 class Interpreter:
     def __init__(self):
         self.prompt_session = PromptSession(
                 lexer=PygmentsLexer(Python3Lexer))
 
+        self.api = MsaApi()
+
+
         self.locals = {}
         self.globals = {
+            "msa_api":  self.api
         }
         self.buffer = ""
         self.indent_level = 0

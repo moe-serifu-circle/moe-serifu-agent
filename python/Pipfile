@@ -8,14 +8,14 @@ click = "*"
 schema = "*"
 termcolor = "*"
 colorama = "*"
+prompt-toolkit = "*"
+pygments = "*"
+aiohttp = "*"
+
+[dev-packages]
 sphinx = "*"
 sphinx-rtd-theme = "*"
 recommonmark = "*"
-prompt-toolkit = "*"
-pygments = "*"
-ptpython = "*"
-
-[dev-packages]
 
 [requires]
 python_version = "3.6"

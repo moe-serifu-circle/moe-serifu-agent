@@ -27,6 +27,15 @@ def daemon(ctx):
 
 @main.command()
 @click.pass_context
+def server(ctx):
+
+    from msa.server import start_server
+    start_server()
+
+
+
+@main.command()
+@click.pass_context
 def cli(ctx):
     from msa.cli.interpreter import Interpreter
 

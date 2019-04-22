@@ -15,15 +15,25 @@ def main(ctx, config_file, log_level):
     ctx.obj["config_file"] = config_file
 
     if ctx.invoked_subcommand is None:
-        ctx.invoke(cli)
+        ctx.invoke(daemon)
 
 @main.command()
 @click.pass_context
-def cli(ctx):
+def daemon(ctx):
 
     supervisor.init(RunMode.CLI, ctx.obj)
 
     supervisor.start()
+
+@main.command()
+@click.pass_context
+def cli(ctx):
+    from msa.cli.interpreter import Interpreter
+
+    interpreter = Interpreter()
+    interpreter.start()
+
+
 
 
 if __name__ == "__main__":

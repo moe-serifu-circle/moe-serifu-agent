@@ -34,6 +34,9 @@ class Interpreter:
 
     def start(self):
 
+        self.api.check_connection()
+        self.api.check_version(quiet=True)
+
         while True:
             try:
                 if self.indent_level == 0:
@@ -95,6 +98,10 @@ class Interpreter:
         print(highlight(stringify, Python3TracebackLexer(), TerminalFormatter()))
 
     def parse_command(self, text):
+        
+        if len(text) == 0: # obviously there is no command to parse 
+            return
+
         clean_text = text.strip()
         if clean_text[0] == "#":
             tokens = clean_text[1::].split()

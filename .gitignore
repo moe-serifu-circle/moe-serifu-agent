@@ -151,6 +151,9 @@ dmypy.json
 
 .idea/
 
+# vim
+.*.swp
+
 msa.log
 
 _build/

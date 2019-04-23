@@ -1,3 +1,4 @@
+import os
 import logging
 import click
 
@@ -35,12 +36,20 @@ def server(ctx):
 
 
 @main.command()
+@click.option("-s" , "--script",  help="If provided will run the specified script and then exit.")
 @click.pass_context
-def cli(ctx):
+def cli(ctx, script):
     from msa.cli.interpreter import Interpreter
 
     interpreter = Interpreter()
-    interpreter.start()
+
+    if script != None:
+        if os.path.exists(script) and os.path.isfile(script):
+            interpreter.execute_script(script)
+        else:
+            print("-s flag provided. Unable to load script {}. Please verify that the file exists and the provided path is correct.".format(script))
+    else:
+        interpreter.start()
 
 
 

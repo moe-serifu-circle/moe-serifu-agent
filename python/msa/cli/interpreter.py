@@ -32,20 +32,22 @@ class Interpreter:
         self.record_buffer_name = ""
         self.record_buffer = ""
 
-    def start(self):
-
+        # startup checks
         self.api.check_connection()
         self.api.check_version(quiet=True)
 
+    def execute_script(self, script):
+       with open(script, "r") as f:
+           self.execute_block(f.read())
+
+
+
+
+    def start(self):
+
         while True:
             try:
-                if self.indent_level == 0:
-                    prompt_text = '>>> '
-                    prompt_default = ""
-                else:
-                    prompt_text = '...'
-                    prompt_default = ' '*self.indent_level*self.indent_size
-
+                prompt_text, prompt_default = self.generate_prompt_text()
                 text = self.prompt_session.prompt(prompt_text, default=prompt_default)
 
             except KeyboardInterrupt:
@@ -53,45 +55,59 @@ class Interpreter:
             except EOFError:
                 break
             else:
-
-                if self.indent_level == 0:
-                    skip_loop = self.parse_command(text)
-                    if skip_loop: continue
-
-                if self.recording:
-                    self.record_buffer += text + "\n"
-
-                # update current indent level
-                if self.indent_level > 0:
-                    if len(text.strip()) == 0:
-                        self.indent_level = 0
-                    else:
-                        current_indent = (len(text) - len(text.lstrip()))//self.indent_size
-                        self.indent_level = current_indent
-
-                # if we see a colon, begin buffer
-                if len(text) > 0 and text[-1] == ":":
-                    self.indent_level += 1
-
-                if self.indent_level > 0:
-                    self.buffer += text + "\n"
-
-                if self.indent_level == 0:
-                    if len(self.buffer) > 0:
-                        text = self.buffer + "\n" + text
-                        self.buffer = ""
-
-
-                    try:
-                        exec(text.strip() ,self.globals, self.locals)
-                    except SystemExit:
-                        break
-                    except:
-                        self.print_traceback(traceback.format_exc())
-
-
+                self.parse_statement(text)
 
         print("Goodbye")
+
+    def generate_prompt_text(self):
+        if self.indent_level == 0:
+            prompt_text = '>>> '
+            prompt_default = ""
+        else:
+            prompt_text = '...'
+            prompt_default = ' '*self.indent_level*self.indent_size
+
+        return prompt_text, prompt_default
+
+
+    def parse_statement(self, text):
+        if self.indent_level == 0:
+            
+            skip_loop = self.parse_command(text)
+            if skip_loop: return 
+
+        if self.recording:
+            self.record_buffer += text + "\n"
+
+        # update current indent level
+        if self.indent_level > 0:
+            if len(text.strip()) == 0:
+                self.indent_level = 0
+            else:
+                current_indent = (len(text) - len(text.lstrip()))//self.indent_size
+                self.indent_level = current_indent
+
+        # if we see a colon, begin buffer
+        if len(text) > 0 and text[-1] == ":":
+            self.indent_level += 1
+
+        if self.indent_level > 0:
+            self.buffer += text + "\n"
+
+        if self.indent_level == 0:
+            if len(self.buffer) > 0:
+                text = self.buffer + "\n" + text
+                self.buffer = ""
+        
+            self.execute_block(text)
+
+    def execute_block(self, text):
+        try:
+            exec(text.strip() ,self.globals, self.locals)
+        except SystemExit:
+            return
+        except:
+            self.print_traceback(traceback.format_exc())
 
     def print_traceback(self, *args, **kwargs):
         stringify = ' '.join(str(e) for e in args)
@@ -99,10 +115,11 @@ class Interpreter:
 
     def parse_command(self, text):
         
-        if len(text) == 0: # obviously there is no command to parse 
-            return
 
         clean_text = text.strip()
+        if len(clean_text) == 0: # obviously there is no command to parse 
+            return
+
         if clean_text[0] == "#":
             tokens = clean_text[1::].split()
 

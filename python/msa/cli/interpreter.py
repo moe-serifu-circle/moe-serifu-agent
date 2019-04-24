@@ -38,9 +38,11 @@ class Interpreter:
 
     def execute_script(self, script):
        with open(script, "r") as f:
-           self.execute_block(f.read())
-
-
+           text = f.read()
+           print("Running script:")
+           print("| " + "\n| ".join(text.split("\n")))
+           print("Script output:")
+           self.execute_block(text)
 
 
     def start(self):
@@ -103,7 +105,7 @@ class Interpreter:
 
     def execute_block(self, text):
         try:
-            exec(text.strip() ,self.globals, self.locals)
+            exec(text.strip(), self.globals, self.locals)
         except SystemExit:
             return
         except:

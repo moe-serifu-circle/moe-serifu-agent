@@ -15,13 +15,16 @@ class Supervisor:
     """The supervisor is responsible for managing the execution of the application and orchestrating the event system.
     """
 
+    def set_loop(self, loop):
+        self.loop = loop 
+        self.event_bus = EventBus(self.loop)
+        self.event_queue = asyncio.Queue(self.loop)
+
     def __init__(self):
         if not os.environ.get("TEST"):
+            self.set_loop(asyncio.new_event_loop())
             # block getting a loop if we are running unit tests
             # helps suppress a warning.
-            self.loop = asyncio.new_event_loop()
-            self.event_bus = EventBus(self.loop)
-            self.event_queue = asyncio.Queue(self.loop)
         self.config_manager = None
         self.stop_loop = False
         self.stop_main_coro = None
@@ -170,18 +173,19 @@ class Supervisor:
                 self.logger.debug("Priming main coroutine")
                 primed_coro = self.main_coro(additional_coros)
                 self.logger.debug("Main coroutine primed, executing in the loop.")
-                self.loop.run_until_complete(primed_coro)
+                self.loop.create_task(primed_coro)
                 self.logger.debug("Finished running main coroutine.")
         except KeyboardInterrupt:
             self.info("Keyboard interrupt (Ctrl-C) encountered, beginning shutdown.")
             print("Ctrl-C Pressed. Quitting...")
         finally:
-            self.stop()
-            self.loop.run_until_complete(self.loop.shutdown_asyncgens())
-            self.logger.info("Stopping loop.")
-            self.loop.close()
-            self.logger.info("Exiting.")
-            sys.exit(0)
+            pass
+            #self.stop()
+            #self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+            #self.logger.info("Stopping loop.")
+            #self.loop.close()
+            #self.logger.info("Exiting.")
+            #sys.exit(0)
 
     def stop(self):
         """Schedules the supervisor to stop, and exit the application."""

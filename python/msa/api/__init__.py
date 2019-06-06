@@ -40,6 +40,20 @@ class MsaApi:
         if not quiet:
             print(response.text)
 
+    def remote_command(self, text):
+        response = self._wrap_api_call(
+            requests.post,
+            self.base_url + "/remote_command",
+            data={"message": text})
+
+        if not response:
+            return
+
+        if response.status_code != 200:
+            raise Exception(response.raw)
+
+        print(response.text)
+
     def check_version(self, quiet=False):
         response = self._wrap_api_call(requests.get, self.base_url + "/version")
 

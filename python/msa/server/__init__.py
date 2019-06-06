@@ -1,4 +1,5 @@
 from msa.version import v as msa_version
+from msa.core import RunMode, supervisor
 
 import aiohttp
 from aiohttp import web
@@ -104,8 +105,27 @@ async def ping_handler(request, raw_data=None):
 async def version_handler(request, raw_data=None):
     return web.Response(text=msa_version)
 
+@route_adapter.post("/remote_command")
+async def echo_handler(request, raw_data=None):
+    message = dict(await request.post())
+
+    from msa.builtins.tty.events import TextInputEvent
+    
+    evt = TextInputEvent()
+    evt.init(message)
+    request.app["supervisor"].fire_event(evt)
+
+    return web.Response(text="Triggering echo")
+
+
+async def start_supervisor(app):
+    supervisor.set_loop(app.loop)
+    supervisor.init(RunMode.CLI, {"log_level": "info", "config_file": "msa_config.json"})
+    supervisor.start()
+    app["supervisor"] = supervisor
 
 def start_server():
     app = web.Application()
     app.add_routes(route_adapter.get_route_table())
+    app.on_startup.append(start_supervisor)
     web.run_app(app)

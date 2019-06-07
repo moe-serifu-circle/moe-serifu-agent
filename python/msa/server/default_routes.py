@@ -3,7 +3,6 @@ from aiohttp import web
 from msa.version import v as msa_version
 from msa.builtins.tty.events import TextInputEvent
 
-
 def register_default_routes(route_adapter):
 
     @route_adapter.get("/ping")

@@ -1,21 +1,31 @@
-from msa.version import v as msa_version
+from functools import partial
 import requests
 import time
 
+from msa.api.base_methods import register_base_methods
 
-class MsaApi:
+
+
+class MsaApi(dict):
+    def __init__(self, *args, **kwargs):
+        super(MsaApi, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
+class MsaApiRestClient:
+
     def __init__(self, host="localhost", port=8080, script_mode=False):
+
         self.host = host
         self.port = port
-        self.script_mode = script_mode
         self.base_url = "http://{}:{}".format(self.host, self.port)
 
-    def _wrap_api_call(self, func, *args, **kwargs):
+    def _wrap_api_call(self, func, endpoint, **kwargs):
         n = 0
         fail = 3
         while True:
             try:
-                return func(*args, **kwargs)
+                return func(self.base_url + endpoint,  **kwargs)
             except requests.exceptions.ConnectionError:
                 n += 1
 
@@ -28,72 +38,48 @@ class MsaApi:
             print("Please check your connection and try again")
             return None
 
-    def ping(self, quiet=False):
-        response = self._wrap_api_call(requests.get, self.base_url + "/ping")
+    def get(self, endpoint, **kwargs):
+        return self._wrap_api_call(requests.get, endpoint, **kwargs)
 
-        if not response:
-            return
+    def post(self, endpoint, **kwargs):
+        return self._wrap_api_call(requests.post, endpoint, **kwargs)
 
-        if response.status_code != 200:
-            raise Exception(response.raw)
-
-        if not quiet:
-            print(response.text)
-
-    def remote_command(self, text):
-        response = self._wrap_api_call(
-            requests.post,
-            self.base_url + "/remote_command",
-            data={"message": text})
-
-        if not response:
-            return
-
-        if response.status_code != 200:
-            raise Exception(response.raw)
-
-        print(response.text)
-
-    def check_version(self, quiet=False):
-        response = self._wrap_api_call(requests.get, self.base_url + "/version")
-
-        if not response:
-            print("Unable to verify server version. Exiting.")
-            # we have been unable to connect to the server and should exit in this case
-            exit(1)
-
-        if response.status_code != 200:
-            raise Exception(response.raw)
-
-        if response.text != msa_version or not quiet:
-            print("Server Version:", response.text)
-            print("Client Version:", msa_version)
-            if response.text != msa_version:
-                print("Warning: Client and server versions mismatch.\nExiting.", flush=True)
-                exit(1)
-
-    def check_connection(self):
-        n = 0
-        fail = 3
-        while n < fail:
-            try:
-                self.ping(quiet=True)
-                if n > 0:
-                    print("There we go! Connection succeeded!")
-                return
-            except requests.exceptions.ConnectionError:
-                n += 1
-
-                if n == 1:
-                    print("Having trouble connecting... Trying again.")
-                elif n == 2:
-                    print("Hmm, something must be up.")
-                time.sleep(2)
+    def put(self, endpoint, **kwargs):
+        return self._wrap_api_call(requests.put, endpoint, **kwargs)
+    
+    def update(self, endpoint, **kwargs):
+        return self._wrap_api_call(requests.update, endpoint, **kwargs)
+    
+    def delete(self, endpoint, **kwargs):
+        return self._wrap_api_call(requests.delete, endpoint, **kwargs)
 
 
-        print("Unfortunately I was unable to reach the msa daemon instance at {}".format(self.base_url), flush=True)
-        print("Exiting.", flush=True)
-        exit(1)
+class MsaApiWrapper:
+    def __init__(self, host="localhost", port=8080, script_mode=False):
+
+        self.api = MsaApi()
+        self.api.script_mode = script_mode
+        self.api.rest_client = MsaApiRestClient()
+
+        self._registration_frozen = False
+
+        register_base_methods(self)
+
+        self._registration_frozen = True
+
+
+    def register_method(self):
+        if not self._registration_frozen:
+            def decorator(func):
+                self.api[func.__name__] = partial(func, self.api)
+            return decorator
+        else:
+            raise Exception(f"MsaAPI Method Registration is frozen, failed to register method: {func.__name__}")
+
+    def get_api(self):
+        return self.api
+
+
 
 
 

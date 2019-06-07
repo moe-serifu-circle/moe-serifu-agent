@@ -13,13 +13,12 @@ register_default_routes(route_adapter)
 
 
 async def start_supervisor(app):
-    supervisor.set_loop(app.loop)
-    supervisor.init(RunMode.CLI, {"log_level": "info", "config_file": "msa_config.json"})
+    supervisor.init(app.loop, {"log_level": "info", "config_file": "msa_config.json"})
     supervisor.start()
     app["supervisor"] = supervisor
 
 
-def start_server():
+def start_server(config_context):
     app = web.Application()
     app.add_routes(route_adapter.get_route_table())
     app.on_startup.append(start_db_engine)

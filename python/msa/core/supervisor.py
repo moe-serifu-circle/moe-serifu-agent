@@ -15,16 +15,7 @@ class Supervisor:
     """The supervisor is responsible for managing the execution of the application and orchestrating the event system.
     """
 
-    def set_loop(self, loop):
-        self.loop = loop 
-        self.event_bus = EventBus(self.loop)
-        self.event_queue = asyncio.Queue(self.loop)
-
     def __init__(self):
-        if not os.environ.get("TEST"):
-            self.set_loop(asyncio.new_event_loop())
-            # block getting a loop if we are running unit tests
-            # helps suppress a warning.
         self.config_manager = None
         self.stop_loop = False
         self.stop_main_coro = None
@@ -88,17 +79,23 @@ class Supervisor:
 
         self.logger.info("Finished setting granular log levels.")
 
-    def init(self, mode, cli_config):
+    def init(self, loop, cli_config):
         """Initializes the supervisor.
 
         Parameters
         ----------
-        mode : int
-            A msa.core.RunMode enum value to configure which modules should be started based on the
-            environment the system is being run in.
+        loop : Asynio Event Loop    
+            An asyncio event loop the supervisor should use.
         cli_config: Dict
             A dictionary containing configuration options derived from the command line interface.
         """
+        if not os.environ.get("TEST"):
+            self.loop = loop 
+            self.event_bus = EventBus(self.loop)
+            self.event_queue = asyncio.Queue(self.loop)
+            # block getting a loop if we are running unit tests
+            # helps suppress a warning.
+
         # ### PLACEHOLDER - Load Configuration file here --
         self.config_manager = ConfigManager(cli_config)
         config = self.config_manager.get_config()
@@ -118,7 +115,7 @@ class Supervisor:
 
         # load plugin modules
         self.logger.debug("Loading plugin modules.")
-        plugin_modules = load_plugin_modules(plugin_names, mode)
+        plugin_modules = load_plugin_modules(plugin_names)
         self.logger.debug("Finished loading plugin modules.")
 
         self.logger.info("Finished loading modules.")

@@ -31,7 +31,7 @@ def daemon(ctx):
 def server(ctx):
 
     from msa.server import start_server
-    start_server()
+    start_server(ctx.obj)
 
 
 

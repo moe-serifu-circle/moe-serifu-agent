@@ -24,7 +24,7 @@ class MsaApi:
                 elif n == 2:
                     print("Hmm, something must be up.")
 
-            print("Unfortunately, I was unable to read the msa daemon instance at {}".formatting(self.base_url))
+            print("Unfortunately, I was unable to read the msa daemon instance at {}".format(self.base_url))
             print("Please check your connection and try again")
             return None
 
@@ -58,6 +58,7 @@ class MsaApi:
         response = self._wrap_api_call(requests.get, self.base_url + "/version")
 
         if not response:
+            print("Unable to verify server version. Exiting.")
             # we have been unable to connect to the server and should exit in this case
             exit(1)
 
@@ -68,7 +69,7 @@ class MsaApi:
             print("Server Version:", response.text)
             print("Client Version:", msa_version)
             if response.text != msa_version:
-                print("Warning: Client and server versions mismatch.\nExiting.")
+                print("Warning: Client and server versions mismatch.\nExiting.", flush=True)
                 exit(1)
 
     def check_connection(self):
@@ -90,8 +91,8 @@ class MsaApi:
                 time.sleep(2)
 
 
-        print("Unfortunately I was unable to reach the msa daemon instance at {}".format(self.base_url))
-        print("Exiting.")
+        print("Unfortunately I was unable to reach the msa daemon instance at {}".format(self.base_url), flush=True)
+        print("Exiting.", flush=True)
         exit(1)
 
 

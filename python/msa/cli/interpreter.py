@@ -37,12 +37,12 @@ class Interpreter:
         self.api.check_version(quiet=True)
 
     def execute_script(self, script):
-       with open(script, "r") as f:
-           text = f.read()
-           print("Running script:")
-           print("| " + "\n| ".join(text.split("\n")))
-           print("Script output:")
-           self.execute_block(text)
+        with open(script, "r") as f:
+            text = f.read()
+            print("Running script:")
+            print("| " + "\n| ".join(text.split("\n")))
+            print("Script output:")
+            self.execute_block(text)
 
 
     def start(self):

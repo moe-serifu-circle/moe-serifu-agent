@@ -43,7 +43,7 @@ def cli(ctx, script):
 
     interpreter = Interpreter()
 
-    if script != None:
+    if script is not None:
         if os.path.exists(script) and os.path.isfile(script):
             interpreter.execute_script(script)
         else:

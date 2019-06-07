@@ -79,7 +79,7 @@ class Supervisor:
 
         self.logger.info("Finished setting granular log levels.")
 
-    def init(self, loop, cli_config):
+    def init(self, loop, cli_config, database):
         """Initializes the supervisor.
 
         Parameters
@@ -88,6 +88,8 @@ class Supervisor:
             An asyncio event loop the supervisor should use.
         cli_config: Dict
             A dictionary containing configuration options derived from the command line interface.
+        database: a aio sqlalchemy database instance
+            **Fix docstrings**
         """
         if not os.environ.get("TEST"):
             self.loop = loop 
@@ -95,6 +97,8 @@ class Supervisor:
             self.event_queue = asyncio.Queue(self.loop)
             # block getting a loop if we are running unit tests
             # helps suppress a warning.
+
+        self.database = database
 
         # ### PLACEHOLDER - Load Configuration file here --
         self.config_manager = ConfigManager(cli_config)

@@ -140,11 +140,9 @@ class Supervisor:
                 handler_logger = self.root_logger.getChild(namespace)
                 self.loggers[full_namespace] = handler_logger
 
-                event_queue = self.event_bus.create_event_queue()
-
                 module_config = config["module_config"].get(full_namespace, None)
 
-                inited_handler = handler(self.loop, event_queue, handler_logger, module_config)
+                inited_handler = handler(self.loop, self.event_bus, self.database, handler_logger, module_config)
 
                 self.initialized_event_handlers.append(inited_handler)
                 self.handler_lookup[handler] = inited_handler

@@ -16,7 +16,7 @@ class EventHandler:
         an event loop that this handler may attempt to read events out of by awaiting on
         it."""
 
-    def __init__(self, loop: asyncio.AbstractEventLoop, event_queue: asyncio.Queue, logger: logging.Logger,
+    def __init__(self, loop: asyncio.AbstractEventLoop, event_bus: EventBus, logger: logging.Logger,
                  config: Optional[Dict] = None):
         """Creates a new event handler. Subclasses should call the base constructor before setting up their own internal
         state.
@@ -25,8 +25,8 @@ class EventHandler:
         ----------
         loop : asyncio.AbstractEventLoop
             an asyncio event loop.
-        event_queue : asyncio.Queue
-            a queue that this handler may attempt to read events out of.
+        event_bus : msa.core.event_bus.EventBus
+            An instance of the event bus that the handler can use to subscribe to events.
         logger : logging.Logger
             A logger instance specific to this event handler."""
         self.loop = loop

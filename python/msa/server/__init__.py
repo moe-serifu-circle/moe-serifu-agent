@@ -15,6 +15,10 @@ async def start_supervisor(app):
     supervisor.start()
     app["supervisor"] = supervisor
 
+async def stop_supervisor(app):
+    app["supervisor"].logger.info("*** trigger shutdown")
+    await app["supervisor"].exit()
+
 
 def start_server(config_context):
     app = web.Application()
@@ -24,4 +28,5 @@ def start_server(config_context):
     app.add_routes(route_adapter.get_route_table())
     app.on_startup.append(start_db_engine)
     app.on_startup.append(start_supervisor)
+    app.on_cleanup.append(stop_supervisor)
     web.run_app(app)

@@ -8,7 +8,7 @@ Base = declarative_base()
 
 
 async def setup(db):
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(db.sync_engine)
 
 
 

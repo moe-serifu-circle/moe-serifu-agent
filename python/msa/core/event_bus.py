@@ -8,7 +8,7 @@ class Subscription:
     def __enter__(self):
         return self.queue
 
-    def __exit__(self):
+    def __exit__(self, type, value, traceback):
         self.event_bus.unsubscribe(self.queue)
 
     
@@ -41,7 +41,7 @@ class EventBus:
         return Subscription(self, new_queue)
 
     def unsubscribe(self, queue):
-        for _,subscriptions in self.subscriptions:
+        for _,subscriptions in self.subscriptions.items():
             if queue in subscriptions:
                 subscriptions.remove(queue)
 

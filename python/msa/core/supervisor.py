@@ -175,9 +175,9 @@ class Supervisor:
                 self.logger.debug("Main coroutine primed, executing in the loop.")
                 self.loop.create_task(primed_coro)
                 self.logger.debug("Finished running main coroutine.")
-        except KeyboardInterrupt:
-            self.info("Keyboard interrupt (Ctrl-C) encountered, beginning shutdown.")
-            print("Ctrl-C Pressed. Quitting...")
+        #except KeyboardInterrupt:
+        #   self.logger.info("Keyboard interrupt (Ctrl-C) encountered, beginning shutdown.")
+        #   print("Ctrl-C Pressed. Quitting...")
         finally:
             pass
             #self.stop()
@@ -291,9 +291,10 @@ class Supervisor:
 
         try:
             self.logger.debug("Beginning handler execution.")
-            futures = await asyncio.gather(*primed_coros)
+            with suppress(asyncio.CancelledError):
+                futures = await asyncio.gather(*primed_coros)
         except Exception as err:
-            self.logger.eror(err, traceback.print_exc())
+            self.logger.error(err, traceback.print_exc())
 
         self.logger.debug("Main Coro: Sleep until shutdown is started.")
         while not self.stop_main_coro:

@@ -4,7 +4,7 @@ import aiocron
 from msa.core.event_handler import EventHandler
 from msa.core import supervisor
 from msa.builtins.scripting import events
-from msa.builtins.scripting.entities import *
+from msa.builtins.scripting.entities import ScriptEntity
 
 
 class ScriptManager:
@@ -24,7 +24,6 @@ class AddScriptHandler(EventHandler):
 
 
     async def handle(self):
-
 
         with self.event_bus.subscribe([events.AddScriptEvent]) as queue:
 
@@ -62,7 +61,20 @@ class TriggerScriptRunHandler(EventHandler):
     def __init__(self, loop, event_bus, database, logger, config=None):
         super().__init__(loop, event_bus, database, logger, config)
 
+        self.started = False
+
+
+    async def async_init(self)
+        # load all scripts and crontabs
+        with self.database.connect() as conn:
+            result = await conn.execute(ScriptEntity.select())
+
+        self.started = True
+
     async def handle(self):
+        if not self.started:
+            await self.async_init()
+
         with self.event_bus.subscribe([events.TriggerScriptRunEvent]):
             pass
 

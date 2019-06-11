@@ -16,6 +16,8 @@ pygments = "^2.3"
 aiohttp = "^3.5"
 sphinx-rtd-theme = "^0.4.3"
 sqlalchemy-aio = "^0.14.1"
+aiocron = "^1.3"
+croniter = "^0.3.30"
 
 [tool.poetry.dev-dependencies]
 sphinx = "^2.0"

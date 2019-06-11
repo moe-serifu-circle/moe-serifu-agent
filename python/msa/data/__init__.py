@@ -11,7 +11,7 @@ async def start_db_engine(app):
     engine = create_engine(
         # In-memory sqlite database cannot be accessed from different
         # threads, use file.
-        'sqlite:///msa.db', strategy=ASYNCIO_STRATEGY
+        'sqlite:///./msa.db', strategy=ASYNCIO_STRATEGY
     )
 
     app["db"] = engine    

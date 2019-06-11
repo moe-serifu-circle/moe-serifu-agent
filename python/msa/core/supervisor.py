@@ -126,6 +126,7 @@ class Supervisor:
 
         self.loaded_modules = bultin_modules + plugin_modules
 
+
         # ### Registering Handlers
         self.logger.info("Registering handlers.")
         # register event handlers
@@ -259,6 +260,15 @@ class Supervisor:
             self.main_coro_task = asyncio.Task.current_task()
         else:
             self.main_coro_task = asyncio.current_task()
+
+
+        # ### Initialize database requirements for modules
+        self.logger.info("Initializing database add-ons")
+        for module in self.loaded_modules:
+            if hasattr(module, "entity_setup"):
+                self.logger.debug(f"Initializing database for module msa.{module.__name__}")
+                await module.entity_setup(self.database)
+                self.logger.debug(f"Finished initializing database for module msa.{module.__name__}")
 
         self.logger.debug("Main Coro: Call async init on handlers.")
         init_coros = [

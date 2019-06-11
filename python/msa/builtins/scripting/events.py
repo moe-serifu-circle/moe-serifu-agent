@@ -1,4 +1,4 @@
-import chroniter
+import croniter
 from schema import Schema, And, Or
 
 from msa.core.event import Event
@@ -21,7 +21,7 @@ class AddScriptEvent(Event):
                     str,
                     len,
                     lambda s: (sum(c.isspace() for c in s) == 0)),
-                "chrontab": And(str, len, chroniter.is_valid),
+                "chrontab": And(str, len, croniter.is_valid),
                 "script_contents": And(str, len)
             })
         )

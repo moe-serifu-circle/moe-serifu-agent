@@ -33,8 +33,8 @@ class EventBus:
         new_queue = asyncio.PriorityQueue(loop=self.loop)
 
         for event_type in event_types:
-            if event_type not self.subscriptions:
-                self.subscriptions[event_type] = set(new_queue)
+            if event_type not in self.subscriptions:
+                self.subscriptions[event_type] = {new_queue}
             else:
                 self.subscriptions[event_type].add(new_queue)
 

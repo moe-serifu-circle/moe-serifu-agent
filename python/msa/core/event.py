@@ -77,6 +77,8 @@ class Event:
         self.schema.validate(data)
         self.data = data
 
+        return self
+
     def get_metadata(self) -> Dict:
         """Returns the metadata of this event. Used for network serialization of an event."""
         return {

@@ -8,6 +8,6 @@ handler_factories = [
 entity_setup = entities.setup
 
 entities = [
-    entities.Script,
-    entities.ScriptRunResult,
+    entities.ScriptEntity,
+    entities.ScriptRunResultEntity,
 ]

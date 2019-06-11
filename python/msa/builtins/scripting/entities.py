@@ -1,17 +1,14 @@
 import datetime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (
-    Column, Integer, MetaData, Table, Text, DateTime, create_engine, select, ForeignKey)
+    Column, Integer, MetaData, Table, Text, DateTime, create_engine, select, ForeignKey, String, inspect)
 from sqlalchemy.schema import CreateTable, DropTable
 
 Base = declarative_base()
 
 
 async def setup(db):
-    if not db.dialect.has_table(db, ScriptEntity):
-        await db.execute(CreateTable(ScriptEntity))
-    if not db.dialect.has_table(db, ScriptRunResultEntity):
-        await db.execute(CreateTable(ScriptRunResultEntity))
+    Base.metadata.create_all(engine)
 
 
 

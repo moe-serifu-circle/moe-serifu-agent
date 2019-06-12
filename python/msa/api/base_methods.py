@@ -34,7 +34,6 @@ def register_base_methods(api_wrapper):
     def check_version(self, quiet=False):
         response = self.rest_client.get("/version")
 
-
         if not response:
             print("Unable to verify server version. Exiting.")
             # we have been unable to connect to the server and should exit in this case

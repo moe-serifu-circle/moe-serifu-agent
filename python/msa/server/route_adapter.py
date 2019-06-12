@@ -65,7 +65,9 @@ class RouteAdapter:
 
                     try:
                         request_data = payload["data"]
-                        await route_func(request=None, raw_data=request_data)
+                        response = await route_func(request=None, raw_data=request_data)
+                        response["type"] = "response"
+                        await ws.send_str(json.dumps(response))
                     except Exception as e:
                         await ws.send_str(json.dumps({"type": "error", "message": str(e)}))
                         continue
@@ -76,18 +78,47 @@ class RouteAdapter:
     def get_route_table(self):
         all_routes = [ ]
 
+        def route_wrapper(func):
+            async def wrapped_route(request, raw_data=None):
+                response = await func(request, raw_data)
+                web.Response(**response)
+            return wrapped_route
+
         for route, route_func in self.routes["get"].items():
-            all_routes.append(web.get(route, route_func))
+            all_routes.append(
+                web.get(
+                    route,
+                    route_wrapper(route_func)
+                ))
 
         for route, route_func in self.routes["put"].items():
-            all_routes.append(web.put(route, route_func))
+            all_routes.append(
+                web.put(
+                    route,
+                    route_wrapper(route_func)
+                ))
 
         for route, route_func in self.routes["post"].items():
-            all_routes.append(web.post(route, route_func))
+            all_routes.append(
+                web.post(
+                    route, 
+                    route_wrapper(route_func)
+                ))
 
         for route, route_func in self.routes["delete"].items():
-            all_routes.append(web.delete(route, route_func))
+            all_routes.append(
+                web.delete(
+                    route,
+                    route_wrapper(route_func)
+                ))
 
         all_routes.append(web.get("/ws", self.generate_websocket_route()))
         return all_routes
+
+
+    def lookup_route(self, verb, route):
+        if verb in self.routes:
+            if route in self.routes[verb]:
+                return self.routes[verb][route]
+        return None
 

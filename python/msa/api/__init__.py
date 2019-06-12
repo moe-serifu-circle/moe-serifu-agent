@@ -3,6 +3,8 @@ import requests
 import time
 
 from msa.api.base_methods import register_base_methods
+from msa.server import route_adapter
+from msa.server.default_routes import register_default_routes
 
 
 
@@ -78,6 +80,54 @@ class MsaApiWrapper:
 
     def get_api(self):
         return self.api
+
+
+class MsaServerApi:
+    def __init__(self):
+        register_default_routes(route_adapter)
+        self.route_adapter = route_adapter
+
+    def _call_api_route(self, verb, route, payload=None):
+        func = self.route_adapter.lookup_route(verb, route)
+        if func is None:
+            raise Exception(f"{self.__cls__.__name}: no api route {verb}:{route} exists.")
+
+        if payload is not None:
+            func(None, raw_data=payload)
+        else:
+            func(None)
+
+    def get(self, route):
+        self._call_api_route("get", route)
+
+    def post(self, route, payload=None):
+        self._call_api_route("post", route, payload=None)
+
+    def put(self, route, payload=None):
+        self._call_api_route("put", route, payload=None)
+
+    def delete(self, route, payload=None):
+        self._call_api_route("delete", route, payload=None)
+
+class MsaLocalApiWrapper:
+    def __init__(self):
+        self.api = MsaServerApi()
+
+        self._registration_frozen = False
+        register_base_methods(self)
+        self._registration_frozen = True
+
+    def register_method(self):
+        if not self._registration_frozen:
+            def decorator(func):
+                self.api[func.__name__] = partial(func, self.api)
+            return decorator
+        else:
+            raise Exception(f"MsaServerAPI Method Registration is frozen, failed to register method: {func.__name__}")
+
+    def get_api(self):
+        return self.api
+
 
 
 

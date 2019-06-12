@@ -19,15 +19,21 @@ def register_base_methods(api_wrapper):
             print(response.text)
 
     @api_wrapper.register_method()
-    def remote_command(self, text):
-        response = self.rest_client.post("/remote_command", data={"message": text})
+    def upload_script(self, name, file_name):
+        with open(file_name, "rb") as f:
+            script_contents = f.read()
+        
+        response = self.rest_client.post(
+            "/scripting/script",
+            data={
+                "name": name,
+                "script_contents": script_contents
+            })
 
         if not response:
             return
-
         if response.status_code != 200:
             raise Exception(response.raw)
-
         print(response.text)
 
     @api_wrapper.register_method()

@@ -20,7 +20,7 @@ class ScriptManager:
         }
 
     def run_script(self, script_contents):
-        exec(text.strip(), self.globals, {})
+        exec(script_contents.strip(), self.globals, {})
 
     def schedule_script(self, name, crontab, script_content):
         if name not in self.running_scripts:

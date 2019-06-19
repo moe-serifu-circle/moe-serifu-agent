@@ -1,0 +1,78 @@
+sequenceDiagram
+participant a as Asyncio
+participant s as Supervisor
+participant eb as Event Bus
+participant cr as Command Reg. Hdlr.
+participant tty as TTY Hdlr.
+participant e as Echo Hdlr.
+
+note left of a: Bootstrap
+a->>+s: Corioutine Start
+s->>+eb:Instanciate
+s->>+cr:Load Module
+cr->>-a:Yield
+s->>+tty:Load Module
+tty->>-a:Yield
+s->>+e:Load Module
+e->>-a:Yield
+s->>+cr:Initialize 
+cr->>-s:return
+s->>+tty:Initialize
+tty->>-s:return
+s->>+e:Initialize
+e->>-s:return
+e->>eb:Register Command Event
+eb->>a:Deposit Event In Event Queue
+a--x+cr:Give event from event queue
+cr->>cr:Handle Event from event queue
+cr->>-a:Yield
+a--x+tty:Give event from event queue
+tty->>tty:Reject event (not of tty handler types)
+tty->>-a:Yield
+a--x+e:Give event from Event Queue
+e->>e:Reject event (not of echo handler types)
+e->>-a:Yield
+s->>s:Start main event loop
+s->>-a: Yield
+note left of a: Echo evt demo
+loop Main Loop
+  a->>a: wait for interaction
+  a--x+tty: Input on stdin pass to tty handler prompt
+  tty->>eb: Propagate TextInputEvent
+  eb->>a:Insert TextInputEvent into evt. queue
+  tty->>-a:Yield
+  a--xcr: Give TxtInEvt. 
+  cr->>cr:Parse text as command
+  cr->>eb: Propagate new command type event (CTE) echo
+  eb->>a:Insert CTE into evt. queue
+  cr->>a: Yield
+  a--x+tty:Give TxtInEvt.
+  tty->>tty:Reject event (not of tty handler types)
+  tty->-a:Yield
+  a--x+e:Give TxtInEvt.
+  e->>e:Reject event (not of echo handler types)
+  e->>-a:Yield
+  a--x+cr: Give CTE echo 
+  cr->>cr:Reject event (not of command registry types)
+  cr->>-a:Yield
+  a--x+tty:Give CTE echo
+  tty-->tty:Reject event (not of tty handler types)
+  tty-->-a:Yield
+  a--x+e:Give CTE echo
+  e->>e: Process event 
+  e->>eb: Propagate TextOutputEvent (TOE)
+  eb->>a: Insert TOE intro event queue
+  e->>-a:Yield
+  a--x+cr: Give TOE
+  cr->>cr:Reject event (not of command registry types)
+  cr->>-a:Yield
+  a--x+tty: Give TOE
+  tty->>tty: Process event, print text to tty
+  tty->>-a:Yield
+    a--x+e: Give TOE
+  e->>e:Reject event (not of command registry types)
+  e->>-a:Yield
+end
+
+
+

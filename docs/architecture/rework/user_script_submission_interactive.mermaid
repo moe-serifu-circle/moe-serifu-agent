@@ -1,0 +1,30 @@
+sequenceDiagram
+participant user as User
+participant cli as MSA CLI Tool REPL
+participant daemon as MSA Daemon
+
+
+user->>daemon: Starts daemon
+user->>cli: Starts CLI in REPL mode
+cli->>daemon: Connect
+cli->>user: Display interactive prompt
+user->>cli: Inputs command to begin recording session
+loop User writes script
+   user->>cli: Sends commands to REPL
+   cli->>cli:Record command from user to pending script
+   cli->>daemon: invokes MSA API as needed
+  daemon->>cli: respond to invoked command
+  cli->>user:display result of command eval
+end
+user->>cli:inputs command to stop recording
+cli->>cli: cli saves pending script 
+cli->>user:cli displays recorded script (via editor?)
+user->>user:edits script [optionally]
+user->>cli:submit script to server for scheduling
+cli->>daemon: Upload Script and schedule
+loop Scheduling Loop
+     daemon->>daemon: Time passes
+     daemon->>daemon: MSA Daemon runs submitted script at scheduled time
+end
+
+

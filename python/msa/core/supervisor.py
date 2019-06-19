@@ -16,12 +16,6 @@ class Supervisor:
     """
 
     def __init__(self):
-        if not os.environ.get("TEST"):
-            # block getting a loop if we are running unit tests
-            # helps suppress a warning.
-            self.loop = asyncio.new_event_loop()
-            self.event_bus = EventBus(self.loop)
-            self.event_queue = asyncio.Queue(self.loop)
         self.config_manager = None
         self.stop_loop = False
         self.stop_main_coro = None
@@ -85,17 +79,27 @@ class Supervisor:
 
         self.logger.info("Finished setting granular log levels.")
 
-    def init(self, mode, cli_config):
+    def init(self, loop, cli_config, database):
         """Initializes the supervisor.
 
         Parameters
         ----------
-        mode : int
-            A msa.core.RunMode enum value to configure which modules should be started based on the
-            environment the system is being run in.
+        loop : Asynio Event Loop    
+            An asyncio event loop the supervisor should use.
         cli_config: Dict
             A dictionary containing configuration options derived from the command line interface.
+        database: a aio sqlalchemy database instance
+            **Fix docstrings**
         """
+        if not os.environ.get("TEST"):
+            self.loop = loop 
+            self.event_bus = EventBus(self.loop)
+            self.event_queue = asyncio.Queue(self.loop)
+            # block getting a loop if we are running unit tests
+            # helps suppress a warning.
+
+        self.database = database
+
         # ### PLACEHOLDER - Load Configuration file here --
         self.config_manager = ConfigManager(cli_config)
         config = self.config_manager.get_config()
@@ -115,12 +119,13 @@ class Supervisor:
 
         # load plugin modules
         self.logger.debug("Loading plugin modules.")
-        plugin_modules = load_plugin_modules(plugin_names, mode)
+        plugin_modules = load_plugin_modules(plugin_names)
         self.logger.debug("Finished loading plugin modules.")
 
         self.logger.info("Finished loading modules.")
 
         self.loaded_modules = bultin_modules + plugin_modules
+
 
         # ### Registering Handlers
         self.logger.info("Registering handlers.")
@@ -136,11 +141,9 @@ class Supervisor:
                 handler_logger = self.root_logger.getChild(namespace)
                 self.loggers[full_namespace] = handler_logger
 
-                event_queue = self.event_bus.create_event_queue()
-
                 module_config = config["module_config"].get(full_namespace, None)
 
-                inited_handler = handler(self.loop, event_queue, handler_logger, module_config)
+                inited_handler = handler(self.loop, self.event_bus, self.database, handler_logger, module_config)
 
                 self.initialized_event_handlers.append(inited_handler)
                 self.handler_lookup[handler] = inited_handler
@@ -170,18 +173,19 @@ class Supervisor:
                 self.logger.debug("Priming main coroutine")
                 primed_coro = self.main_coro(additional_coros)
                 self.logger.debug("Main coroutine primed, executing in the loop.")
-                self.loop.run_until_complete(primed_coro)
+                self.loop.create_task(primed_coro)
                 self.logger.debug("Finished running main coroutine.")
-        except KeyboardInterrupt:
-            self.info("Keyboard interrupt (Ctrl-C) encountered, beginning shutdown.")
-            print("Ctrl-C Pressed. Quitting...")
+        #except KeyboardInterrupt:
+        #   self.logger.info("Keyboard interrupt (Ctrl-C) encountered, beginning shutdown.")
+        #   print("Ctrl-C Pressed. Quitting...")
         finally:
-            self.stop()
-            self.loop.run_until_complete(self.loop.shutdown_asyncgens())
-            self.logger.info("Stopping loop.")
-            self.loop.close()
-            self.logger.info("Exiting.")
-            sys.exit(0)
+            pass
+            #self.stop()
+            #self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+            #self.logger.info("Stopping loop.")
+            #self.loop.close()
+            #self.logger.info("Exiting.")
+            #sys.exit(0)
 
     def stop(self):
         """Schedules the supervisor to stop, and exit the application."""
@@ -257,6 +261,15 @@ class Supervisor:
         else:
             self.main_coro_task = asyncio.current_task()
 
+
+        # ### Initialize database requirements for modules
+        self.logger.info("Initializing database add-ons")
+        for module in self.loaded_modules:
+            if hasattr(module, "entity_setup"):
+                self.logger.debug(f"Initializing database for module msa.{module.__name__}")
+                await module.entity_setup(self.database)
+                self.logger.debug(f"Finished initializing database for module msa.{module.__name__}")
+
         self.logger.debug("Main Coro: Call async init on handlers.")
         init_coros = [
             handler.init()
@@ -278,9 +291,10 @@ class Supervisor:
 
         try:
             self.logger.debug("Beginning handler execution.")
-            futures = await asyncio.gather(*primed_coros)
+            with suppress(asyncio.CancelledError):
+                futures = await asyncio.gather(*primed_coros)
         except Exception as err:
-            self.logger.eror(err, traceback.print_exc())
+            self.logger.error(err, traceback.print_exc())
 
         self.logger.debug("Main Coro: Sleep until shutdown is started.")
         while not self.stop_main_coro:

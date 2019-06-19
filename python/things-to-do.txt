@@ -1,0 +1,18 @@
+- [ ] enable submitting scripts to server and running on a schedule
+- [ ] enable creating custom db tables for plugins
+- [ ] implement basic counter service
+- [ ] implement basic reminder/timer service
+- [ ] allow plugins to send events to client
+- [ ] allow clients to send events to server
+- [ ] create basic javascript client
+- [ ] plan out stt & tts
+- [ ] plan out NLP 
+- [ ] create basic characture mesh
+- [ ] create basic webGL client
+- [ ] research useful things the bot could do
+  - [ ] checkout mycroft
+  - [ ] checkout home assistant
+  - [ ] checkout jasper voice assistant
+- [ ] consider various means of providing sensors/inputs to app
+- [ ] look into building/generating rasberry pi images
+

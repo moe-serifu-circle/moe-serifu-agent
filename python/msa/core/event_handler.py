@@ -5,6 +5,8 @@ from contextlib import suppress
 import asyncio
 import logging
 
+import msa
+
 class EventHandler:
     """The base event handler class, all other event handlers should be a subclass of this type.
 
@@ -16,7 +18,7 @@ class EventHandler:
         an event loop that this handler may attempt to read events out of by awaiting on
         it."""
 
-    def __init__(self, loop: asyncio.AbstractEventLoop, event_queue: asyncio.Queue, logger: logging.Logger,
+    def __init__(self, loop: asyncio.AbstractEventLoop, event_bus: msa.core.event_bus.EventBus, database, logger: logging.Logger,
                  config: Optional[Dict] = None):
         """Creates a new event handler. Subclasses should call the base constructor before setting up their own internal
         state.
@@ -25,12 +27,14 @@ class EventHandler:
         ----------
         loop : asyncio.AbstractEventLoop
             an asyncio event loop.
-        event_queue : asyncio.Queue
-            a queue that this handler may attempt to read events out of.
+        event_bus : msa.core.event_bus.EventBus
+            An instance of the event bus that the handler can use to subscribe to events.
+        database : sqlalchemy database engine
+            An instance of a sql alchemy database engine the handler can use for database tasks.
         logger : logging.Logger
             A logger instance specific to this event handler."""
         self.loop = loop
-        self.event_queue = event_queue
+        self.event_bus = event_bus
         self.logger = logger
         self.config = config
 

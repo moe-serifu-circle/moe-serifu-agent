@@ -1,0 +1,17 @@
+sequenceDiagram
+participant user as User
+participant cli as MSA CLI Tool REPL
+participant daemon as MSA Daemon
+
+user->>user:Write hook script
+user->>daemon: Starts daemon
+user->>cli: Upload hook via cli
+cli->>daemon: Connect
+
+cli->>daemon: Upload hook script
+loop Scheduling Loop
+     daemon->>daemon: Time passes
+     daemon->>daemon: run script when event of type (according to configured hook) fires
+end
+
+

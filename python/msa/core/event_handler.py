@@ -37,6 +37,7 @@ class EventHandler:
         self.event_bus = event_bus
         self.logger = logger
         self.config = config
+        self._canceled = False
 
     async def init(self):
         """An optional initialization hook, may be used for executing setup code before all handlers have benn fully
@@ -49,7 +50,7 @@ class EventHandler:
 
         from msa.core import supervisor
 
-        while not supervisor.should_stop():
+        while not supervisor.should_stop() and not self._canceled:
             try:
                 with suppress(asyncio.CancelledError):
                     await self.handle()
@@ -62,6 +63,10 @@ class EventHandler:
         """An abstract method which must be overwritten. Once the system is started, the handle method will be called
         repeatedly until the system shuts down. The handler must be non-blocking."""
         raise NotImplementedError()
+
+    def cancel_reschedule(self):
+        """ Prevents this event handler from ever being rescheduled."""
+        self._canceled = True
 
 
 

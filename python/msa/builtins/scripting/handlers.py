@@ -1,3 +1,4 @@
+from functools import partial
 import asyncio
 import aiocron
 
@@ -9,24 +10,61 @@ from msa.api import MsaLocalApiWrapper
 
 
 class ScriptManager:
-    def __init__(self, loop):
-        self.loop = loop
-        self.running_scripts = {}
+    __shared_state = None
+    def __init__(self, loop=None, database=None):
 
-        self.local_api = MsaLocalApiWrapper().get_api()
+        if ScriptManager.__shared_state is None:
+            ScriptManager.__shared_state = {}
+            self.__dict__ = ScriptManager.__shared_state
 
-        self.globals = {
-            "msa_api":  self.api
-        }
+            self.loop = loop
+            self.running_scripts = {}
 
-    def run_script(self, script_contents):
-        exec(script_contents.strip(), self.globals, {})
+            self.local_api = MsaLocalApiWrapper(database).get_api()
 
-    def schedule_script(self, name, crontab, script_content):
+            self.globals = {
+                "msa_api":  self.api
+            }
+        else:
+            self.__dict__ = ScriptManager.__shared_state
+
+
+
+    async def run_script(self, name, script_content, crontab_definition=None):
+        if crontab_definition is not None:
+            while True:
+                await aiocron.crontab(crontab_definition).next()
+        else:
+            # run once and exit
+            exec(script_content.strip(), self.globals, {})
+
+        self.script_finished(name)
+
+    def schedule_script(self, name, script_content, crontab_definition=None):
         if name not in self.running_scripts:
-            self.running_scripts[name] = self.loop.create_task()
-        
 
+            script_coro = partial(self.run_script, name, script_content, crontab_definition)
+            self.running_scripts[name] = self.loop.create_task(script_coro)
+
+    def script_finished(self, name):
+        del self.running_scripts[name]
+
+    def shutdown(self):
+        # schedule shutdown
+        self.loop.create_task(self.async_shutdown())
+        
+    async def async_shutdown(self):
+        for name, task in self.running_scripts.items():
+            # todo: log the name of the script being shut down
+            task.cancel()
+
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+
+ 
 class AddScriptHandler(EventHandler):
     """
     Handles AddScript Events
@@ -75,6 +113,7 @@ class TriggerScriptRunHandler(EventHandler):
     """
     def __init__(self, loop, event_bus, database, logger, config=None):
         super().__init__(loop, event_bus, database, logger, config)
+        self.script_manager = ScriptManager(loop, database)
 
         self.started = False
 
@@ -82,6 +121,8 @@ class TriggerScriptRunHandler(EventHandler):
         # load all scripts and crontabs
         with self.database.connect() as conn:
             result = await conn.execute(ScriptEntity.select())
+
+            # TODO: load specific script and use script manager to run immediately
 
         self.started = True
 
@@ -93,3 +134,26 @@ class TriggerScriptRunHandler(EventHandler):
             pass
 
     
+class StartupEventHandler(EventHandler):
+    """
+    Handles Startup Event to start the script manager
+    """
+    def __init__(self, loop, event_bus, database, logger, config=None):
+        super().__init__(loop, event_bus, database, logger, config)
+        self.script_manager = ScriptManager(loop, database)
+
+
+    async def handle(self):
+        print("a")
+        with self.database.connect() as conn:
+            result = await conn.execute(ScriptEntity.select())
+            for script in result:
+                self.script_manager.schedule_script(
+                    script.name,
+                    script.script_contents,
+                    script.crontab)
+
+        self.cancel_reschedule()
+
+
+

@@ -82,9 +82,11 @@ class MsaApiWrapper:
         return self.api
 
 
-class MsaServerApi:
+class MsaServerApi(dict):
     def __init__(self, database):
-        register_default_routes(route_adapter)
+        super(MsaServerApi, self).__init__()
+        self.__dict__ = self
+
         self.route_adapter = route_adapter
         self.database = database
 

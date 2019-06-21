@@ -7,6 +7,7 @@ from msa.core import supervisor
 from msa.builtins.scripting import events
 from msa.builtins.scripting.entities import ScriptEntity
 from msa.api import MsaLocalApiWrapper
+from sqlalchemy.sql import select
 
 
 class ScriptManager:
@@ -23,7 +24,7 @@ class ScriptManager:
             self.local_api = MsaLocalApiWrapper(database).get_api()
 
             self.globals = {
-                "msa_api":  self.api
+                "msa_api":  self.local_api
             }
         else:
             self.__dict__ = ScriptManager.__shared_state
@@ -144,10 +145,9 @@ class StartupEventHandler(EventHandler):
 
 
     async def handle(self):
-        print("a")
-        with self.database.connect() as conn:
-            result = await conn.execute(ScriptEntity.select())
-            for script in result:
+        async with self.database.connect() as conn:
+            result = await conn.execute(select([ScriptEntity]))
+            for script in await result.fetchall():
                 self.script_manager.schedule_script(
                     script.name,
                     script.script_contents,

@@ -36,6 +36,7 @@ class EventHandler:
         self.loop = loop
         self.event_bus = event_bus
         self.logger = logger
+        self.database = database
         self.config = config
         self._canceled = False
 

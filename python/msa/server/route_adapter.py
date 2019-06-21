@@ -8,6 +8,7 @@ class RouteAdapter:
 
 
     def _register_route(self, verb, route):
+        print(verb, route)
         if route in self.routes[verb]:
             raise Exception("Route GET {} already registered".format(route))
 

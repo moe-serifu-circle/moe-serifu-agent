@@ -32,6 +32,7 @@ class ScriptManager:
 
 
     async def run_script(self, name, script_content, crontab_definition=None):
+        # TODO capture log, errors, etc, and log to db via RunScriptResultEvent
         if crontab_definition is not None:
             while True:
                 await aiocron.crontab(crontab_definition).next()
@@ -116,23 +117,22 @@ class TriggerScriptRunHandler(EventHandler):
         super().__init__(loop, event_bus, database, logger, config)
         self.script_manager = ScriptManager(loop, database)
 
-        self.started = False
-
-    async def async_init(self):
-        # load all scripts and crontabs
-        with self.database.connect() as conn:
-            result = await conn.execute(ScriptEntity.select())
-
-            # TODO: load specific script and use script manager to run immediately
-
         self.started = True
 
     async def handle(self):
-        if not self.started:
-            await self.async_init()
+        with self.event_bus.subscribe([events.TriggerScriptRunEvent]) as q:
+            event = await q.get()
+            with self.database.connect() as conn:
+                result = await conn.execute(
+                    select(ScriptEntity).where(ScriptEntity.c.name = event.data["name"])
+                )
 
-        with self.event_bus.subscribe([events.TriggerScriptRunEvent]):
-            pass
+                self.script_manager.schedule_script(
+                    script.name,
+                    script.script_contents,
+                    None)
+
+
 
     
 class StartupEventHandler(EventHandler):

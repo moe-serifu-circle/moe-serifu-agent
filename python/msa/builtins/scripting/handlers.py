@@ -32,7 +32,7 @@ class ScriptManager:
 
 
     async def run_script(self, name, script_content, crontab_definition=None):
-        # TODO capture log, errors, etc, and log to db via RunScriptResultEvent
+        # TODO capture log, errors, etc, and log to db via RunScriptResultEvent(Event):
         if crontab_definition is not None:
             while True:
                 await aiocron.crontab(crontab_definition).next()
@@ -124,7 +124,7 @@ class TriggerScriptRunHandler(EventHandler):
             event = await q.get()
             with self.database.connect() as conn:
                 result = await conn.execute(
-                    select(ScriptEntity).where(ScriptEntity.c.name = event.data["name"])
+                    select(ScriptEntity).where(ScriptEntity.c.name == event.data["name"])
                 )
 
                 self.script_manager.schedule_script(

@@ -2,7 +2,7 @@ import os
 import logging
 import click
 
-from msa.core import supervisor, RunMode
+from msa.core import supervisor
 
 @click.group(invoke_without_command=True)
 @click.option("--config-file", default="msa_config.json", help="The config file to use")

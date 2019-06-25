@@ -10,6 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
 from msa.core.config_manager import ConfigManager
+from msa.server.route_adapter import RouteAdapter
+from msa.api import MsaLocalApiWrapper
 
 class Supervisor:
     """The supervisor is responsible for managing the execution of the application and orchestrating the event system.
@@ -79,7 +81,7 @@ class Supervisor:
 
         self.logger.info("Finished setting granular log levels.")
 
-    def init(self, loop, cli_config, database):
+    def init(self, loop, cli_config, database, route_adapter):
         """Initializes the supervisor.
 
         Parameters
@@ -90,6 +92,7 @@ class Supervisor:
             A dictionary containing configuration options derived from the command line interface.
         database: a aio sqlalchemy database instance
             **Fix docstrings**
+        route_adapter: ** fix docstrings **
         """
         if not os.environ.get("TEST"):
             self.loop = loop 
@@ -99,6 +102,9 @@ class Supervisor:
             # helps suppress a warning.
 
         self.database = database
+
+        client_api_binder= MsaLocalApiWrapper(database)
+        server_api_binder = route_adapter
 
         # ### PLACEHOLDER - Load Configuration file here --
         self.config_manager = ConfigManager(cli_config)
@@ -129,8 +135,15 @@ class Supervisor:
 
         # ### Registering Handlers
         self.logger.info("Registering handlers.")
-        # register event handlers
         for module in self.loaded_modules:
+            self.logger.debug("Registering client api endpoints for module msa.{}".format(module.__name__))
+            if hasattr(module, "register_client_api") and callable(module.register_client_api):
+                module.register_client_api(client_api_binder)
+
+            self.logger.debug("Registering server api endpoints for module msa.{}".format(module.__name__))
+            if hasattr(module, "register_server_api") and callable(module.register_server_api):
+                module.register_server_api(server_api_binder)
+
             self.logger.debug("Registering handlers for module msa.{}".format(module.__name__))
             for handler in module.handler_factories:
 
@@ -151,6 +164,7 @@ class Supervisor:
                 self.logger.debug("Finished registering handler: {}".format(full_namespace))
             self.logger.debug("Finished registering handlers for module {}".format(module.__name__))
 
+        client_api_binder.freeze_registration()
         self.logger.info("Finished registering handlers.")
 
         self.apply_granular_log_levels(config["logging"]["granular_log_levels"])

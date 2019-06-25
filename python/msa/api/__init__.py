@@ -118,15 +118,17 @@ class MsaLocalApiWrapper:
 
         self._registration_frozen = False
         register_base_methods(self)
-        self._registration_frozen = True
 
     def register_method(self):
-        if not self._registration_frozen:
-            def decorator(func):
+        def decorator(func):
+            if not self._registration_frozen:
                 self.api[func.__name__] = partial(func, self.api)
-            return decorator
-        else:
-            raise Exception(f"MsaServerAPI Method Registration is frozen, failed to register method: {func.__name__}")
+            else:
+                raise Exception(f"MsaServerAPI Method Registration is frozen, failed to register method: {func.__name__}")
+        return decorator
+
+    def freeze_registration(self):
+        self._registration_frozen = True
 
     def get_api(self):
         return self.api

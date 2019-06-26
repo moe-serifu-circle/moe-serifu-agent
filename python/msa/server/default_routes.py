@@ -10,6 +10,6 @@ def register_default_routes(route_adapter):
 
     @route_adapter.get("/version")
     async def version_handler(request=None, raw_data=None):
-        return {"text": "msa_version"}
+        return {"text": msa_version}
 
 

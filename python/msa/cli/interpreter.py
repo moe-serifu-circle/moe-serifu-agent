@@ -1,3 +1,4 @@
+import time
 import traceback
 import os
 import webbrowser
@@ -19,6 +20,8 @@ class Interpreter:
 
         self.api = MsaApiWrapper().get_api()
 
+        self.quit = False
+        self.exit_code = 0
 
         self.locals = {}
         self.globals = {
@@ -56,10 +59,17 @@ class Interpreter:
                 continue
             except EOFError:
                 break
+            except Exception as e:
+                print(e)
+                time.sleep(5)
             else:
                 self.parse_statement(text)
 
+            if self.quit:
+                break
+
         print("Goodbye")
+        quit(self.exit_code)
 
     def generate_prompt_text(self):
         if self.indent_level == 0:
@@ -106,7 +116,9 @@ class Interpreter:
     def execute_block(self, text):
         try:
             exec(text.strip(), self.globals, self.locals)
-        except SystemExit:
+        except SystemExit as e:
+            self.quit = True
+            self.exit_code = e.code
             return
         except:
             self.print_traceback(traceback.format_exc())

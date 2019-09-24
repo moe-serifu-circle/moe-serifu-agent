@@ -10,6 +10,7 @@ from pygments.formatters import TerminalFormatter
 from pygments import highlight
 
 from msa.api import MsaApiWrapper 
+from msa.core.loader import load_builtin_modules, load_plugin_modules
 
 
 
@@ -18,7 +19,18 @@ class Interpreter:
         self.prompt_session = PromptSession(
                 lexer=PygmentsLexer(Python3Lexer))
 
-        self.api = MsaApiWrapper().get_api()
+        white_listed_plugins = []
+
+        to_be_registered = []
+        for module in load_builtin_modules():
+            if hasattr(module, "register_client_api") and callable(module.register_client_api):
+                to_be_registered.append(module.register_client_api)
+
+        for module in load_plugin_modules(white_listed_plugins):
+            if hasattr(module, "register_client_api") and callable(module.register_client_api):
+                to_be_registered.append(module.register_client_api)
+
+        self.api = MsaApiWrapper(to_be_registered=to_be_registered).get_api()
 
         self.quit = False
         self.exit_code = 0

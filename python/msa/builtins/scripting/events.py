@@ -1,4 +1,4 @@
-import croniter
+from croniter import croniter
 from schema import Schema, And, Or
 
 from msa.core.event import Event
@@ -8,7 +8,7 @@ class AddScriptEvent(Event):
     """
     AddScriptEvent schema:
     - name: The name of the script, must not include any whitespace.
-    - chrontab: The chrontab interval this script should run on. Refer to https://en.wikipedia.org/wiki/Cron for 
+    - crontab: The crontab interval this script should run on. Refer to https://en.wikipedia.org/wiki/Cron for 
         details on syntax.
     - scripts_contents: The contents of the script to be submitted.
     """
@@ -21,7 +21,7 @@ class AddScriptEvent(Event):
                     str,
                     len,
                     lambda s: (sum(c.isspace() for c in s) == 0)),
-                "chrontab": And(str, len, croniter.is_valid),
+                "crontab": And(str, len, croniter.is_valid),
                 "script_contents": And(str, len)
             })
         )

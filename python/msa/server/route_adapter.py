@@ -81,7 +81,7 @@ class RouteAdapter:
 
         def route_wrapper(func):
             async def wrapped_route(request, raw_data=None):
-                response = await func(request, raw_data)
+                response = await func(request, raw_data) or {}
                 return web.Response(**response)
             return wrapped_route
 

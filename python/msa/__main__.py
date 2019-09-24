@@ -22,9 +22,8 @@ def main(ctx, config_file, log_level):
 @click.pass_context
 def daemon(ctx):
 
-    supervisor.init(RunMode.CLI, ctx.obj)
-
-    supervisor.start()
+    from msa.server import start_server
+    start_server(ctx.obj)
 
 @main.command()
 @click.pass_context

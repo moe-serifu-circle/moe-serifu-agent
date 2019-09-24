@@ -57,7 +57,7 @@ class MsaApiRestClient:
 
 
 class MsaApiWrapper:
-    def __init__(self, host="localhost", port=8080, script_mode=False):
+    def __init__(self, host="localhost", port=8080, script_mode=False, to_be_registered=[]):
 
         self.api = MsaApi()
         self.api.script_mode = script_mode
@@ -66,6 +66,9 @@ class MsaApiWrapper:
         self._registration_frozen = False
 
         register_base_methods(self)
+        for method in to_be_registered:
+            method(self)
+
 
         self._registration_frozen = True
 
@@ -73,6 +76,7 @@ class MsaApiWrapper:
     def register_method(self):
         if not self._registration_frozen:
             def decorator(func):
+                print(func)
                 self.api[func.__name__] = partial(func, self.api)
             return decorator
         else:

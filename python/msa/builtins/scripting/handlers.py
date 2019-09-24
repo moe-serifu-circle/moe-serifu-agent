@@ -77,16 +77,19 @@ class AddScriptHandler(EventHandler):
 
 
     async def handle(self):
+        print("hi")
 
         with self.event_bus.subscribe([events.AddScriptEvent]) as queue:
+            print(queue)
 
             _, event = await queue.get()
+            print(_, event)
 
             if isinstance(event, events.AddScriptEvent):
 
 
-                with self.database.connect() as conn:
-                    result = await conn.execute(ScriptEntity.filter(ScriptEntity.name == event.data["name"]).count())
+                async with self.database.connect() as conn:
+                    result = await conn.execute(select([ScriptEntity]).where(ScriptEntity.name == event.data["name"]).count())
 
                     if result == 0:
                         insert_new_script = ScriptEntity.insert().values(
@@ -148,6 +151,7 @@ class StartupEventHandler(EventHandler):
         async with self.database.connect() as conn:
             result = await conn.execute(select([ScriptEntity]))
             for script in await result.fetchall():
+                print(script)
                 self.script_manager.schedule_script(
                     script.name,
                     script.script_contents,

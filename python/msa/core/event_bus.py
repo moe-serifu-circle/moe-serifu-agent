@@ -52,8 +52,15 @@ class EventBus:
         ----------
         new_event : msa.core.event.Event
             A subclass of msa.core.event.Event to propagate to event handlers."""
-        for queue in self.queues:
-            queue.put_nowait((new_event.priority, new_event))
+        # get queues for event type
+        event_type = type(new_event)
+
+        if event_type not in self.subscriptions.keys():
+            print(f"WARNING: attempted to propagate event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
+        else:
+            queues = self.subscriptions[event_type]
+            for queue in queues:
+                queue.put_nowait((new_event.priority, new_event))
 
 
 

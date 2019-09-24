@@ -17,7 +17,8 @@ def register_endpoints(api_binder):
             "/scripting/script",
             data={
                 "name": name,
-                "script_contents": script_contents
+                "script_contents": script_contents,
+                "crontab": crontab
             })
 
         if not response:

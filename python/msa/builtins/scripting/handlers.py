@@ -77,11 +77,14 @@ class AddScriptHandler(EventHandler):
     def __init__(self, loop, event_bus, logger, config=None):
         super().__init__(loop, event_bus, logger, config)
         self.event_bus.subscribe(events.AddScriptEvent, self.handle_add_script_event)
+        self.script_manager = ScriptManager(loop)
 
     async def handle_add_script_event(self, event):
         result = await ScriptEntity.filter(name=event.data["name"]).first()
 
         if not result:
+            self.logger.debug(f"Script upload recieved for script \"{event.data['name']}\"")
+
             insert_new_script = ScriptEntity.create(
                 name=event.data["name"],
                 crontab=event.data["crontab"],
@@ -89,13 +92,23 @@ class AddScriptHandler(EventHandler):
             )
             await insert_new_script
 
+            # schedule script
+            self.logger.debug(f"Scheduling script \"{event.data['name']}\"")
+            self.script_manager.schedule_script(
+                event.data["name"],
+                event.data["script_contents"],
+                event.data["crontab"])
+
         else:
+            self.logger.error(f"Script upload recieved for script \"{event.data['name']}\", but a script with this name already exists.")
+
             new_event = events.AddScriptFailedEvent()
             new_event.init({
 
                     "error": f"Failed to add script {event.data['name']}." ,
                     "description": "A script with this name already exists.",
-                    "description_verbose": "A script with this name already exists.Delete the script with this name then try again",
+                    "description_verbose": ("A script with this name already exists. Delete the script with "
+                                            "this name then try again, or change the name of the script you are attempting to upload"),
             })
             supervisor.fire_event(
                 new_event
@@ -115,6 +128,7 @@ class TriggerScriptRunHandler(EventHandler):
         self.started = True
 
     async def handle_trigger_script_run_event(self, event):
+        print("hi", event)
         script = await ScriptEntity.filter(name=event.data["name"]).first()
 
         if script:

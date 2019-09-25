@@ -76,7 +76,6 @@ class MsaApiWrapper:
     def register_method(self):
         if not self._registration_frozen:
             def decorator(func):
-                print(func)
                 self.api[func.__name__] = partial(func, self.api)
             return decorator
         else:

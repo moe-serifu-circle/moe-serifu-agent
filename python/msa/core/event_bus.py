@@ -47,19 +47,21 @@ class EventBus:
     async def listen(self):
         """Listens for a new event to be passed into the event bus queue via EventBus.fire_event. """
 
-        _, event = await self.queue.get()
+        while True:
 
-        event_type = type(event)
-        if event_type not in self.subscriptions.keys():
-            print(f"WARNING: propagated event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
+            _, event = await self.queue.get()
 
-        self.task = asyncio.gather(*[
-            callback(event) 
-            for callback in 
-            self.subscriptions[event_type]
-                 ])
+            event_type = type(event)
+            if event_type not in self.subscriptions.keys():
+                print(f"WARNING: propagated event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
 
-        await self.task
+            self.task = asyncio.gather(*[
+                callback(event) 
+                for callback in 
+                self.subscriptions[event_type]
+                     ])
+
+            result = await self.task
 
 
 

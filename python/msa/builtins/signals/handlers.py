@@ -8,8 +8,8 @@ class StartupEventTrigger(EventHandler):
     Fires off a startup event and then exits
     """
 
-    def __init__(self, loop, event_bus, database, logger, config=None):
-        super().__init__(loop, event_bus, database, logger, config)
+    def __init__(self, loop, event_bus, logger, config=None):
+        super().__init__(loop, event_bus, logger, config)
 
     async def init(self):
         # trigger startup hook later

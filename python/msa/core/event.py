@@ -22,6 +22,7 @@ class Event:
         self.schema = schema
         self.data = None
         self.propagate = True
+        self.network_propagate = True
 
 
     def __eq__(self, other):
@@ -82,9 +83,12 @@ class Event:
     def get_metadata(self) -> Dict:
         """Returns the metadata of this event. Used for network serialization of an event."""
         return {
-            "generation_time": self.generation_time,
+            "event_type": self.__class__.__name__,
+            "generation_time": self.generation_time.strftime('%Y-%m-%d %H:%M:%S.%f'),
             "priority": self.priority,
             "propagate": self.propagate,
+            "network_propagate": self.network_propagate,
+            "event_data": self.data,
         }
 
     def set_metadata(self, metadata: Dict) -> None:
@@ -96,7 +100,32 @@ class Event:
             A dictionary containing the event metadata"""
         self.generation_time = metadata.get("generation_time", datetime.datetime.now())
         self.priority = metadata.get("priority", 100)
-        self.propagate = metadata.get("propagate", True)
+        self.propagate = metadata.get("network_propagate", True)
+        self.data = metadata.get("event_data", None)
+        self.schema.validate(self.data)
+
+
+    def __str__(self):
+        return f"<{self.__class__.__module__}.{self.__class__.__name__} at {hex(id(self))} fired at {self.generation_time}"
+
+    @staticmethod
+    def deserialize(event_data):
+        event_type = event_data.get("event_type", None)
+        subclasses =  Event.__subclasses__()
+
+        if not event_type:
+            raise Exception("Attempted to deserialize an event that does not have a defined event type.")
+
+        for cls in subclasses:
+            if event_type == cls.__name__:
+                new_event = cls()
+                new_event.set_metadata(event_data)
+                return new_event
+
+        raise Exception(f"Attempted to deserialize an event of type {event_type} but an event class of that type could not be found.")
+
+
+
 
 
 

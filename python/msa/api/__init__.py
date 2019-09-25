@@ -5,6 +5,7 @@ import time
 from msa.api.base_methods import register_base_methods
 from msa.server import route_adapter
 from msa.server.default_routes import register_default_routes
+from msa.core.loader import load_builtin_modules, load_plugin_modules
 
 
 
@@ -44,6 +45,7 @@ class MsaApiRestClient:
         return self._wrap_api_call(requests.get, endpoint, **kwargs)
 
     def post(self, endpoint, **kwargs):
+        print(kwargs)
         return self._wrap_api_call(requests.post, endpoint, **kwargs)
 
     def put(self, endpoint, **kwargs):
@@ -57,7 +59,7 @@ class MsaApiRestClient:
 
 
 class MsaApiWrapper:
-    def __init__(self, host="localhost", port=8080, script_mode=False, to_be_registered=[]):
+    def __init__(self, host="localhost", port=8080, script_mode=False, white_listed_plugins=[]):
 
         self.api = MsaApi()
         self.api.script_mode = script_mode
@@ -66,6 +68,16 @@ class MsaApiWrapper:
         self._registration_frozen = False
 
         register_base_methods(self)
+
+        to_be_registered = []
+        for module in load_builtin_modules():
+            if hasattr(module, "register_client_api") and callable(module.register_client_api):
+                to_be_registered.append(module.register_client_api)
+
+        for module in load_plugin_modules(white_listed_plugins):
+            if hasattr(module, "register_client_api") and callable(module.register_client_api):
+                to_be_registered.append(module.register_client_api)
+
         for method in to_be_registered:
             method(self)
 
@@ -91,6 +103,7 @@ class MsaServerApi(dict):
         self.__dict__ = self
 
         self.route_adapter = route_adapter
+        self.rest_client = self
 
     def _call_api_route(self, verb, route, payload=None):
         func = self.route_adapter.lookup_route(verb, route)
@@ -105,21 +118,36 @@ class MsaServerApi(dict):
     def get(self, route):
         self._call_api_route("get", route)
 
-    def post(self, route, payload=None):
-        self._call_api_route("post", route, payload=None)
+    def post(self, route, data=None, json=None):
+        self._call_api_route("post", route, payload=data or json)
 
-    def put(self, route, payload=None):
-        self._call_api_route("put", route, payload=None)
+    def put(self, route, data=None, json=None):
+        self._call_api_route("put", route, payload=data or json)
 
-    def delete(self, route, payload=None):
-        self._call_api_route("delete", route, payload=None)
+    def delete(self, route, data=None, json=None):
+        self._call_api_route("delete", route, payload=data or json)
 
 class MsaLocalApiWrapper:
-    def __init__(self):
+    def __init__(self, white_listed_plugins=[]):
         self.api = MsaServerApi()
 
         self._registration_frozen = False
         register_base_methods(self)
+
+        to_be_registered = []
+        for module in load_builtin_modules():
+            if hasattr(module, "register_client_api") and callable(module.register_client_api):
+                to_be_registered.append(module.register_client_api)
+
+        for module in load_plugin_modules(white_listed_plugins):
+            if hasattr(module, "register_client_api") and callable(module.register_client_api):
+                to_be_registered.append(module.register_client_api)
+
+        for method in to_be_registered:
+            method(self)
+
+
+
 
     def register_method(self):
         def decorator(func):

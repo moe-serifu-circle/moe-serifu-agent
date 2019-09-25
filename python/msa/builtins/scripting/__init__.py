@@ -6,6 +6,7 @@ from msa.builtins.scripting import client_api
 handler_factories = [
     handlers.AddScriptHandler,
     handlers.StartupEventHandler,
+    handlers.TriggerScriptRunHandler,
 ]
 
 

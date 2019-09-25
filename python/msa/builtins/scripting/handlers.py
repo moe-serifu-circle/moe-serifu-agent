@@ -40,10 +40,11 @@ class ScriptManager:
         else:
             # run once and exit
             exec(script_content.strip(), self.globals, {})
-
         self.script_finished(name)
 
+
     def schedule_script(self, name, script_content, crontab_definition=None):
+
         if name not in self.running_scripts:
 
             script_coro = partial(self.run_script, name, script_content, crontab_definition)
@@ -85,19 +86,24 @@ class AddScriptHandler(EventHandler):
         if not result:
             self.logger.debug(f"Script upload recieved for script \"{event.data['name']}\"")
 
+            crontab = event.data.get("crontab", None)
+
             insert_new_script = ScriptEntity.create(
                 name=event.data["name"],
-                crontab=event.data["crontab"],
+                crontab=crontab,
                 script_contents=event.data["script_contents"]
             )
             await insert_new_script
 
             # schedule script
-            self.logger.debug(f"Scheduling script \"{event.data['name']}\"")
-            self.script_manager.schedule_script(
-                event.data["name"],
-                event.data["script_contents"],
-                event.data["crontab"])
+            if crontab:
+                self.logger.debug(f"Scheduling script \"{event.data['name']}\"")
+                self.script_manager.schedule_script(
+                    event.data["name"],
+                    event.data["script_contents"],
+                    crontab)
+            else:
+                self.logger.debug("Not scheduling uploaded script \"{event.data['name']} as crontabe is None.")
 
         else:
             self.logger.error(f"Script upload recieved for script \"{event.data['name']}\", but a script with this name already exists.")
@@ -128,10 +134,11 @@ class TriggerScriptRunHandler(EventHandler):
         self.started = True
 
     async def handle_trigger_script_run_event(self, event):
-        print("hi", event)
+        print(event)
+
         script = await ScriptEntity.filter(name=event.data["name"]).first()
 
-        if script:
+        if script is not None:
             self.script_manager.schedule_script(
                 script.name,
                 script.script_contents,
@@ -152,10 +159,11 @@ class StartupEventHandler(EventHandler):
 
     async def handle_startup_event(self, event):
         for script in await ScriptEntity.all():
-            self.script_manager.schedule_script(
-                script.name,
-                script.script_contents,
-                script.crontab)
+            if script.crontab is not None:
+                self.script_manager.schedule_script(
+                    script.name,
+                    script.script_contents,
+                    script.crontab)
 
         self.event_bus.unsubscribe(signal_events.StartupEvent, self.handle_startup_event)
 

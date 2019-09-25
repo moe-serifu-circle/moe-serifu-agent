@@ -8,7 +8,7 @@ from tortoise import fields
 class ScriptEntity(Model):
     id = fields.IntField(pk=True)
     name = fields.TextField()
-    crontab = fields.TextField()
+    crontab = fields.TextField(null=True)
     created = fields.DatetimeField(auto_now_add=True)
     last_edited = fields.DatetimeField(auto_now=True)
     last_run = fields.DatetimeField(auto_now_add=True)

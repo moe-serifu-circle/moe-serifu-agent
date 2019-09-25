@@ -6,9 +6,7 @@ class RouteAdapter:
     def __init__(self):
         self.routes = {"get" : {}, "put": {}, "post": {}, "delete": {}}
 
-
     def _register_route(self, verb, route):
-        print(verb, route)
         if route in self.routes[verb]:
             raise Exception("Route GET {} already registered".format(route))
 
@@ -82,6 +80,10 @@ class RouteAdapter:
         def route_wrapper(func):
             async def wrapped_route(request, raw_data=None):
                 response = await func(request, raw_data) or {}
+                if "json" in response:
+                    j = response["json"]
+                    del response["json"]
+                    response["data"] = json.dumps(j)
                 return web.Response(**response)
             return wrapped_route
 

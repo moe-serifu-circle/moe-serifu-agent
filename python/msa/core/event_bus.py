@@ -25,8 +25,9 @@ class EventBus:
         self.propagation_hooks = []
 
         self.subscriptions = {}
-
         self.queue = asyncio.PriorityQueue(loop=self.loop)
+
+        self.task = None
 
 
 
@@ -52,8 +53,15 @@ class EventBus:
         if event_type not in self.subscriptions.keys():
             print(f"WARNING: propagated event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
 
-        for callback in list(self.subscriptions[event_type]):
-            await callback(event)
+        self.task = asyncio.gather(*[
+            callback(event) 
+            for callback in 
+            self.subscriptions[event_type]
+                 ])
+
+        await self.task
+
+
 
     async def fire_event(self, new_event):
         """Fires an event to each event handler via its corresponding event queue.

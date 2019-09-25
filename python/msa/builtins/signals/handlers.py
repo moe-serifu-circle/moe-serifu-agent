@@ -11,7 +11,7 @@ class StartupEventTrigger(EventHandler):
     def __init__(self, loop, event_bus, database, logger, config=None):
         super().__init__(loop, event_bus, database, logger, config)
 
-    def init(self):
+    async def init(self):
         # trigger startup hook later
         self.loop.call_later(1, self.trigger_event)
         

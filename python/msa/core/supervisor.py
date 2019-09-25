@@ -22,8 +22,9 @@ class Supervisor:
     def __init__(self):
         self.config_manager = None
         self.stop_loop = False
-        self.stop_main_coro = None
         self.stop_future = None
+
+        self.coroutine_futures = []
 
 
         self.loaded_modules = []
@@ -182,35 +183,19 @@ class Supervisor:
             startup scenarios.
         """
 
-        self.logger.info("Starting main coroutine.")
+        self.logger.info("Starting startup coroutine.")
 
-        try:
-            with suppress(asyncio.CancelledError):
-                self.logger.debug("Priming main coroutine")
-                primed_coro = self.main_coro(additional_coros)
-                self.logger.debug("Main coroutine primed, executing in the loop.")
-                self.loop.create_task(primed_coro)
-                self.logger.debug("Finished running main coroutine.")
-        #except KeyboardInterrupt:
-        #   self.logger.info("Keyboard interrupt (Ctrl-C) encountered, beginning shutdown.")
-        #   print("Ctrl-C Pressed. Quitting...")
-        finally:
-            pass
-            #self.stop()
-            #self.loop.run_until_complete(self.loop.shutdown_asyncgens())
-            #self.logger.info("Stopping loop.")
-            #self.loop.close()
-            #self.logger.info("Exiting.")
-            #sys.exit(0)
+        with suppress(asyncio.CancelledError):
+            self.logger.debug("Priming startup coroutine")
+            primed_coro = self.startup_coroutine(additional_coros)
+            self.logger.debug("Startup coroutine primed, executing in the loop.")
+            self.loop.create_task(primed_coro)
+            self.logger.debug("Finished running startup coroutine.")
 
-    def stop(self):
-        """Schedules the supervisor to stop, and exit the application."""
-        self.logger.info("Schedule the main coroutine to stop.")
-        self.stop_future = asyncio.ensure_future(self.exit())
 
     async def exit(self):
         """Shuts down running tasks and stops the event loop, exiting the application."""
-        self.logger.info("Stopping handlers, and main coroutine.")
+        self.logger.info("Stopping handlers.")
         self.stop_loop = True
 
         self.logger.debug("Shutting down executor threads.")
@@ -220,28 +205,30 @@ class Supervisor:
         for callback in self.shutdown_callbacks:
             callback()
 
-        await asyncio.sleep(0.5) # let most of the handlers finish their current loop
-        await asyncio.sleep(0.5) # let most of the handlers finish their current loop
 
-        self.stop_main_coro = True
-
-        self.logger.debug("Cancel any remaining tasks.")
-        if sys.version_info[0] == 3 and sys.version_info[1] == 6:
-            pending = asyncio.Task.all_tasks()
-            current = asyncio.Task.current_task()
-        else:
-            pending = asyncio.all_tasks() # get all tasks
-            current = asyncio.current_task()
-
-        pending.remove(current)  # except this task
-        pending.remove(self.main_coro_task)
-
-        for task in pending:
-            if not task.done():
+        self.logger.debug("Exit: Cancelling remaining futures.")
+        for future in self.coroutine_futures:
+            if future is not None:
                 with suppress(asyncio.CancelledError):
-                    task.cancel()
-                    await asyncio.sleep(0.01)
-                    await task
+                    await future
+
+        self.logger.debug("Exit: Cancelling event bus futures.")
+        with suppress(asyncio.CancelledError):
+            if self.event_bus.task is not None:
+                self.event_bus.task.cancel()
+                await self.event_bus.task
+
+        # cancel and suppress exit future
+        if self.stop_future is not None:
+            asyncio.gather(self.stop_future)
+
+
+        #await asyncio.sleep(0.5) # let most of the handlers finish their current loop
+        #await asyncio.sleep(0.5) # let most of the handlers finish their current loop
+
+        self.logger.info("Exit: finished shutting down supervisor.")
+        print("\rGoodbye!\n")
+
 
 
 
@@ -257,11 +244,10 @@ class Supervisor:
         def fire():
             self.loop.create_task(self.event_bus.fire_event(new_event))
 
-
         self.loop.call_soon(fire)
 
 
-    async def main_coro(self, additional_coros=[]):
+    async def startup_coroutine(self, additional_coros=[]):
         """The main coroutine that manages starting the handlers, and waiting for a shutdown signal.
 
         Parameters
@@ -270,13 +256,7 @@ class Supervisor:
             Additional coroutines to be run in the event loop.
 
         """
-        self.logger.debug("Main coroutine executing.")
-
-        if sys.version_info[0] == 3 and sys.version_info[1] == 6:
-            self.main_coro_task = asyncio.Task.current_task()
-        else:
-            self.main_coro_task = asyncio.current_task()
-
+        self.logger.debug("Startup coroutine executing.")
 
         # ### Initialize database requirements for modules
         self.logger.info("Initializing database add-ons")
@@ -286,53 +266,32 @@ class Supervisor:
                 await module.entity_setup()
                 self.logger.debug(f"Finished initializing database for module msa.{module.__name__}")
 
-        self.logger.debug("Main Coro: Call async init on handlers.")
+        self.logger.debug("Startup Coroutine: Call async init on handlers.")
         init_coros = [
             handler.init()
             for handler in self.initialized_event_handlers
         ]
 
-        self.logger.debug("Main Coro: Prime EventBus coroutine.")
+        await asyncio.gather(*init_coros)
+
+        self.logger.debug("Startup Coroutine: Prime EventBus coroutine.")
         primed_coros = [
             self.event_bus.listen()
         ]
 
-        self.logger.debug("Main Coro: Prime additional coroutines: {}".format(len(additional_coros)))
+        self.logger.debug("Startup Coroutine: Prime additional coroutines: {}".format(len(additional_coros)))
         if len(additional_coros) > 0:
             primed_coros.extend(additional_coros)
 
-        futures = None
 
         try:
             self.logger.debug("Beginning handler execution.")
             with suppress(asyncio.CancelledError):
-                futures = await asyncio.gather(*primed_coros)
+                self.coroutine_futures = await asyncio.gather(*primed_coros)
         except Exception as err:
             self.logger.error(err, traceback.print_exc())
 
-        self.logger.debug("Main Coro: Sleep until shutdown is started.")
-        while not self.stop_main_coro:
-            await asyncio.sleep(0.5)
-
-        self.logger.debug("Main Coro: Wakeup for shutdown.")
-
-        if futures is not None:
-            for future in futures:
-                if future is not None:
-                    with suppress(asyncio.CancelledError):
-                        await future
-
-        # cancel and suppress exit future
-        if self.stop_future is not None:
-            asyncio.gather(self.stop_future)
-
-        self.logger.info("Main coro: finishing execution.")
-
-        print("\rGoodbye!\n")
-
-
-
-
+        self.logger.debug("Startup Coroutine: Finished startup")
 
 
     def should_stop(self):

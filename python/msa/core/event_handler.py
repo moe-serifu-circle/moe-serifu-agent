@@ -1,8 +1,5 @@
 import asyncio
 from typing import Dict, Optional
-import traceback
-from contextlib import suppress
-import asyncio
 import logging
 
 import msa
@@ -45,29 +42,10 @@ class EventHandler:
         started."""
         pass
 
-    async def handle_wrapper(self):
-        """A method that wraps self.handle and handles repeatedly calling the handler while the system is still running.
-        Called automatically by the supervisor during startup."""
-
-        from msa.core import supervisor
-
-        while not supervisor.should_stop() and not self._canceled:
-            try:
-                with suppress(asyncio.CancelledError):
-                    await self.handle()
-            except Exception as err:
-                traceback.print_exc()
-            await asyncio.sleep(0.01)
-
-
-    async def handle(self):
+    async def handle(self, event):
         """An abstract method which must be overwritten. Once the system is started, the handle method will be called
         repeatedly until the system shuts down. The handler must be non-blocking."""
         raise NotImplementedError()
-
-    def cancel_reschedule(self):
-        """ Prevents this event handler from ever being rescheduled."""
-        self._canceled = True
 
 
 

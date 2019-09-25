@@ -11,10 +11,9 @@ class StartupEventTrigger(EventHandler):
     def __init__(self, loop, event_bus, database, logger, config=None):
         super().__init__(loop, event_bus, database, logger, config)
 
-    async def handle(self):
-        # prevent handler from being rescheduled
+    def init(self):
+        # trigger startup hook later
         self.loop.call_later(1, self.trigger_event)
-        self.cancel_reschedule()
         
 
     def trigger_event(self):

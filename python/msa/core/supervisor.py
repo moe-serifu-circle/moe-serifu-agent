@@ -291,12 +291,10 @@ class Supervisor:
             handler.init()
             for handler in self.initialized_event_handlers
         ]
-        await asyncio.gather(*init_coros)
 
-        self.logger.debug("Main Coro: Prime handler coroutines.")
+        self.logger.debug("Main Coro: Prime EventBus coroutine.")
         primed_coros = [
-            handler.handle_wrapper()
-            for handler in self.initialized_event_handlers
+            self.event_bus.listen()
         ]
 
         self.logger.debug("Main Coro: Prime additional coroutines: {}".format(len(additional_coros)))

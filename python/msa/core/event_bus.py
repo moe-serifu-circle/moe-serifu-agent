@@ -26,24 +26,34 @@ class EventBus:
 
         self.subscriptions = {}
 
-        self.queues = []
+        self.queue = asyncio.PriorityQueue(loop=self.loop)
 
 
-    def subscribe(self, event_types):
-        new_queue = asyncio.PriorityQueue(loop=self.loop)
 
-        for event_type in event_types:
-            if event_type not in self.subscriptions:
-                self.subscriptions[event_type] = {new_queue}
-            else:
-                self.subscriptions[event_type].add(new_queue)
+    def subscribe(self, event_type, callback):
 
-        return Subscription(self, new_queue)
+        if event_type not in self.subscriptions:
+            self.subscriptions[event_type] = {callback}
+        else:
+            self.subscriptions[event_type].add(callback)
 
-    def unsubscribe(self, queue):
-        for _,subscriptions in self.subscriptions.items():
-            if queue in subscriptions:
-                subscriptions.remove(queue)
+
+    def unsubscribe(self, event_type, callback):
+        if event_type in self.subscriptions:
+            if callback in self.subscriptions[event_type]:
+                self.subscriptions[event_type].remove(callback)
+
+    async def listen(self):
+        """Listens for a new event to be passed into the event bus queue via EventBus.fire_event. """
+
+        _, event = await self.queue.get()
+
+        event_type = type(event)
+        if event_type not in self.subscriptions.keys():
+            print(f"WARNING: propagated event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
+
+        for callback in list(self.subscriptions[event_type]):
+            await callback(event)
 
     async def fire_event(self, new_event):
         """Fires an event to each event handler via its corresponding event queue.
@@ -58,9 +68,7 @@ class EventBus:
         if event_type not in self.subscriptions.keys():
             print(f"WARNING: attempted to propagate event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
         else:
-            queues = self.subscriptions[event_type]
-            for queue in queues:
-                queue.put_nowait((new_event.priority, new_event))
+            self.queue.put_nowait((new_event.priority, new_event))
 
 
 

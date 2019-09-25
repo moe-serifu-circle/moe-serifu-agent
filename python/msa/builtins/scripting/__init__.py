@@ -8,7 +8,6 @@ handler_factories = [
     handlers.StartupEventHandler,
 ]
 
-entity_setup = entities.setup
 
 entities = [
     entities.ScriptEntity,

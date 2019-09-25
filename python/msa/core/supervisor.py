@@ -12,6 +12,8 @@ from msa.core.event_bus import EventBus
 from msa.core.config_manager import ConfigManager
 from msa.server.route_adapter import RouteAdapter
 from msa.api import MsaLocalApiWrapper
+from msa.data import __models__
+
 
 class Supervisor:
     """The supervisor is responsible for managing the execution of the application and orchestrating the event system.
@@ -81,7 +83,7 @@ class Supervisor:
 
         self.logger.info("Finished setting granular log levels.")
 
-    def init(self, loop, cli_config, database, route_adapter):
+    def init(self, loop, cli_config, route_adapter):
         """Initializes the supervisor.
 
         Parameters
@@ -90,8 +92,6 @@ class Supervisor:
             An asyncio event loop the supervisor should use.
         cli_config: Dict
             A dictionary containing configuration options derived from the command line interface.
-        database: a aio sqlalchemy database instance
-            **Fix docstrings**
         route_adapter: ** fix docstrings **
         """
         if not os.environ.get("TEST"):
@@ -101,9 +101,8 @@ class Supervisor:
             # block getting a loop if we are running unit tests
             # helps suppress a warning.
 
-        self.database = database
 
-        client_api_binder= MsaLocalApiWrapper(database)
+        client_api_binder= MsaLocalApiWrapper()
         server_api_binder = route_adapter
 
         # ### PLACEHOLDER - Load Configuration file here --
@@ -144,6 +143,9 @@ class Supervisor:
             if hasattr(module, "register_server_api") and callable(module.register_server_api):
                 module.register_server_api(server_api_binder)
 
+            if hasattr(module, "entities") and isinstance(module.entities, list):
+                __models__.extend(module.entities)
+
             self.logger.debug("Registering handlers for module msa.{}".format(module.__name__))
             for handler in module.handler_factories:
 
@@ -156,7 +158,7 @@ class Supervisor:
 
                 module_config = config["module_config"].get(full_namespace, None)
 
-                inited_handler = handler(self.loop, self.event_bus, self.database, handler_logger, module_config)
+                inited_handler = handler(self.loop, self.event_bus, handler_logger, module_config)
 
                 self.initialized_event_handlers.append(inited_handler)
                 self.handler_lookup[handler] = inited_handler
@@ -281,7 +283,7 @@ class Supervisor:
         for module in self.loaded_modules:
             if hasattr(module, "entity_setup"):
                 self.logger.debug(f"Initializing database for module msa.{module.__name__}")
-                await module.entity_setup(self.database)
+                await module.entity_setup()
                 self.logger.debug(f"Finished initializing database for module msa.{module.__name__}")
 
         self.logger.debug("Main Coro: Call async init on handlers.")

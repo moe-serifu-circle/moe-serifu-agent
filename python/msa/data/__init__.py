@@ -1,18 +1,21 @@
-from sqlalchemy_aio import ASYNCIO_STRATEGY
+from tortoise import Tortoise
 
-from sqlalchemy import (
-    Column, Integer, MetaData, Table, Text, create_engine, select)
-from sqlalchemy.schema import CreateTable, DropTable
+from tortoise.backends.base.config_generator import generate_config
 
+__models__ = []
 
-#https://pypi.org/project/sqlalchemy-aio/
 
 async def start_db_engine():
-    engine = create_engine(
-        # In-memory sqlite database cannot be accessed from different
-        # threads, use file.
-        'sqlite:///./msa.db', strategy=ASYNCIO_STRATEGY
+    await Tortoise.init(
+        db_url='sqlite://./msa.db',
+        modules={'models': ['msa.data']}
     )
+    await Tortoise.generate_schemas(safe=True)
 
-    return engine
+
+async def stop_db_engine(_):
+    await Tortoise.close_connections()
+
+
+
 

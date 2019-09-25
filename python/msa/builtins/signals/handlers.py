@@ -13,12 +13,15 @@ class StartupEventTrigger(EventHandler):
 
     async def handle(self):
         # prevent handler from being rescheduled
+        self.loop.call_later(1, self.trigger_event)
+        self.cancel_reschedule()
+        
 
+    def trigger_event(self):
         new_event = events.StartupEvent()
         new_event.init({
             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d, %H:%M:%S:%f")
         })
-        await self.event_bus.fire_event(new_event)
+        supervisor.fire_event(new_event)
 
-        self.cancel_reschedule()
 

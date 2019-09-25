@@ -6,13 +6,13 @@ from msa.core.event_handler import EventHandler
 from msa.core import supervisor
 from msa.builtins.scripting import events
 from msa.builtins.scripting.entities import ScriptEntity
+from msa.builtins.signals import events as signal_events
 from msa.api import MsaLocalApiWrapper
-from sqlalchemy.sql import select
 
 
 class ScriptManager:
     __shared_state = None
-    def __init__(self, loop=None, database=None):
+    def __init__(self, loop=None):
 
         if ScriptManager.__shared_state is None:
             ScriptManager.__shared_state = {}
@@ -21,7 +21,7 @@ class ScriptManager:
             self.loop = loop
             self.running_scripts = {}
 
-            self.local_api = MsaLocalApiWrapper(database).get_api()
+            self.local_api = MsaLocalApiWrapper().get_api()
 
             self.globals = {
                 "msa_api":  self.local_api
@@ -36,6 +36,7 @@ class ScriptManager:
         if crontab_definition is not None:
             while True:
                 await aiocron.crontab(crontab_definition).next()
+                exec(script_content.strip(), self.globals, {})
         else:
             # run once and exit
             exec(script_content.strip(), self.globals, {})
@@ -46,7 +47,8 @@ class ScriptManager:
         if name not in self.running_scripts:
 
             script_coro = partial(self.run_script, name, script_content, crontab_definition)
-            self.running_scripts[name] = self.loop.create_task(script_coro)
+
+            self.running_scripts[name] = self.loop.create_task(script_coro())
 
     def script_finished(self, name):
         del self.running_scripts[name]
@@ -72,92 +74,86 @@ class AddScriptHandler(EventHandler):
     Handles AddScript Events
     """
 
-    def __init__(self, loop, event_bus, database, logger, config=None):
-        super().__init__(loop, event_bus, database, logger, config)
+    def __init__(self, loop, event_bus, logger, config=None):
+        super().__init__(loop, event_bus, logger, config)
 
 
     async def handle(self):
-        print("hi")
 
         with self.event_bus.subscribe([events.AddScriptEvent]) as queue:
-            print(queue)
-
             _, event = await queue.get()
-            print(_, event)
 
             if isinstance(event, events.AddScriptEvent):
 
+                result = await ScriptEntity.filter(name=event.data["name"]).first()
 
-                async with self.database.connect() as conn:
-                    result = await conn.execute(select([ScriptEntity]).where(ScriptEntity.name == event.data["name"]).count())
+                if not result:
+                    insert_new_script = ScriptEntity.create(
+                        name=event.data["name"],
+                        crontab=event.data["crontab"],
+                        script_contents=event.data["script_contents"]
+                    )
+                    await insert_new_script
 
-                    if result == 0:
-                        insert_new_script = ScriptEntity.insert().values(
-                            name=event.data["name"],
-                            crontab=event.data["crontab"],
-                            script_contents=event.data["script_contents"]
-                        )
-                        await conn.execute(insert_new_script)
+                else:
+                    new_event = events.AddScriptFailedEvent()
+                    new_event.init({
 
-                        self.loop.create_task()
-                    else:
-                        new_event = events.AddScriptFailedEvent()
-                        new_event.init({
-                                "error": f"Failed to add script {event.data['name']}." ,
-                                "description": "A script with this name already exists.",
-                                "description_verbose": "A script with this name already exists.Delete the script with this name then try again",
-                        })
-                        await supervisor.fire_event(
-                            new_event
-                        )
+                            "error": f"Failed to add script {event.data['name']}." ,
+                            "description": "A script with this name already exists.",
+                            "description_verbose": "A script with this name already exists.Delete the script with this name then try again",
+                    })
+                    supervisor.fire_event(
+                        new_event
+                    )
                 
 
 class TriggerScriptRunHandler(EventHandler):
     """
     Handles TriggerScriptRun Events
     """
-    def __init__(self, loop, event_bus, database, logger, config=None):
-        super().__init__(loop, event_bus, database, logger, config)
-        self.script_manager = ScriptManager(loop, database)
+    def __init__(self, loop, event_bus, logger, config=None):
+        super().__init__(loop, event_bus, logger, config)
+        self.script_manager = ScriptManager(loop )
 
         self.started = True
 
     async def handle(self):
         with self.event_bus.subscribe([events.TriggerScriptRunEvent]) as q:
             event = await q.get()
-            with self.database.connect() as conn:
-                result = await conn.execute(
-                    select(ScriptEntity).where(ScriptEntity.c.name == event.data["name"])
-                )
 
+            script = await ScriptEntity.filter(name=event.data["name"]).first()
+
+            if script:
                 self.script_manager.schedule_script(
                     script.name,
                     script.script_contents,
                     None)
-
-
+            else:
+                self.logger.warn(f"Attempted to trigger script run for script \"{script.name}\" but this script does not exist in the database.")
 
     
 class StartupEventHandler(EventHandler):
     """
     Handles Startup Event to start the script manager
     """
-    def __init__(self, loop, event_bus, database, logger, config=None):
-        super().__init__(loop, event_bus, database, logger, config)
-        self.script_manager = ScriptManager(loop, database)
+    def __init__(self, loop, event_bus, logger, config=None):
+        super().__init__(loop, event_bus, logger, config)
+        self.script_manager = ScriptManager(loop)
 
 
     async def handle(self):
-        async with self.database.connect() as conn:
-            result = await conn.execute(select([ScriptEntity]))
-            for script in await result.fetchall():
-                print(script)
-                self.script_manager.schedule_script(
-                    script.name,
-                    script.script_contents,
-                    script.crontab)
+        with self.event_bus.subscribe([signal_events.StartupEvent]) as q:
+            _, event = await q.get()
+            
+            if isinstance(event, signal_events.StartupEvent):
+                for script in await ScriptEntity.all():
+                    self.script_manager.schedule_script(
+                        script.name,
+                        script.script_contents,
+                        script.crontab)
 
-        self.cancel_reschedule()
+                self.cancel_reschedule()
 
 
 

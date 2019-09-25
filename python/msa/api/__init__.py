@@ -87,12 +87,11 @@ class MsaApiWrapper:
 
 
 class MsaServerApi(dict):
-    def __init__(self, database):
+    def __init__(self):
         super(MsaServerApi, self).__init__()
         self.__dict__ = self
 
         self.route_adapter = route_adapter
-        self.database = database
 
     def _call_api_route(self, verb, route, payload=None):
         func = self.route_adapter.lookup_route(verb, route)
@@ -100,7 +99,7 @@ class MsaServerApi(dict):
             raise Exception(f"{self.__cls__.__name}: no api route {verb}:{route} exists.")
 
         if payload is not None:
-            func(None, raw_data=payload, database=self.database)
+            func(None, raw_data=payload)
         else:
             func(None)
 
@@ -117,8 +116,8 @@ class MsaServerApi(dict):
         self._call_api_route("delete", route, payload=None)
 
 class MsaLocalApiWrapper:
-    def __init__(self, database):
-        self.api = MsaServerApi(database)
+    def __init__(self):
+        self.api = MsaServerApi()
 
         self._registration_frozen = False
         register_base_methods(self)

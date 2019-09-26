@@ -1,5 +1,4 @@
 from msa.version import v as msa_version
-from msa.core import supervisor
 
 
 def register_default_routes(route_adapter):

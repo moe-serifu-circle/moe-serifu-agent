@@ -2,8 +2,6 @@ import os
 import logging
 import click
 
-from msa.core import supervisor
-
 @click.group(invoke_without_command=True)
 @click.option("--config-file", default="msa_config.json", help="The config file to use")
 @click.option('--log-level', help="Override the log level defined in the config file. Can be either: "
@@ -49,8 +47,6 @@ def cli(ctx, script):
             print("-s flag provided. Unable to load script {}. Please verify that the file exists and the provided path is correct.".format(script))
     else:
         interpreter.start()
-
-
 
 
 if __name__ == "__main__":

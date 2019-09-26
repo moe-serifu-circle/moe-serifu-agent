@@ -38,6 +38,20 @@ def register_base_methods(api_wrapper):
                 exit(1)
 
     @api_wrapper.register_method()
+    def get_version(self):
+        response = self.rest_client.get("/version")
+
+        if not response:
+            print("Unable to verify server version. Exiting.")
+            # we have been unable to connect to the server and should exit in this case
+            exit(1)
+
+        if response.status_code != 200:
+            raise Exception(response.raw)
+
+        return response.text
+
+    @api_wrapper.register_method()
     def check_connection(self):
         n = 0
         fail = 3

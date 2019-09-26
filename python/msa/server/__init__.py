@@ -27,7 +27,10 @@ def start_server(config_context):
     loop = asyncio.get_event_loop()
 
     # init supervisor
-    from msa.core import supervisor
+    from msa import core as msa_core
+    from msa.core.supervisor import Supervisor
+    supervisor =  Supervisor()
+    msa_core.supervisor = supervisor
     app["supervisor"] = supervisor
     supervisor.init(loop, app["config_context"], route_adapter)
     loop.run_until_complete(start_db_engine())

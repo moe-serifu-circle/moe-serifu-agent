@@ -11,7 +11,8 @@ from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
 from msa.core.config_manager import ConfigManager
 from msa.server.route_adapter import RouteAdapter
-from msa.api import MsaLocalApiWrapper
+from msa.api import get_api 
+from msa.api.context import ApiContext
 from msa.data import __models__
 
 
@@ -103,7 +104,7 @@ class Supervisor:
             # helps suppress a warning.
 
 
-        client_api_binder= MsaLocalApiWrapper(loop)
+        client_api_binder= get_api(ApiContext.local, loop=loop)
         server_api_binder = route_adapter
 
         # ### PLACEHOLDER - Load Configuration file here --

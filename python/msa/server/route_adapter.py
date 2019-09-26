@@ -5,6 +5,7 @@ import json
 class RouteAdapter:
     def __init__(self):
         self.routes = {"get" : {}, "put": {}, "post": {}, "delete": {}}
+        self.sync_routes = { "get": {}, "put": {}, "post": {}, "delete":{}}
 
     def _register_route(self, verb, route):
         if route in self.routes[verb]:
@@ -79,7 +80,20 @@ class RouteAdapter:
 
         def route_wrapper(func):
             async def wrapped_route(request, raw_data=None):
-                response = await func(request, raw_data) or {}
+                if raw_data:
+                    payload = raw_data
+                else:
+                    dump = await request.read()
+                    decoded = dump.decode("utf-8")
+                    if len(decoded) != 0:
+                        payload = json.loads(decoded)
+                    else: 
+                        payload = None
+
+                async def async_wrap(payload):
+                    return func(payload)
+
+                response = await async_wrap(payload)
                 if "json" in response:
                     j = response["json"]
                     del response["json"]

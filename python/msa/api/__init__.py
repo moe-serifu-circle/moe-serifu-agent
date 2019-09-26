@@ -98,9 +98,10 @@ class MsaApiWrapper:
 
 
 class MsaServerApi(dict):
-    def __init__(self):
+    def __init__(self, loop):
         super(MsaServerApi, self).__init__()
         self.__dict__ = self
+        self.loop = loop
 
         self.route_adapter = route_adapter
         self.rest_client = self
@@ -108,10 +109,13 @@ class MsaServerApi(dict):
     def _call_api_route(self, verb, route, payload=None):
         func = self.route_adapter.lookup_route(verb, route)
         if func is None:
-            raise Exception(f"{self.__cls__.__name}: no api route {verb}:{route} exists.")
+            raise Exception(f"{self.__class__.__name__}: no api route {verb}:{route} exists.")
+
+        if not callable(func):
+            raise Exception(f"{self.__class__.__name__}: api route is not callable: {func}")
 
         if payload is not None:
-            func(None, raw_data=payload)
+            func(payload)
         else:
             func(None)
 
@@ -126,10 +130,14 @@ class MsaServerApi(dict):
 
     def delete(self, route, data=None, json=None):
         self._call_api_route("delete", route, payload=data or json)
+        
 
 class MsaLocalApiWrapper:
-    def __init__(self, white_listed_plugins=[]):
-        self.api = MsaServerApi()
+    def __init__(self, loop=None, white_listed_plugins=[]):
+        self.loop = loop
+        self.api = MsaServerApi(loop)
+
+        MsaLocalApiWrapper.api = self.api
 
         self._registration_frozen = False
         register_base_methods(self)
@@ -146,9 +154,6 @@ class MsaLocalApiWrapper:
         for method in to_be_registered:
             method(self)
 
-
-
-
     def register_method(self):
         def decorator(func):
             if not self._registration_frozen:
@@ -160,8 +165,9 @@ class MsaLocalApiWrapper:
     def freeze_registration(self):
         self._registration_frozen = True
 
-    def get_api(self):
-        return self.api
+    @classmethod
+    def get_api(cls):
+        return cls.api
 
 
 

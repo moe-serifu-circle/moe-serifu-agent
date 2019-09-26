@@ -5,6 +5,7 @@ import webbrowser
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.history import FileHistory
 from pygments.lexers.python import Python3Lexer, Python3TracebackLexer
 from pygments.formatters import TerminalFormatter
 from pygments import highlight
@@ -15,8 +16,10 @@ from msa.api import MsaApiWrapper
 
 class Interpreter:
     def __init__(self):
+        history_file = FileHistory('.msa_cli_history')
         self.prompt_session = PromptSession(
-                lexer=PygmentsLexer(Python3Lexer))
+                lexer=PygmentsLexer(Python3Lexer),
+                history=history_file)
 
         self.api = MsaApiWrapper().get_api()
 

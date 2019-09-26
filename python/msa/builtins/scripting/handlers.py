@@ -21,7 +21,7 @@ class ScriptManager:
             self.loop = loop
             self.running_scripts = {}
 
-            self.local_api = MsaLocalApiWrapper().get_api()
+            self.local_api = MsaLocalApiWrapper.get_api()
 
             self.globals = {
                 "msa_api":  self.local_api
@@ -134,8 +134,6 @@ class TriggerScriptRunHandler(EventHandler):
         self.started = True
 
     async def handle_trigger_script_run_event(self, event):
-        print(event)
-
         script = await ScriptEntity.filter(name=event.data["name"]).first()
 
         if script is not None:

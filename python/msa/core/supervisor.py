@@ -103,7 +103,7 @@ class Supervisor:
             # helps suppress a warning.
 
 
-        client_api_binder= MsaLocalApiWrapper()
+        client_api_binder= MsaLocalApiWrapper(loop)
         server_api_binder = route_adapter
 
         # ### PLACEHOLDER - Load Configuration file here --

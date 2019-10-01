@@ -22,7 +22,7 @@ class Event:
         self.schema = schema
         self.data = None
         self.propagate = True
-        self.network_propagate = True
+        self._network_propagate = False
 
 
     def __eq__(self, other):
@@ -87,7 +87,7 @@ class Event:
             "generation_time": self.generation_time.strftime('%Y-%m-%d %H:%M:%S.%f'),
             "priority": self.priority,
             "propagate": self.propagate,
-            "network_propagate": self.network_propagate,
+            "network_propagate": self._network_propagate,
             "event_data": self.data,
         }
 
@@ -100,7 +100,8 @@ class Event:
             A dictionary containing the event metadata"""
         self.generation_time = metadata.get("generation_time", datetime.datetime.now())
         self.priority = metadata.get("priority", 100)
-        self.propagate = metadata.get("network_propagate", True)
+        self.propagate = metadata.get("propagate", True)
+        self._network_propagate = metadata.get("network_propagate", False)
         self.data = metadata.get("event_data", None)
         self.schema.validate(self.data)
 
@@ -108,10 +109,14 @@ class Event:
     def __str__(self):
         return f"<{self.__class__.__module__}.{self.__class__.__name__} at {hex(id(self))} fired at {self.generation_time}"
 
+    def network_propagate(self):
+        self._network_propagate = True
+        return self
+
     @staticmethod
     def deserialize(event_data):
         event_type = event_data.get("event_type", None)
-        subclasses =  Event.__subclasses__()
+        subclasses = Event.__subclasses__()
 
         if not event_type:
             raise Exception("Attempted to deserialize an event that does not have a defined event type.")

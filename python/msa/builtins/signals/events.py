@@ -17,3 +17,31 @@ class StartupEvent(Event):
                 "timestamp": And(str, len)
             })
         )
+
+
+class RequestDisburseEventsToNetworkEvent(Event):
+    """
+    RequestDisburseEventsToClientEvent schema:
+    """
+
+    def __init__(self):
+        super().__init__(
+            priority=0,
+            schema=Schema({
+            })
+        )
+
+class DisburseEventsToNetworkEvent(Event):
+    """
+    DisburseEventsToNetworkEvent schema:
+    """
+
+    def __init__(self):
+        super().__init__(
+            priority=0,
+            schema=Schema({
+                "events": [
+                    dict
+                ]
+            })
+        )

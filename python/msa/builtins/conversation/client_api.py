@@ -13,3 +13,5 @@ def register_endpoints(api_binder):
         if response.status_code != 200:
             raise Exception(response.raw)
 
+        print(response.text)
+

@@ -1,3 +1,4 @@
+from collections import deque
 import datetime 
 from msa.core.event_handler import EventHandler
 from msa.core import supervisor
@@ -23,4 +24,30 @@ class StartupEventTrigger(EventHandler):
         })
         supervisor.fire_event(new_event)
 
+
+class NetworkPropagateEventHandler(EventHandler):
+    def __init__(self, loop, event_bus, logger, config=None):
+        super().__init__(loop, event_bus, logger, config)
+
+        event_bus.subscribe(".*", self.handle)
+
+        self.buffered_events = deque(maxlen=10)
+
+    async def handle(self, event):
+
+        if isinstance(event, events.RequestDisburseEventsToNetworkEvent):
+            self.handle_disburse_request()
+            return
+
+        if not event._network_propagate:
+            return
+
+        self.buffered_events.append(event)
+
+    def handle_disburse_request(self):
+        new_event = events.DisburseEventsToNetworkEvent().init({
+            "events": [ event.get_metadata() for event in self.buffered_events]
+        })
+        self.buffered_events.clear()
+        supervisor.fire_event(new_event)
 

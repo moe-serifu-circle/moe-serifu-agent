@@ -1,4 +1,5 @@
 import asyncio
+import re
 
 class Subscription:
     def __init__(self, event_bus, queue):
@@ -25,6 +26,10 @@ class EventBus:
         self.propagation_hooks = []
 
         self.subscriptions = {}
+        self.complex_subscriptions = {}
+        self.result_listeners = {}
+        self.event_result = {}
+
         self.queue = asyncio.PriorityQueue(loop=self.loop)
 
         self.task = None
@@ -33,16 +38,40 @@ class EventBus:
 
     def subscribe(self, event_type, callback):
 
-        if event_type not in self.subscriptions:
-            self.subscriptions[event_type] = {callback}
+        if isinstance(event_type, str):
+            if event_type not in self.complex_subscriptions:
+                self.complex_subscriptions[event_type] = {callback}
+            else:
+                self.complex_subscriptions[event_type].add(callback)
         else:
-            self.subscriptions[event_type].add(callback)
+            if event_type not in self.subscriptions:
+                self.subscriptions[event_type] = {callback}
+            else:
+                self.subscriptions[event_type].add(callback)
+
 
 
     def unsubscribe(self, event_type, callback):
         if event_type in self.subscriptions:
             if callback in self.subscriptions[event_type]:
                 self.subscriptions[event_type].remove(callback)
+
+        if event_type in self.complex_subscriptions:
+            if callback in self.complex_subscriptions[event_type]:
+                self.complex_subscriptions[event_type].remove(callback)
+
+    def _get_subscribers(self, event_type):
+        subs = []
+
+        if event_type in self.subscriptions.keys():
+            subs.extend(self.subscriptions[event_type])
+
+        for type_, listeners in self.complex_subscriptions.items():
+            if re.match(type_, event_type.__name__):
+                subs.extend(listeners)
+
+        return list(set(subs))
+
 
     async def listen(self):
         """Listens for a new event to be passed into the event bus queue via EventBus.fire_event. """
@@ -52,16 +81,35 @@ class EventBus:
             _, event = await self.queue.get()
 
             event_type = type(event)
-            if event_type not in self.subscriptions.keys():
+            subs = self._get_subscribers(event_type)
+            if len(subs) == 0:
                 print(f"WARNING: propagated event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
+
 
             self.task = asyncio.gather(*[
                 callback(event) 
                 for callback in 
-                self.subscriptions[event_type]
-                     ])
+                    subs
+                 ])
 
             result = await self.task
+
+            if event_type in self.result_listeners:
+                async_event = self.result_listeners[event_type]
+                del self.result_listeners[event_type]
+                self.event_result[event_type] = event
+                async_event.set()
+
+
+    async def listen_for_result(self, event_type):
+        if event_type not in self.result_listeners:
+            event = asyncio.Event()
+            self.result_listeners[event_type] = event
+        else:
+            event = self.result_listeners[event_type]
+
+        await event.wait()
+        return self.event_result[event_type]
 
 
 
@@ -75,7 +123,8 @@ class EventBus:
         # get queues for event type
         event_type = type(new_event)
 
-        if event_type not in self.subscriptions.keys():
+        subs = self._get_subscribers(event_type)
+        if len(subs) == 0:
             print(f"WARNING: attempted to propagate event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
         else:
             self.queue.put_nowait((new_event.priority, new_event))

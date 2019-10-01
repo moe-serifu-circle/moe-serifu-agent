@@ -4,6 +4,7 @@ from msa.builtins.signals import client_api
 
 handler_factories = [
     handlers.StartupEventTrigger,
+    handlers.NetworkPropagateEventHandler,
 ]
 
 

@@ -19,8 +19,7 @@ class ConversationInputEventHandler(EventHandler):
         # - https://github.com/gunthercox/ChatterBot
         # - https://github.com/huggingface/transformers
 
-        new_event = events.ConversationOutputEvent()
-        new_event.init({
-            "output": f"I am afraid I don't know what to say."
-        })
+        new_event = (events.ConversationOutputEvent()
+                     .init({"output": f"I am afraid I don't know what to say."})
+                     .network_propagate())
         supervisor.fire_event(new_event)

@@ -245,6 +245,9 @@ class Supervisor:
 
         self.loop.call_soon(fire)
 
+    async def listen_for_result(self, event_type):
+        return await self.event_bus.listen_for_result(event_type)
+
 
     async def startup_coroutine(self, additional_coros=[]):
         """The main coroutine that manages starting the handlers, and waiting for a shutdown signal.

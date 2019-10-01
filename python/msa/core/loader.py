@@ -5,6 +5,7 @@ import importlib
 builtin_module_names = [
     "signals",
     "scripting",
+    "conversation",
 ]
 
 

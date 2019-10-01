@@ -1,4 +1,3 @@
-import requests
 
 
 def register_endpoints(api_binder):

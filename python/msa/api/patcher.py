@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import asyncio
 from functools import partial
 
 from msa.api.patchable_api import MsaApi
@@ -10,17 +11,19 @@ from msa.core.loader import load_builtin_modules, load_plugin_modules
 class ApiPatcher:
     cache = {}
     
-    def __init__(self, api_context, api_client):
+    def __init__(self, api_context, api_client, plugin_whitelist):
         self.api = MsaApi()
         self.api.context = api_context
         self.api.client = api_client
+        self.api.client.api = self.api
+        self.plugin_whitelist = plugin_whitelist
 
         self._registration_frozen = False
-        self.process_registration()
+        self._process_registrations()
         self._registration_frozen = True
 
     @staticmethod
-    def load(self, api_context, api_client=None):
+    def load(api_context, api_client=None, plugin_whitelist=None):
         if api_context is None:
             raise Exception(f"{ApiPatcher.__name__}: api_context cannot be None.")
 
@@ -28,14 +31,16 @@ class ApiPatcher:
             if api_client is not None:
                 raise Exception(f"{ApiPatcher.__name__}: api_client cannot be non-None when context '{api_context}' already been patched and loaded.")
             
-            return ApiPatcher.cache[api_context]
+            return ApiPatcher.cache[api_context].api
 
         else:
             if api_client is None:
                 raise Exception(f"{ApiPatcher.__name__}: api_client cannot be None when context '{api_context}' has never been patched and loaded.")
+            if plugin_whitelist is None:
+                raise Exception(f"{ApiPatcher.__name__}: plugin_whitelist cannot be None when context '{api_context}' has never been patched and loaded.")
 
-            ApiPatcher.cache[api_context] = ApiPatcher(api_context, api_client)
-            return ApiPatcher.cache[api_context]
+            ApiPatcher.cache[api_context] = ApiPatcher(api_context, api_client, plugin_whitelist)
+            return ApiPatcher.cache[api_context].api
             
     def _process_registrations(self):
         register_base_methods(self)
@@ -44,16 +49,18 @@ class ApiPatcher:
             if hasattr(module, "register_client_api") and callable(module.register_client_api):
                 module.register_client_api(self)
 
-        for module in load_plugin_modules(white_listed_plugins):
+        for module in load_plugin_modules(self.plugin_whitelist):
             if hasattr(module, "register_client_api") and callable(module.register_client_api):
                 module.register_client_api(self)
 
 
+
     def register_method(self):
         if not self._registration_frozen:
+
             def decorator(func):
-                self.api[func.__name__] = partial(func, self.api)
+                    self.api[func.__name__] = partial(func, self.api)
             return decorator
         else:
-            raise Exception(f"MsaAPI Method Registration is frozen, failed to register method: {func.__name__}")
+            raise Exception(f"MsaAPI Method Registration is frozen, failed to register method.")
 

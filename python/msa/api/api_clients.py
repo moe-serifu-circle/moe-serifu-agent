@@ -1,55 +1,66 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from functools import partial
+import signal
 import requests
 import time
 import asyncio
 import aiohttp
+import json
 
 from msa.server import route_adapter
 
 
+class ApiResponse:
+    def __init__(self, status_code, raw):
+        self.status_code = status_code
+        self.raw = raw
+
+        if isinstance(raw, str):
+            self.text = raw
+        else:
+            self.text = raw.decode("utf-8"())
+
+    def json(self):
+        return json.loads(self.text)
+
 class ApiRestClient:
 
-    def __init__(self, host="localhost", port=8080, script_mode=False):
+    def __init__(self, host="localhost", port=8080):
 
         self.host = host
         self.port = port
         self.base_url = "http://{}:{}".format(self.host, self.port)
 
-    def _wrap_api_call(self, func, endpoint, **kwargs):
-        n = 0
-        fail = 3
-        while True:
-            try:
-                return func(self.base_url + endpoint,  **kwargs)
-            except requests.exceptions.ConnectionError:
-                n += 1
+        self.session = None
 
-                if n == 1:
-                    print("This is taking longer than expected, we seem to be having some connection troubles. Trying again.")
-                elif n == 2:
-                    print("Hmm, something must be up.")
+    async def connect(self):
+        self.session = aiohttp.ClientSession()
 
-            print("Unfortunately, I was unable to read the msa daemon instance at {}".format(self.base_url))
-            print("Please check your connection and try again")
-            return None
+    async def disconnect(self):
+        await self.session.close()
+        self.session = None
 
-    def get(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.get, endpoint, **kwargs)
+    async def _wrap_api_call(self, func, endpoint, payload=None):
 
-    def post(self, endpoint, **kwargs):
-        print(kwargs)
-        return self._wrap_api_call(requests.post, endpoint, **kwargs)
+        async with  func(self.base_url + endpoint, json=payload) as response:
+            raw_text = await response.text()
+            return ApiResponse(response.status, raw_text)
 
-    def put(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.put, endpoint, **kwargs)
+    async def get(self, endpoint):
+        return await self._wrap_api_call(self.session.get, endpoint)
+
+    async def post(self, endpoint, payload=None):
+        return await self._wrap_api_call(self.session.post, endpoint, payload)
+
+    async def put(self, endpoint, payload=None):
+        return await self._wrap_api_call(self.session.put, endpoint, payload)
     
-    def update(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.update, endpoint, **kwargs)
+    async def update(self, endpoint, payload=None):
+        return await self._wrap_api_call(self.session.update, endpoint, payload)
     
-    def delete(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.delete, endpoint, **kwargs)
+    def delete(self, endpoint, payload=None):
+        return self._wrap_api_call(self.session.delete, endpoint, payload)
 
 class ApiWebsocketClient:
 
@@ -57,55 +68,77 @@ class ApiWebsocketClient:
         self.loop = loop
         self.host = host
         self.port = port
-        self.base_url = "http://{}:{}".format(self.host, self.port)
+        self.base_url = "http://{}:{}/ws".format(self.host, self.port)
 
         self.interact = interact
 
         self.message_buffer = asyncio.Queue()
 
+        self.queue = asyncio.Queue()
+        self.state = {}
+
     async def _connect(self):
         async with aiohttp.ClientSession() as session:
-            async with session.ws_connect('http://localhost:8080') as ws:
+            async with session.ws_connect(self.base_url) as ws:
                 self.ws = ws
-                await self.interact(self)
+                self.loop.create_task(self.interact(self.api, self.state))
 
-    async def _wrap_api_call(self, verb, endpoint, data):
+                async for msg in ws:
+                    if msg.type == aiohttp.WSMsgType.TEXT:
+                        self.queue.put_nowait(
+                            ApiResponse(200, msg.data))
 
-        payload = {
+
+    def start(self):
+
+        try:
+            self.loop.run_until_complete(self._connect())
+        except KeyboardInterrupt:
+            print(1)
+            self._stop()
+            print(2)
+        except asyncio.CancelledError:
+            pass
+            
+    async def stop(self):
+        await self.ws.close()
+
+    async def _wrap_api_call(self, verb, endpoint, payload):
+
+        wrapped_payload = {
             "verb": verb,
-            "route": "/ws" + endpoint,
-            "data":  data
+            "route": endpoint,
+            "data":  payload
             
         }
-        await self.ws.send_json(payload)
-        await self.ws.receive_str()
+        await self.ws.send_json(wrapped_payload)
+        response = await self.queue.get()
+        return response
 
-    def get(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.get, endpoint, **kwargs)
+    async def get(self, endpoint):
+        return await self._wrap_api_call("get", endpoint, None)
 
-    def post(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.post, endpoint, **kwargs)
+    async def post(self, endpoint, payload=None):
+        return await self._wrap_api_call("post", endpoint, payload)
 
-    def put(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.put, endpoint, **kwargs)
+    async def put(self, endpoint, payload=None):
+        return await self._wrap_api_call("put", endpoint, payload)
     
-    def update(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.update, endpoint, **kwargs)
+    async def update(self, endpoint, payload=None):
+        return await self._wrap_api_call("update", endpoint, payload)
     
-    def delete(self, endpoint, **kwargs):
-        return self._wrap_api_call(requests.delete, endpoint, **kwargs)
+    async def delete(self, endpoint, payload=None):
+        return await self._wrap_api_call("delete", endpoint, payload)
 
 
 class ApiLocalClient(dict):
     def __init__(self, loop):
-        super(MsaApiServerClient, self).__init__()
-        self.__dict__ = self
         self.loop = loop
 
         self.route_adapter = route_adapter
         self.client = self
 
-    def _call_api_route(self, verb, route, payload=None):
+    async def _call_api_route(self, verb, route, payload=None):
         func = self.route_adapter.lookup_route(verb, route)
         if func is None:
             raise Exception(f"{self.__class__.__name__}: no api route {verb}:{route} exists.")
@@ -114,21 +147,21 @@ class ApiLocalClient(dict):
             raise Exception(f"{self.__class__.__name__}: api route is not callable: {func}")
 
         if payload is not None:
-            func(payload)
+            return await func(payload)
         else:
-            func(None)
+            return await func(None)
 
-    def get(self, route):
-        self._call_api_route("get", route)
+    async def get(self, route):
+        return await self._call_api_route("get", route)
 
-    def post(self, route, data=None, json=None):
-        self._call_api_route("post", route, payload=data or json)
+    async def post(self, route, payload=None):
+        return await self._call_api_route("post", route, payload=payload)
 
-    def put(self, route, data=None, json=None):
-        self._call_api_route("put", route, payload=data or json)
+    async def put(self, route, payload=None):
+        return await self._call_api_route("put", route, payload=payload)
 
-    def delete(self, route, data=None, json=None):
-        self._call_api_route("delete", route, payload=data or json)
+    async def delete(self, route, payload=None):
+        return await self._call_api_route("delete", route, payload=payload)
         
 
 

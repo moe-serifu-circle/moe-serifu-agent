@@ -43,7 +43,7 @@ class RouteAdapter:
             await ws.prepare(response)
 
             async for msg in ws:
-                if msg.type == aiohttp.WSMessageType.TEXT:
+                if msg.type == aiohttp.WSMsgType.TEXT:
                     payload = json.loads(msg.data)
 
                     if "verb" not in payload:
@@ -90,10 +90,7 @@ class RouteAdapter:
                     else: 
                         payload = None
 
-                async def async_wrap(payload):
-                    return func(payload)
-
-                response = await async_wrap(payload)
+                response = await func(payload)
                 if "json" in response:
                     j = response["json"]
                     del response["json"]

@@ -6,8 +6,8 @@ from msa.version import v as msa_version
 def register_base_methods(api_wrapper):
 
     @api_wrapper.register_method()
-    def ping(self, quiet=False):
-        response = self.rest_client.get("/ping")
+    async def ping(self, quiet=False):
+        response = await self.client.get("/ping")
 
         if not response:
             return
@@ -19,8 +19,8 @@ def register_base_methods(api_wrapper):
             print(response.text)
 
     @api_wrapper.register_method()
-    def check_version(self, quiet=False):
-        response = self.rest_client.get("/version")
+    async def check_version(self, quiet=False):
+        response = await self.client.get("/version")
 
         if not response:
             print("Unable to verify server version. Exiting.")
@@ -38,8 +38,8 @@ def register_base_methods(api_wrapper):
                 exit(1)
 
     @api_wrapper.register_method()
-    def get_version(self):
-        response = self.rest_client.get("/version")
+    async def get_version(self):
+        response = await self.client.get("/version")
 
         if not response:
             print("Unable to verify server version. Exiting.")
@@ -52,12 +52,12 @@ def register_base_methods(api_wrapper):
         return response.text
 
     @api_wrapper.register_method()
-    def check_connection(self):
+    async def check_connection(self):
         n = 0
         fail = 3
         while n < fail:
             try:
-                self.ping(quiet=True)
+                await self.ping(quiet=True)
                 if n > 0:
                     print("There we go! Connection succeeded!")
                 return

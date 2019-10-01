@@ -5,7 +5,7 @@ import json
 def register_routes(route_binder):
 
     @route_binder.post("/signals/trigger_event")
-    def add_script(payload):
+    async def add_script(payload):
 
         from msa.core.event import Event
         new_event = Event.deserialize(payload)

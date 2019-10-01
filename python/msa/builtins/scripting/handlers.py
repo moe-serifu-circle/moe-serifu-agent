@@ -7,8 +7,8 @@ from msa.core import supervisor
 from msa.builtins.scripting import events
 from msa.builtins.scripting.entities import ScriptEntity
 from msa.builtins.signals import events as signal_events
-from msa.api import MsaLocalApiWrapper
-
+from msa.api import get_api
+from msa.api.context import ApiContext
 
 class ScriptManager:
     __shared_state = None
@@ -21,14 +21,25 @@ class ScriptManager:
             self.loop = loop
             self.running_scripts = {}
 
-            self.local_api = MsaLocalApiWrapper.get_api()
+            self.local_api = get_api(ApiContext.local)
 
             self.globals = {
                 "msa_api":  self.local_api
             }
+
+            self.locals = {}
         else:
             self.__dict__ = ScriptManager.__shared_state
 
+    async def aexec(self, code):
+        # Make an async function with the code and `exec` it
+        func = f'async def __ex(): ' + ''.join(f'\n {l}' for l in code.split('\n'))
+        exec(
+            func,
+        self.globals, self.locals)
+
+        # Get `__ex` from local variables and call it  
+        await self.locals['__ex']()
 
 
     async def run_script(self, name, script_content, crontab_definition=None):
@@ -36,10 +47,10 @@ class ScriptManager:
         if crontab_definition is not None:
             while True:
                 await aiocron.crontab(crontab_definition).next()
-                exec(script_content.strip(), self.globals, {})
+                await self.aexec(script_content.strip())
         else:
             # run once and exit
-            exec(script_content.strip(), self.globals, {})
+            await self.aexec(script_content.strip())
         self.script_finished(name)
 
 
@@ -142,7 +153,7 @@ class TriggerScriptRunHandler(EventHandler):
                 script.script_contents,
                 None)
         else:
-            self.logger.warn(f"Attempted to trigger script run for script \"{script.name}\" but this script does not exist in the database.")
+            self.logger.warn(f"Attempted to trigger script run for script \"{event.data['name']}\" but this script does not exist in the database.")
 
     
 class StartupEventHandler(EventHandler):

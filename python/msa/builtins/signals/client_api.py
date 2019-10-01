@@ -1,17 +1,16 @@
-import requests
 
 
 def register_endpoints(api_binder):
 
     @api_binder.register_method()
-    def trigger_event(self, event):
+    async def trigger_event(self, event):
 
         if not event.network_propagate:
             print("WARNING: event.network_propagate is not True, cancelling network propagation.")
 
-        response = self.rest_client.post(
+        response = await self.client.post(
             "/signals/trigger_event",
-            json=event.get_metadata())
+            payload=event.get_metadata())
 
         if not response:
             return

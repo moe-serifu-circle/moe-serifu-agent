@@ -1,16 +1,22 @@
 import time
 import traceback
 import os
+import asyncio
 import webbrowser
 
 from prompt_toolkit import PromptSession
+from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.history import FileHistory
 from pygments.lexers.python import Python3Lexer, Python3TracebackLexer
 from pygments.formatters import TerminalFormatter
 from pygments import highlight
 
-from msa.api import MsaApiWrapper 
+from msa.api import get_api, run_async
+from msa.api.context import ApiContext
+from msa.core.config_manager import ConfigManager
+
+use_asyncio_event_loop()
 
 
 
@@ -21,7 +27,10 @@ class Interpreter:
                 lexer=PygmentsLexer(Python3Lexer),
                 history=history_file)
 
-        self.api = MsaApiWrapper().get_api()
+        self.config_manager = ConfigManager({"config_file": "msa_config.json"})
+        self.config = self.config_manager.get_config()
+
+        self.api = get_api(ApiContext.rest, self.config["plugin_modules"], host="localhost", port=8080)
 
         self.quit = False
         self.exit_code = 0
@@ -38,9 +47,12 @@ class Interpreter:
         self.record_buffer_name = ""
         self.record_buffer = ""
 
-        # startup checks
-        self.api.check_connection()
-        self.api.check_version(quiet=True)
+
+
+    async def startup_check(self):
+        await self.api.check_connection()
+        await self.api.check_version(quiet=True)
+
 
     def execute_script(self, script):
         with open(script, "r") as f:
@@ -50,29 +62,37 @@ class Interpreter:
             print("Script output:")
             self.execute_block(text)
 
-
     def start(self):
+        asyncio.get_event_loop().run_until_complete(self._start())
 
-        while True:
-            try:
-                prompt_text, prompt_default = self.generate_prompt_text()
-                text = self.prompt_session.prompt(prompt_text, default=prompt_default)
+    async def _start(self):
+        # startup checks
+        try:
+            await self.api.client.connect()
+            await self.startup_check()
 
-            except KeyboardInterrupt:
-                continue
-            except EOFError:
-                break
-            except Exception as e:
-                print(e)
-                time.sleep(5)
-            else:
-                self.parse_statement(text)
+            while True:
+                try:
+                    prompt_text, prompt_default = self.generate_prompt_text()
+                    text = await self.prompt_session.prompt(prompt_text, default=prompt_default, async_=True)
 
-            if self.quit:
-                break
+                except KeyboardInterrupt:
+                    continue
+                except EOFError:
+                    break
+                except Exception as e:
+                    print(e)
+                    time.sleep(5)
+                else:
+                    await self.parse_statement(text)
 
-        print("Goodbye")
-        quit(self.exit_code)
+                if self.quit:
+                    break
+
+            print("Goodbye")
+            quit(self.exit_code)
+        finally:
+            await self.api.client.disconnect()
 
     def generate_prompt_text(self):
         if self.indent_level == 0:
@@ -85,7 +105,7 @@ class Interpreter:
         return prompt_text, prompt_default
 
 
-    def parse_statement(self, text):
+    async def parse_statement(self, text):
         if self.indent_level == 0:
             
             skip_loop = self.parse_command(text)
@@ -114,17 +134,27 @@ class Interpreter:
                 text = self.buffer + "\n" + text
                 self.buffer = ""
         
-            self.execute_block(text)
+            await self.execute_block(text)
 
-    def execute_block(self, text):
+    async def execute_block(self, text):
         try:
-            exec(text.strip(), self.globals, self.locals)
+            await self.aexec(text.strip())
         except SystemExit as e:
             self.quit = True
             self.exit_code = e.code
             return
         except:
             self.print_traceback(traceback.format_exc())
+
+    async def aexec(self, code):
+        # Make an async function with the code and `exec` it
+        exec(
+            f'async def __ex(): ' +
+            ''.join(f'\n {l}' for l in code.split('\n')),
+        self.globals, self.locals)
+
+        # Get `__ex` from local variables, call it and return the result
+        return await self.locals['__ex']()
 
     def print_traceback(self, *args, **kwargs):
         stringify = ' '.join(str(e) for e in args)

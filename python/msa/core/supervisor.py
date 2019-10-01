@@ -104,12 +104,13 @@ class Supervisor:
             # helps suppress a warning.
 
 
-        client_api_binder= get_api(ApiContext.local, loop=loop)
-        server_api_binder = route_adapter
 
         # ### PLACEHOLDER - Load Configuration file here --
         self.config_manager = ConfigManager(cli_config)
         config = self.config_manager.get_config()
+
+        client_api_binder= get_api(ApiContext.local, config["plugin_modules"], loop=loop)
+        server_api_binder = route_adapter
 
         # Initialize logging
         self.init_logging(config["logging"])
@@ -137,9 +138,7 @@ class Supervisor:
         # ### Registering Handlers
         self.logger.info("Registering handlers.")
         for module in self.loaded_modules:
-            self.logger.debug("Registering client api endpoints for module msa.{}".format(module.__name__))
-            if hasattr(module, "register_client_api") and callable(module.register_client_api):
-                module.register_client_api(client_api_binder)
+            # Note client api registration is handled by the patcher
 
             self.logger.debug("Registering server api endpoints for module msa.{}".format(module.__name__))
             if hasattr(module, "register_server_api") and callable(module.register_server_api):
@@ -168,7 +167,6 @@ class Supervisor:
                 self.logger.debug("Finished registering handler: {}".format(full_namespace))
             self.logger.debug("Finished registering handlers for module {}".format(module.__name__))
 
-        client_api_binder.freeze_registration()
         self.logger.info("Finished registering handlers.")
 
         self.apply_granular_log_levels(config["logging"]["granular_log_levels"])

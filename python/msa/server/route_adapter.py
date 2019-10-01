@@ -39,8 +39,17 @@ class RouteAdapter:
     def generate_websocket_route(self):
         route_adapter = self
         async def websocket_route(response):
+
+            peername = response.transport.get_extra_info('peername')
+            if peername is not None:
+                host, port = peername
+            else:
+                host, port = "Unknown", "xxxx"
+
             ws = web.WebSocketResponse()
             await ws.prepare(response)
+
+            print(f"Client {host}:{port} connected")
 
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
@@ -71,6 +80,13 @@ class RouteAdapter:
                     except Exception as e:
                         await ws.send_str(json.dumps({"type": "error", "message": str(e)}))
                         continue
+
+                elif msg.type == aiohttp.WSMsgType.ERROR:
+                    print('ws connection closed with exception %s' %
+                          ws.exception())
+            print(f"Client {host}:{port} disconnected")
+            return ws
+
                     
 
         return websocket_route

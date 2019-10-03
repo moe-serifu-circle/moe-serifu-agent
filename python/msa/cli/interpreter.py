@@ -39,6 +39,7 @@ class Interpreter:
         self.globals = {
             "msa_api":  self.api
         }
+        self.func_locals = {}
         self.buffer = ""
         self.indent_level = 0
         self.indent_size = 4
@@ -148,13 +149,21 @@ class Interpreter:
 
     async def aexec(self, code):
         # Make an async function with the code and `exec` it
+
+        effective_globals = {**self.func_locals, **self.globals}
         exec(
             f'async def __ex(): ' +
-            ''.join(f'\n {l}' for l in code.split('\n')),
-        self.globals, self.locals)
+            ''.join(f'\n {l}' for l in code.split('\n')) + "\n return locals()",
+        effective_globals, self.locals)
 
         # Get `__ex` from local variables, call it and return the result
-        return await self.locals['__ex']()
+        self.func_locals = await self.locals['__ex']()
+
+        for key in list(self.func_locals.keys()):
+            if key in self.globals:
+                del self.func_locals[key]
+                raise Exception(f"Statement attempted to override global variable \"{key}\". This is not allowed.")
+
 
     def print_traceback(self, *args, **kwargs):
         stringify = ' '.join(str(e) for e in args)

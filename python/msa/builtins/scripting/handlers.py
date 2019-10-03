@@ -26,20 +26,27 @@ class ScriptManager:
             self.globals = {
                 "msa_api":  self.local_api
             }
-
+            self.func_locals = {}
             self.locals = {}
+
         else:
             self.__dict__ = ScriptManager.__shared_state
 
     async def aexec(self, code):
         # Make an async function with the code and `exec` it
-        func = f'async def __ex(): ' + ''.join(f'\n {l}' for l in code.split('\n'))
+        effective_globals = {**self.func_locals, **self.globals}
+        func = f'async def __ex(): ' + ''.join(f'\n {l}' for l in code.split('\n')) + "\n return locals()"
         exec(
             func,
-        self.globals, self.locals)
+            effective_globals, self.locals)
 
         # Get `__ex` from local variables and call it  
-        await self.locals['__ex']()
+        self.func_locals = await self.locals['__ex']()
+
+        for key in list(self.func_locals.keys()):
+            if key in self.globals:
+                del self.func_locals[key]
+                raise Exception(f"Statement attempted to override global variable \"{key}\". This is not allowed.")
 
 
     async def run_script(self, name, script_content, crontab_definition=None):

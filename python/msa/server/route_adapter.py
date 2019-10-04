@@ -74,7 +74,7 @@ class RouteAdapter:
 
                     try:
                         request_data = payload["data"]
-                        response = await route_func(request=None, raw_data=request_data)
+                        response = await route_func(request_data)
                         response["type"] = "response"
                         await ws.send_str(json.dumps(response))
                     except Exception as e:

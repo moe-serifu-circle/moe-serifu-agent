@@ -55,10 +55,16 @@ async def interact(api, state):
 
             try:
                 text = await prompt_session.prompt(">>> ", async_=True)
+                text = text.strip().replace("\n", "")
 
-                print(await api.get_version())
+                if text == "quit" or text == "exit":
+                    break
+
+                await api.talk(text)
+
             except (KeyboardInterrupt, EOFError):
                 print("Shutting down...")
+            finally:
                 await api.client.stop()
                 return 
     finally:

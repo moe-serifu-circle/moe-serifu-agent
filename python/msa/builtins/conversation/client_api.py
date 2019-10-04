@@ -13,5 +13,13 @@ def register_endpoints(api_binder):
         if response.status_code != 200:
             raise Exception(response.raw)
 
-        print(response.text)
+        try:
+            json = response.json()
+
+            if json["type"] == "response":
+                print(json["text"])
+            elif json["type"] == "error":
+                print("Server Error:", json["message"])
+        except:
+            print("It seems there was an issue.")
 

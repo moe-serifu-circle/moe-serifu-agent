@@ -6,7 +6,7 @@ import unittest
 
 from msa.api.patchable_api import MsaApi
 
-class EventTest(unittest.TestCase):
+class PatchableApiTest(unittest.TestCase):
 
     def test_str(self):
         api = MsaApi()

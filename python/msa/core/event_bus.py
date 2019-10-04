@@ -1,17 +1,6 @@
 import asyncio
 import re
 
-class Subscription:
-    def __init__(self, event_bus, queue):
-        self.event_bus = event_bus
-        self.queue = queue
-
-    def __enter__(self):
-        return self.queue
-
-    def __exit__(self, type, value, traceback):
-        self.event_bus.unsubscribe(self.queue)
-
     
 
 class EventBus:
@@ -73,17 +62,34 @@ class EventBus:
         return list(set(subs))
 
 
-    async def listen(self):
+    async def listen(self, timeout=None):
         """Listens for a new event to be passed into the event bus queue via EventBus.fire_event. """
+
 
         while True:
 
-            _, event = await self.queue.get()
+            if timeout is None:
+                _, event = await self.queue.get() # pragma: no cover
+            else:
+                try:
+                    _, event = await asyncio.wait_for(
+                        self.queue.get(),
+                        timeout
+                    )
+                except asyncio.TimeoutError:
+                    return
+
 
             event_type = type(event)
             subs = self._get_subscribers(event_type)
-            if len(subs) == 0:
+            if len(subs) == 0 or not event in list(self.result_listeners.keys()):
                 print(f"WARNING: propagated event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
+
+            if event_type in self.result_listeners:
+                async_event = self.result_listeners[event_type]
+                del self.result_listeners[event_type]
+                self.event_result[event_type] = event
+                async_event.set()
 
 
             self.task = asyncio.gather(*[
@@ -94,21 +100,23 @@ class EventBus:
 
             result = await self.task
 
-            if event_type in self.result_listeners:
-                async_event = self.result_listeners[event_type]
-                del self.result_listeners[event_type]
-                self.event_result[event_type] = event
-                async_event.set()
 
 
-    async def listen_for_result(self, event_type):
+
+    async def listen_for_result(self, event_type, timeout=None):
         if event_type not in self.result_listeners:
             event = asyncio.Event()
             self.result_listeners[event_type] = event
         else:
             event = self.result_listeners[event_type]
 
-        await event.wait()
+        if timeout is None:
+            await event.wait()
+        else:
+            try:
+                await asyncio.wait_for(event.wait(), timeout)
+            except asyncio.TimeoutError:
+                return None
         return self.event_result[event_type]
 
 

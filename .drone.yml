@@ -40,9 +40,9 @@ pipeline:
     image: python:3
     commands:
       - cd python
-      - pip install pipenv
-      - pipenv install --system
-      - "TEST=1 python -m unittest discover -p \"*_test.py\""
+      - pip install poetry
+      - poetry install 
+      - "TEST=1 ./test_and_coverage.sh"
     when:
       event: [pull_request, push]
       branch: master

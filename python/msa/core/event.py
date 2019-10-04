@@ -2,7 +2,7 @@ from typing import Dict
 from schema import Schema
 import datetime
 
-class Event:
+class Event(object):
     """The base Event Class. All other events should be subclasses of this class."""
 
     def __init__(self, priority: int, schema: Schema):
@@ -29,8 +29,11 @@ class Event:
         return (
             other is not None
             and self.__class__ == other.__class__
-            and self.priority == other.priority
+            and self.data == other.data
         )
+
+    def __ne__(self, other):
+        return not self == other
 
 
     def __lt__(self, other):
@@ -47,17 +50,11 @@ class Event:
             and self.priority <= other.priority
         )
 
-    def __ne__(self, other):
-        return (
-            other is not None
-            and self._class__ == other.__class__
-            and self.priority != other.priority
-        )
 
     def __gt__(self, other):
         return (
             other is not None
-            and self._class__ == other.__class__
+            and self.__class__ == other.__class__
             and self.priority > other.priority
         )
 
@@ -107,7 +104,7 @@ class Event:
 
 
     def __str__(self):
-        return f"<{self.__class__.__module__}.{self.__class__.__name__} at {hex(id(self))} fired at {self.generation_time}"
+        return f"<{self.__class__.__module__}.{self.__class__.__name__} at {hex(id(self))} created at {self.generation_time}"
 
     def network_propagate(self):
         self._network_propagate = True

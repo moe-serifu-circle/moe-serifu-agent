@@ -37,32 +37,36 @@ class Event(object):
 
 
     def __lt__(self, other):
+        """" Note: the inequality is backwards on purpose because asyncio.PriorityQueue uses low values as higher priority"""
         return (
             other is not None
-            and self.__class__ == other.__class__
-            and self.priorty < other.priority
+            and isinstance(other, Event)
+            and self.priority > other.priority
         )
 
     def __le__(self, other):
+        """" Note: the inequality is backwards on purpose because asyncio.PriorityQueue uses low values as higher priority"""
         return (
             other is not None
-            and self.__class__ == other.__class__
-            and self.priority <= other.priority
+            and isinstance(other, Event)
+            and self.priority >= other.priority
         )
 
 
     def __gt__(self, other):
+        """" Note: the inequality is backwards on purpose because asyncio.PriorityQueue uses low values as higher priority"""
         return (
             other is not None
-            and self.__class__ == other.__class__
-            and self.priority > other.priority
+            and isinstance(other, Event)
+            and self.priority < other.priority
         )
 
     def __ge__(self, other):
+        """" Note: the inequality is backwards on purpose because asyncio.PriorityQueue uses low values as higher priority"""
         return (
             other is not None
-            and self.__class__ == other.__class__
-            and self.priority >= other.priority
+            and isinstance(other, Event)
+            and self.priority <= other.priority
         )
 
     def init(self, data: Dict = None) -> None:

@@ -1,9 +1,9 @@
-- [ ] enable submitting scripts to server and running on a schedule
-- [ ] enable creating custom db tables for plugins
+- [X] enable submitting scripts to server and running on a schedule
+- [X] enable creating custom db tables for plugins
 - [ ] implement basic counter service
 - [ ] implement basic reminder/timer service
-- [ ] allow plugins to send events to client
-- [ ] allow clients to send events to server
+- [X] allow plugins to send events to client
+- [X] allow clients to send events to server
 - [ ] create basic javascript client
 - [ ] plan out stt & tts
 - [ ] plan out NLP 

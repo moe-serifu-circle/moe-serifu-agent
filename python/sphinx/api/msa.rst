@@ -1,29 +1,26 @@
-API Reference
-=============
+msa package
+===========
 
 Subpackages
 -----------
 
 .. toctree::
 
+    msa.api
     msa.builtins
+    msa.cli
     msa.core
+    msa.data
+    msa.server
+    msa.utils
 
 Submodules
 ----------
 
-msa.config module
------------------
+msa.version module
+------------------
 
-.. automodule:: msa.config
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-msa.var module
---------------
-
-.. automodule:: msa.var
+.. automodule:: msa.version
     :members:
     :undoc-members:
     :show-inheritance:

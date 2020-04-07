@@ -11,6 +11,7 @@ def register_routes(route_binder):
         supervisor.fire_event(new_event)
 
         response_event = await supervisor.listen_for_result(ConversationOutputEvent)
+        print(response_event)
 
         return {"text": response_event.data["output"]}
 

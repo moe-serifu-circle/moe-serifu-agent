@@ -170,6 +170,7 @@ class StartupEventHandler(EventHandler):
     def __init__(self, loop, event_bus, logger, config=None):
         super().__init__(loop, event_bus, logger, config)
         self.script_manager = ScriptManager(loop)
+        print("StartupEventHandler scripting/handlers")
 
         self.event_bus.subscribe(signal_events.StartupEvent, self.handle_startup_event)
 

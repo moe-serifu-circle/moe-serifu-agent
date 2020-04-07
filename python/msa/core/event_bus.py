@@ -82,7 +82,7 @@ class EventBus:
 
             event_type = type(event)
             subs = self._get_subscribers(event_type)
-            if len(subs) == 0 or not event in list(self.result_listeners.keys()):
+            if len(subs) == 0 and not event in list(self.result_listeners.keys()):
                 print(f"WARNING: propagated event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
 
             if event_type in self.result_listeners:

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+
 def register_endpoints(api_binder):
 
     @api_binder.register_method()
@@ -14,12 +15,7 @@ def register_endpoints(api_binder):
             raise Exception(response.raw)
 
         try:
-            json = response.json()
-
-            if json["type"] == "response":
-                print(json["text"])
-            elif json["type"] == "error":
-                print("Server Error:", json["message"])
+            print(response.text)
         except:
             print("It seems there was an issue.")
 

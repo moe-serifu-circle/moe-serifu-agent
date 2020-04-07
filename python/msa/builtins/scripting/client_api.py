@@ -3,6 +3,7 @@ async def upload_script(self, name, crontab=None, file_name=None, script_content
     """
     Uploads a script to the daemon instance.
 
+    :async:
     :param name: The name the script should be referred to by on the daemon.
     :param crontab: (Optional) A crontab to run the script on. For help writing a crontab try https://crontab.guru/
     :param file_name: (Optional) A file name, relative to the current working directory, to upload to the daemon.
@@ -43,4 +44,4 @@ async def upload_script(self, name, crontab=None, file_name=None, script_content
 
 
 def register_endpoints(api_binder):
-    api_binder.register_method(upload_script)
+    api_binder.register_method()(upload_script)

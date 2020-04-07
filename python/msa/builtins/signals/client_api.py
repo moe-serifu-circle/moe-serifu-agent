@@ -5,6 +5,7 @@ async def trigger_event(self, event):
     """
     Takes an `msa.core.event.Event` subclass to propagate to the daemon.
 
+    :async:
     :param msa.core.event.Event event: The event to propagate to the daemon. `event.network_propagate` must be set to
         `True`, otherwise the event will not be propagated.
     :return: `None`
@@ -26,6 +27,7 @@ async def get_events(self):
     """
     Fetches any events that have not been dispersed to clients.
 
+    :async:
     :return: List[msa.core.event.Event]
     """
     response = await self.client.get("/signals/events")
@@ -52,5 +54,5 @@ async def get_events(self):
 
 def register_endpoints(api_binder):
 
-    api_binder.register_method(trigger_event)
-    api_binder.register_method(get_events)
+    api_binder.register_method()(trigger_event)
+    api_binder.register_method()(get_events)

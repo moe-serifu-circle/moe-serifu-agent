@@ -7,6 +7,7 @@ async def ping(self, quiet=False):
     """
     Send's a ping to the daemon. If the ping succeeds, you should see a pong response.
 
+    :async:
     :param bool quiet: Print's the response of `True`.
     :return: `None`
     """
@@ -26,6 +27,7 @@ async def check_version(self, quiet=False):
     """
     Called automatically at startup, ensures that the cli version and the daemon versions match.
 
+    :async:
     :param bool quiet: Print's the response of `True`.
     :return: `None`
     """
@@ -50,6 +52,7 @@ async def get_version(self):
     """
     Fetches the daemon's version.
 
+    :async:
     :return: `None`
     """
     response = await self.client.get("/version")
@@ -68,6 +71,7 @@ async def check_connection(self):
     """
     Raises an exception if the cli cannot contact the daemon.
 
+    :async:
     :return: `None`
     """
     n = 0
@@ -94,7 +98,7 @@ async def check_connection(self):
 
 def register_base_methods(api_wrapper):
 
-    api_wrapper.register_method(ping)
-    api_wrapper.register_method(check_version)
-    api_wrapper.register_method(get_version)
-    api_wrapper.register_method(check_connection)
+    api_wrapper.register_method()(ping)
+    api_wrapper.register_method()(check_version)
+    api_wrapper.register_method()(get_version)
+    api_wrapper.register_method()(check_connection)

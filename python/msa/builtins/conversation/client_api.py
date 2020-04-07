@@ -5,6 +5,7 @@ async def talk(self, input):
     """
     Interact with the conversation module builtin to MSA. Expects a natural language message, MSA should respond in kind.
 
+    :async:
     :param input: A natural language message to send to MSA.
     :return: `None`
     """
@@ -22,6 +23,6 @@ async def talk(self, input):
 
 
 def register_endpoints(api_binder):
-    api_binder.register_method(talk)
+    api_binder.register_method()(talk)
 
 

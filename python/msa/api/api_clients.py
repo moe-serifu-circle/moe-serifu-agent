@@ -12,17 +12,25 @@ from msa.server import route_adapter
 
 
 class ApiResponse:
-    def __init__(self, status_code, raw):
+    def __init__(self, status_code, raw=None, payload=None):
         self.status_code = status_code
         self.raw = raw
+        self.payload = payload
 
-        if isinstance(raw, str):
-            self.text = raw
+        if self.raw is not None:
+            if isinstance(raw, str):
+                self.text = raw
+            else:
+                self.text = raw.decode("utf-8"())
         else:
-            self.text = raw.decode("utf-8"())
+            self.raw = ""
+            self.text = ""
 
     def json(self):
-        return json.loads(self.text)
+        if self.payload:
+            return self.payload
+        else:
+            return json.loads(self.text)
 
 class ApiRestClient:
 
@@ -147,9 +155,9 @@ class ApiLocalClient(dict):
             raise Exception(f"{self.__class__.__name__}: api route is not callable: {func}")
 
         if payload is not None:
-            return await func(payload)
+            return await func(ApiResponse(200, payload))
         else:
-            return await func(None)
+            return await func(ApiResponse(200, None))
 
     async def get(self, route):
         return await self._call_api_route("get", route)

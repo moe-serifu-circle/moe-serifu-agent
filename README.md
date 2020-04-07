@@ -1,7 +1,8 @@
-# Overview
+# Moe Serifu Agent
+## Overview
 [![Build Status](https://megumin.moeserifu.moe/api/badges/moe-serifu-circle/moe-serifu-agent/status.svg?branch=master)](https://megumin.moeserifu.moe/api/badges/moe-serifu-circle/moe-serifu-agent)
 ![logo](https://raw.githubusercontent.com/wiki/dekarrin/moe-serifu-agent/assets/logo/logo-en-700w.png "MSA Logo")
----
+
 [Project Website](http://www.moeserifu.moe)
 
 Moe Serifu Agent (MSA) is an event-driven personal assistant system that

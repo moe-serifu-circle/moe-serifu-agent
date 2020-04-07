@@ -23,14 +23,6 @@ def daemon(ctx):
     from msa.server import start_server
     start_server(ctx.obj)
 
-@main.command()
-@click.pass_context
-def server(ctx):
-
-    from msa.server import start_server
-    start_server(ctx.obj)
-
-
 
 @main.command()
 @click.option("-s" , "--script",  help="If provided will run the specified script and then exit.")

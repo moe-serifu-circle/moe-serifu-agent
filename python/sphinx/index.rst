@@ -9,16 +9,16 @@ Welcome to Moe Serifu Agent's documentation!
 ============================================
 
 
-
+Contents
+--------
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    readme
    installation
    getting_started
    configuration
-   builtin_commands
+   using_the_cli
    plugins
    architecture
    contributor_guide

@@ -41,7 +41,7 @@ class ApiPatcher:
 
             ApiPatcher.cache[api_context] = ApiPatcher(api_context, api_client, plugin_whitelist)
             return ApiPatcher.cache[api_context].api
-            
+
     def _process_registrations(self):
         register_base_methods(self)
 

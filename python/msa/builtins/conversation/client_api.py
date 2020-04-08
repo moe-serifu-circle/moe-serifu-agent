@@ -13,11 +13,11 @@ async def talk(self, input):
         "/conversation/talk",
         payload={"input": input})
 
-    if response.status_code != 200:
+    if response.status != "success":
         raise Exception(response.raw)
 
     try:
-        print(response.text)
+        print(response.json["text"])
     except:
         print("It seems there was an issue.")
 

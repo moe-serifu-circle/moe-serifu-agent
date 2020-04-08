@@ -40,4 +40,15 @@ def start_server(config_context):
 
     app.on_cleanup.append(stop_supervisor)
     app.on_cleanup.append(stop_db_engine)
-    web.run_app(app)
+
+    try:
+        import aiomonitor
+
+        host, port = "localhost", 8080
+        locals_ = {"port": port, "host": host}
+        with aiomonitor.start_monitor(loop=loop, locals=locals_):
+            # run application with built in aiohttp run_app function
+            web.run_app(app, port=port, host=host)
+
+    except:
+        web.run_app(app)

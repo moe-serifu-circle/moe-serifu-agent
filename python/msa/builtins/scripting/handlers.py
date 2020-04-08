@@ -1,6 +1,7 @@
 from functools import partial
 import asyncio
 import aiocron
+import traceback
 
 from msa.core.event_handler import EventHandler
 from msa.core import supervisor
@@ -9,6 +10,7 @@ from msa.builtins.scripting.entities import ScriptEntity
 from msa.builtins.signals import events as signal_events
 from msa.api import get_api
 from msa.api.context import ApiContext
+import logging
 
 class ScriptManager:
     __shared_state = None
@@ -17,6 +19,9 @@ class ScriptManager:
         if ScriptManager.__shared_state is None:
             ScriptManager.__shared_state = {}
             self.__dict__ = ScriptManager.__shared_state
+
+            root_logger = logging.getLogger("msa")
+            self.logger = root_logger.getChild("msa.builtins.scripting.ScriptManager")
 
             self.loop = loop
             self.running_scripts = {}
@@ -32,34 +37,52 @@ class ScriptManager:
         else:
             self.__dict__ = ScriptManager.__shared_state
 
-    async def aexec(self, code):
+    async def aexec(self, identifier, code):
+        self.logger.debug(f"Prepping execution of script \"{identifier}\"")
         # Make an async function with the code and `exec` it
         effective_globals = {**self.func_locals, **self.globals}
         func = f'async def __ex(): ' + ''.join(f'\n {l}' for l in code.split('\n')) + "\n return locals()"
-        exec(
-            func,
-            effective_globals, self.locals)
+        try:
+            exec(
+                func,
+                effective_globals, self.locals)
+        except:
+            self.logger.error(f"Failed to prep execution of script \"{identifier}\"")
 
-        # Get `__ex` from local variables and call it  
-        self.func_locals = await self.locals['__ex']()
+        self.logger.debug(f"Scheduling execution of script \"{identifier}\"")
+        # Get `__ex` from local variables and call it
+        task = asyncio.create_task(self.locals['__ex']())
+
+        self.logger.debug(f"Awaiting execution of script \"{identifier}\"")
+
+        try:
+            self.func_locals = await task
+        except Exception as e:
+            msg = traceback.format_exc()
+            print(msg)
+            self.logger.error(msg)
 
         for key in list(self.func_locals.keys()):
             if key in self.globals:
                 del self.func_locals[key]
                 raise Exception(f"Statement attempted to override global variable \"{key}\". This is not allowed.")
 
-
     async def run_script(self, name, script_content, crontab_definition=None):
         # TODO capture log, errors, etc, and log to db via RunScriptResultEvent(Event):
         if crontab_definition is not None:
+            self.logger.debug(f"Scheduling cron execution of script \"{name}\" on schedule \"{crontab_definition}\"")
             while True:
                 await aiocron.crontab(crontab_definition).next()
-                await self.aexec(script_content.strip())
+                self.logger.debug(
+                    f"Script \"{name}\" on schedule \"{crontab_definition}\" is about to execute")
+
+                await self.aexec(name, script_content.strip())
+                self.logger.debug(
+                    f"Script \"{name}\" triggered")
         else:
             # run once and exit
-            await self.aexec(script_content.strip())
+            await self.aexec("adhoc_scrpipt_<"+name+">", script_content.strip())
         self.script_finished(name)
-
 
     def schedule_script(self, name, script_content, crontab_definition=None):
 

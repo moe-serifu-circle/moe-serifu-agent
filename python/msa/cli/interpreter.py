@@ -30,15 +30,14 @@ class Interpreter:
         self.config_manager = ConfigManager({"config_file": "msa_config.json"})
         self.config = self.config_manager.get_config()
 
-        self.api = get_api(ApiContext.rest, self.config["plugin_modules"], host="localhost", port=8080)
+        self.loop = asyncio.get_event_loop()
 
+        self.api = None
         self.quit = False
         self.exit_code = 0
 
         self.locals = {}
-        self.globals = {
-            "msa_api":  self.api
-        }
+        self.globals = {}
         self.func_locals = {}
         self.buffer = ""
         self.indent_level = 0
@@ -48,12 +47,9 @@ class Interpreter:
         self.record_buffer_name = ""
         self.record_buffer = ""
 
-
-
     async def startup_check(self):
         await self.api.check_connection()
         await self.api.check_version(quiet=True)
-
 
     def execute_script(self, script):
         with open(script, "r") as f:
@@ -64,12 +60,24 @@ class Interpreter:
             self.execute_block(text)
 
     def start(self):
-        asyncio.get_event_loop().run_until_complete(self._start())
+        self.api = get_api(
+            ApiContext.websocket,
+            self.config["plugin_modules"],
+            loop=self.loop,
+            interact=self.interact,
+            host="localhost",
+            port=8080,
+        )
+        self.globals["msa_api"] = self.api
+
+        self.loop.run_until_complete(self._start())
 
     async def _start(self):
         # startup checks
+        await self.api.client.connect()
+
+    async def interact(self):
         try:
-            await self.api.client.connect()
             await self.startup_check()
 
             while True:
@@ -104,7 +112,6 @@ class Interpreter:
             prompt_default = ' '*self.indent_level*self.indent_size
 
         return prompt_text, prompt_default
-
 
     async def parse_statement(self, text):
         if self.indent_level == 0:
@@ -150,7 +157,7 @@ class Interpreter:
     async def aexec(self, code):
         # Make an async function with the code and `exec` it
 
-        effective_globals = {**self.func_locals, **self.globals}
+        effective_globals = {**self.locals, **self.globals}
         exec(
             f'async def __ex(): ' +
             ''.join(f'\n {l}' for l in code.split('\n')) + "\n return locals()",
@@ -163,6 +170,9 @@ class Interpreter:
             if key in self.globals:
                 del self.func_locals[key]
                 raise Exception(f"Statement attempted to override global variable \"{key}\". This is not allowed.")
+
+        # patch func locals into locals
+        self.locals = { **self.locals, **self.func_locals}
 
 
     def print_traceback(self, *args, **kwargs):

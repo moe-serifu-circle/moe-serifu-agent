@@ -1,4 +1,12 @@
 [[package]]
+category = "dev"
+description = "Asynchronous console and interfaces for asyncio"
+name = "aioconsole"
+optional = false
+python-versions = "*"
+version = "0.1.16"
+
+[[package]]
 category = "main"
 description = "Asyncio support for PEP-567 contextvars backport."
 marker = "python_version < \"3.7\""
@@ -52,6 +60,18 @@ version = ">=3.6.5"
 
 [package.extras]
 speedups = ["aiodns", "brotlipy", "cchardet"]
+
+[[package]]
+category = "dev"
+description = "aiomonitor adds monitor and python REPL capabilities for asyncio application"
+name = "aiomonitor"
+optional = false
+python-versions = "*"
+version = "0.4.5"
+
+[package.dependencies]
+aioconsole = "*"
+terminaltables = "*"
 
 [[package]]
 category = "main"
@@ -521,6 +541,14 @@ python-versions = "*"
 version = "1.1.0"
 
 [[package]]
+category = "dev"
+description = "Generate simple tables in terminals from a nested list of strings."
+name = "terminaltables"
+optional = false
+python-versions = "*"
+version = "3.1.0"
+
+[[package]]
 category = "main"
 description = "Easy async ORM for python, built with relations in mind"
 name = "tortoise-orm"
@@ -602,10 +630,13 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "1d83e85c8c45a829522dd3c81e37ba8c1e8a496740e424fe9d31a8985545d9c7"
+content-hash = "ecf949387170134b48aeeef3e8a748f49a33db39d0a08affaf389fb9e728e584"
 python-versions = "^3.6"
 
 [metadata.files]
+aioconsole = [
+    {file = "aioconsole-0.1.16.tar.gz", hash = "sha256:a5d98a99539e060f514b96425f19839abc4bc2b487b39cdb76b91df2367c647a"},
+]
 aiocontextvars = [
     {file = "aiocontextvars-0.2.2-py2.py3-none-any.whl", hash = "sha256:885daf8261818767d8f7cbd79f9d4482d118f024b6586ef6e67980236a27bfa3"},
     {file = "aiocontextvars-0.2.2.tar.gz", hash = "sha256:f027372dc48641f683c559f247bd84962becaacdc9ba711d583c3871fb5652aa"},
@@ -637,6 +668,10 @@ aiohttp = [
     {file = "aiohttp-3.5.4-cp37-cp37m-win32.whl", hash = "sha256:6d5ec9b8948c3d957e75ea14d41e9330e1ac3fed24ec53766c780f82805140dc"},
     {file = "aiohttp-3.5.4-cp37-cp37m-win_amd64.whl", hash = "sha256:368ed312550bd663ce84dc4b032a962fcb3c7cae099dbbd48663afc305e3b939"},
     {file = "aiohttp-3.5.4.tar.gz", hash = "sha256:9c4c83f4fa1938377da32bc2d59379025ceeee8e24b89f72fcbccd8ca22dc9bf"},
+]
+aiomonitor = [
+    {file = "aiomonitor-0.4.5-py3-none-any.whl", hash = "sha256:5c7ac38b2ee59cbad87162ef5c45d72c7b57b94c8a93e7f462184bf10f9ebccd"},
+    {file = "aiomonitor-0.4.5.tar.gz", hash = "sha256:6232c1ab14bf06cd7217845801c27340032f74e283bdaf32d01cdd3b7c673d0e"},
 ]
 aiosqlite = [
     {file = "aiosqlite-0.10.0.tar.gz", hash = "sha256:ad84fbd7516ca7065d799504fc41d6845c938e5306d1b7dd960caaeda12e22a9"},
@@ -913,6 +948,9 @@ sphinxcontrib-serializinghtml = [
 ]
 termcolor = [
     {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
+]
+terminaltables = [
+    {file = "terminaltables-3.1.0.tar.gz", hash = "sha256:f3eb0eb92e3833972ac36796293ca0906e998dc3be91fbe1f8615b331b853b81"},
 ]
 tortoise-orm = [
     {file = "tortoise-orm-0.13.7.tar.gz", hash = "sha256:8bee91f9439aed95b71059bfa89838295dd79b459fae6bc0aa86bf134b675269"},

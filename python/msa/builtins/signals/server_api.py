@@ -22,7 +22,6 @@ def register_routes(route_binder):
         new_event = RequestDisburseEventsToNetworkEvent().init({})
         supervisor.fire_event(new_event)
 
-
         response_event = await supervisor.listen_for_result(DisburseEventsToNetworkEvent)
 
-        return {"text": json.dumps(response_event.get_metadata())}
+        return response_event.get_metadata()

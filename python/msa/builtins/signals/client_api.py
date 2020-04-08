@@ -19,8 +19,8 @@ async def trigger_event(self, event):
 
     if not response:
         return
-    if response.status_code != 200:
-        raise Exception(response.raw)
+    if response.status != "success":
+        raise Exception(response.json["message"])
 
 
 async def get_events(self):
@@ -34,14 +34,11 @@ async def get_events(self):
 
     if not response:
         return
-    if response.status_code != 200:
+    if response.status != "success":
         raise Exception(response.raw)
 
-    # load response json
-    json = response.json()
-
     # load disburse event
-    disburse_event = Event.deserialize(json)
+    disburse_event = Event.deserialize(response.json)
 
     # load sent events
     deserialized_events = []

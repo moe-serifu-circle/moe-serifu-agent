@@ -16,7 +16,7 @@ async def ping(self, quiet=False):
     if not response:
         return
 
-    if response.status_code != 200:
+    if response.status != "success":
         raise Exception(response.raw)
 
     if not quiet:
@@ -38,13 +38,14 @@ async def check_version(self, quiet=False):
         # we have been unable to connect to the server and should exit in this case
         exit(1)
 
-    if response.status_code != 200:
+    if response.status != "success":
         raise Exception(response.raw)
 
     if response.text != msa_version or not quiet:
-        print("Server Version:", response.text)
+        server_version = response.json["text"]
+        print("Server Version:", server_version)
         print("Client Version:", msa_version)
-        if response.text != msa_version:
+        if server_version != msa_version:
             print("Warning: Client and server versions mismatch.\nExiting.", flush=True)
             exit(1)
 
@@ -62,7 +63,7 @@ async def get_version(self):
         # we have been unable to connect to the server and should exit in this case
         exit(1)
 
-    if response.status_code != 200:
+    if response.status != "success":
         raise Exception(response.raw)
 
     return response.text

@@ -38,9 +38,9 @@ async def upload_script(self, name, crontab=None, file_name=None, script_content
         "/scripting/script",
         payload=payload)
 
-    if response.status_code != 200:
-        raise Exception(response.raw)
-    print(response.text)
+    if response.status != "success":
+        raise Exception(response.json["message"])
+    print(response.raw)
 
 
 def register_endpoints(api_binder):

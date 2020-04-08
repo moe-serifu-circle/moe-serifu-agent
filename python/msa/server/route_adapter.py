@@ -42,7 +42,7 @@ class RouteAdapter:
 
             peername = response.transport.get_extra_info('peername')
             if peername is not None:
-                host, port = peername
+                host, port = peername[:2]
             else:
                 host, port = "Unknown", "xxxx"
 
@@ -74,11 +74,17 @@ class RouteAdapter:
 
                     try:
                         request_data = payload["data"]
+
                         response = await route_func(request_data)
-                        response["type"] = "response"
-                        await ws.send_str(json.dumps(response))
+                        wrapped_response = {"type": "response", "payload": response}
+                        await ws.send_str(json.dumps(wrapped_response))
                     except Exception as e:
-                        await ws.send_str(json.dumps({"type": "error", "message": str(e)}))
+                        await ws.send_str(json.dumps({
+                            "type": "error",
+                            "payload": {
+                                "message": str(e)
+                            }
+                        }))
                         continue
 
                 elif msg.type == aiohttp.WSMsgType.ERROR:
@@ -107,10 +113,6 @@ class RouteAdapter:
                         payload = None
 
                 response = await func(payload)
-                if "json" in response:
-                    j = response["json"]
-                    del response["json"]
-                    response["data"] = json.dumps(j)
                 return web.Response(**response)
             return wrapped_route
 

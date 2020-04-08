@@ -12,8 +12,8 @@ from msa.server import route_adapter
 
 
 class ApiResponse:
-    def __init__(self, status_code, raw=None, payload=None):
-        self.status_code = status_code
+    def __init__(self, status, raw=None, payload=None):
+        self.status = status
         self.raw = raw
         self.payload = payload
 
@@ -26,11 +26,14 @@ class ApiResponse:
             self.raw = ""
             self.text = ""
 
+    @property
     def json(self):
         if self.payload:
             return self.payload
-        else:
+        elif self.raw:
             return json.loads(self.text)
+        else:
+            return {}
 
 class ApiRestClient:
 
@@ -53,7 +56,7 @@ class ApiRestClient:
 
         async with  func(self.base_url + endpoint, json=payload) as response:
             raw_text = await response.text()
-            return ApiResponse(response.status, raw_text)
+            return ApiResponse(response.status, raw=raw_text)
 
     async def get(self, endpoint):
         return await self._wrap_api_call(self.session.get, endpoint)
@@ -76,40 +79,34 @@ class ApiWebsocketClient:
         self.loop = loop
         self.host = host
         self.port = port
-        self.base_url = "http://{}:{}/ws".format(self.host, self.port)
-
         self.interact = interact
+        self.base_url = "http://{}:{}/ws".format(self.host, self.port)
 
         self.message_buffer = asyncio.Queue()
 
         self.queue = asyncio.Queue()
-        self.state = {}
 
-    async def _connect(self):
+    async def connect(self):
         async with aiohttp.ClientSession() as session:
             async with session.ws_connect(self.base_url) as ws:
                 self.ws = ws
-                self.loop.create_task(self.interact(self.api, self.state))
+                self.loop.create_task(self.interact())
 
                 async for msg in ws:
                     if msg.type == aiohttp.WSMsgType.TEXT:
-                        self.queue.put_nowait(
-                            ApiResponse(200, msg.data))
+                        data = json.loads(msg.data)
 
+                        if data["type"] == "response":
+                            response = ApiResponse("success", payload=data["payload"])
 
-    def start(self):
+                        else:
+                            response = ApiResponse("failed", payload=data["payload"])
 
-        try:
-            self.loop.run_until_complete(self._connect())
-        except KeyboardInterrupt:
-            print(1)
-            self._stop()
-            print(2)
-        except asyncio.CancelledError:
-            pass
-            
-    async def stop(self):
-        await self.ws.close()
+                        self.queue.put_nowait(response)
+
+    async def disconnect(self):
+        if self.ws:
+            await self.ws.close()
 
     async def _wrap_api_call(self, verb, endpoint, payload):
 
@@ -155,9 +152,9 @@ class ApiLocalClient(dict):
             raise Exception(f"{self.__class__.__name__}: api route is not callable: {func}")
 
         if payload is not None:
-            return await func(ApiResponse(200, payload))
+            return ApiResponse(200, payload=await func(payload))
         else:
-            return await func(ApiResponse(200, None))
+            return ApiResponse(200, payload=await func())
 
     async def get(self, route):
         return await self._call_api_route("get", route)

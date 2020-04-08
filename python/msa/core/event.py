@@ -70,12 +70,18 @@ class Event(object):
         )
 
     def init(self, data: Dict = None) -> None:
-        """Sets the data property on this event. Used when creating a new event, and when deserializing an event.
+        """
+        Sets the data property on this event. Used when creating a new event, and when deserializing an event.
+
+        :param Dict data: Event specific data. Must follow the defined schema for the event type.
+        :return: the initialized event instance
+        """
+        """
 
         Parameters
         ----------
         data : Dict
-            Event specific data. Must follow the defined schema for the event type."""
+            """
         self.schema.validate(data)
         self.data = data
 

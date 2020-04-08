@@ -16,10 +16,6 @@ async def talk(self, input):
     if response.status == "failed":
         raise Exception(response.json)
 
-    if response.status == "empty_response":
-        print("Got empty response")
-        return
-
     try:
         print(response.json["text"])
     except:

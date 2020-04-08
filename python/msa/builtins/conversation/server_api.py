@@ -11,9 +11,8 @@ def register_routes(route_binder):
         new_event = ConversationInputEvent().init(payload)
         supervisor.fire_event(new_event)
 
-        if connection_type is not ApiContext.websocket:
-            response_event = await supervisor.listen_for_result(ConversationOutputEvent)
-            return {"text": response_event.data["output"]}
+        response_event = await supervisor.listen_for_result(ConversationOutputEvent)
+        return {"text": response_event.data["output"]}
 
 
 

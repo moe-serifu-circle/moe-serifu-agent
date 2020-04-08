@@ -115,7 +115,7 @@ class ApiWebsocketClient:
                             self.propagate_queue.put_nowait(new_event)
                             continue
                         elif data["type"] == "empty_response":
-                            response = ApiResponse("empty_response")
+                            pass #TODO figure out what to do about this
                         else:
                             response = ApiResponse("failed", payload=data["payload"])
 

@@ -81,7 +81,7 @@ class Interpreter:
 
         while True:
             event = await event_queue.get()
-            print("Got background event", event)
+            #print("Got background event", event)
 
         return
 

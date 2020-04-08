@@ -2,10 +2,24 @@ import aiohttp
 from aiohttp import web
 import json
 
+from msa.api import ApiContext
+
 class RouteAdapter:
+    cache = None
+
     def __init__(self):
         self.routes = {"get" : {}, "put": {}, "post": {}, "delete": {}}
         self.sync_routes = { "get": {}, "put": {}, "post": {}, "delete":{}}
+        self.app = None
+
+    @staticmethod
+    def _get_instance():
+        if RouteAdapter.cache is None:
+            instance = RouteAdapter()
+            RouteAdapter.cache = instance
+            return instance
+        else:
+            return RouteAdapter.cache
 
     def _register_route(self, verb, route):
         if route in self.routes[verb]:
@@ -27,6 +41,10 @@ class RouteAdapter:
 
     def delete(self, route):
         return self._register_route("delete", route)
+
+    def register_app(self, app):
+        self.app = app
+        self.app["websockets"] = []
 
     def lookup_route(self, verb, route):
         if verb not in self.routes:
@@ -50,6 +68,7 @@ class RouteAdapter:
             await ws.prepare(response)
 
             print(f"Client {host}:{port} connected")
+            self.app["websockets"].append(ws)
 
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
@@ -75,8 +94,12 @@ class RouteAdapter:
                     try:
                         request_data = payload["data"]
 
-                        response = await route_func(request_data)
-                        wrapped_response = {"type": "response", "payload": response}
+                        response = await route_func(ApiContext.websocket, request_data)
+
+                        if response is None:
+                            wrapped_response = {"type": "empty_response"}
+                        else:
+                            wrapped_response = {"type": "response", "payload": response}
                         await ws.send_str(json.dumps(wrapped_response))
                     except Exception as e:
                         await ws.send_str(json.dumps({
@@ -90,6 +113,9 @@ class RouteAdapter:
                 elif msg.type == aiohttp.WSMsgType.ERROR:
                     print('ws connection closed with exception %s' %
                           ws.exception())
+
+                    self.app["websockets"].remove(ws)
+
             print(f"Client {host}:{port} disconnected")
             return ws
 
@@ -112,7 +138,7 @@ class RouteAdapter:
                     else: 
                         payload = None
 
-                response = await func(payload)
+                response = await func(ApiContext.rest, payload)
                 return web.Response(**response)
             return wrapped_route
 

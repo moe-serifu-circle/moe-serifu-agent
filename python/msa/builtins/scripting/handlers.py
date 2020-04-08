@@ -8,7 +8,7 @@ from msa.core import supervisor
 from msa.builtins.scripting import events
 from msa.builtins.scripting.entities import ScriptEntity
 from msa.builtins.signals import events as signal_events
-from msa.api import get_api
+from msa.api import get_api, ApiContext
 from msa.api.context import ApiContext
 import logging
 

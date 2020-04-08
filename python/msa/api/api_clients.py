@@ -7,8 +7,10 @@ import time
 import asyncio
 import aiohttp
 import json
+import traceback
 
-from msa.server import route_adapter
+from msa.core.event import Event
+from msa.api import ApiContext
 
 
 class ApiResponse:
@@ -34,6 +36,7 @@ class ApiResponse:
             return json.loads(self.text)
         else:
             return {}
+
 
 class ApiRestClient:
 
@@ -75,22 +78,29 @@ class ApiRestClient:
 
 class ApiWebsocketClient:
 
-    def __init__(self, loop, interact, host="localhost", port=8080):
+    def __init__(self, loop, interact, propagate, host="localhost", port=8080):
         self.loop = loop
         self.host = host
         self.port = port
         self.interact = interact
+        self.propagate = propagate
         self.base_url = "http://{}:{}/ws".format(self.host, self.port)
 
         self.message_buffer = asyncio.Queue()
 
         self.queue = asyncio.Queue()
+        self.propagate_queue = asyncio.Queue()
 
     async def connect(self):
         async with aiohttp.ClientSession() as session:
             async with session.ws_connect(self.base_url) as ws:
                 self.ws = ws
+
                 self.loop.create_task(self.interact())
+
+                async def prop():
+                    await self.propagate(self.propagate_queue)
+                self.loop.create_task(prop())
 
                 async for msg in ws:
                     if msg.type == aiohttp.WSMsgType.TEXT:
@@ -99,6 +109,13 @@ class ApiWebsocketClient:
                         if data["type"] == "response":
                             response = ApiResponse("success", payload=data["payload"])
 
+                        elif data["type"] == "event_propagate":
+                            new_event = Event.deserialize(data["payload"])
+                            new_event._network_propagate = False
+                            self.propagate_queue.put_nowait(new_event)
+                            continue
+                        elif data["type"] == "empty_response":
+                            response = ApiResponse("empty_response")
                         else:
                             response = ApiResponse("failed", payload=data["payload"])
 
@@ -106,7 +123,7 @@ class ApiWebsocketClient:
 
     async def disconnect(self):
         if self.ws:
-            await self.ws.close()
+            self.ws.disconnect()
 
     async def _wrap_api_call(self, verb, endpoint, payload):
 
@@ -140,7 +157,8 @@ class ApiLocalClient(dict):
     def __init__(self, loop):
         self.loop = loop
 
-        self.route_adapter = route_adapter
+        from msa.server import route_adapter_instance
+        self.route_adapter = route_adapter_instance
         self.client = self
 
     async def _call_api_route(self, verb, route, payload=None):
@@ -152,9 +170,17 @@ class ApiLocalClient(dict):
             raise Exception(f"{self.__class__.__name__}: api route is not callable: {func}")
 
         if payload is not None:
-            return ApiResponse(200, payload=await func(payload))
+            try:
+                result_payload = await func(ApiContext.local, payload)
+                return ApiResponse("success", payload=result_payload)
+            except Exception as e:
+                return ApiResponse("failed", raw=traceback.format_exc())
         else:
-            return ApiResponse(200, payload=await func())
+            try:
+                result_payload = await func(ApiContext.local)
+                return ApiResponse("success", payload=result_payload)
+            except Exception as e:
+                return ApiResponse("failed", raw=traceback.format_exc())
 
     async def get(self, route):
         return await self._call_api_route("get", route)

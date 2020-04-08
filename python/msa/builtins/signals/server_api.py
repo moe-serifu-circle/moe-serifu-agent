@@ -5,7 +5,7 @@ import json
 def register_routes(route_binder):
 
     @route_binder.post("/signals/trigger_event")
-    async def trigger_event(payload):
+    async def trigger_event(connection_type, payload):
 
         from msa.core.event import Event
         new_event = Event.deserialize(payload)
@@ -15,7 +15,7 @@ def register_routes(route_binder):
 
 
     @route_binder.get("/signals/events")
-    async def get_events(payload):
+    async def get_events(connection_type, payload):
 
         from msa.builtins.signals.events import RequestDisburseEventsToNetworkEvent, DisburseEventsToNetworkEvent
 
@@ -25,3 +25,5 @@ def register_routes(route_binder):
         response_event = await supervisor.listen_for_result(DisburseEventsToNetworkEvent)
 
         return response_event.get_metadata()
+
+

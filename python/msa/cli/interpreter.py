@@ -65,6 +65,7 @@ class Interpreter:
             self.config["plugin_modules"],
             loop=self.loop,
             interact=self.interact,
+            propagate=self.propagate,
             host="localhost",
             port=8080,
         )
@@ -75,6 +76,14 @@ class Interpreter:
     async def _start(self):
         # startup checks
         await self.api.client.connect()
+
+    async def propagate(self, event_queue):
+
+        while True:
+            event = await event_queue.get()
+            print("Got background event", event)
+
+        return
 
     async def interact(self):
         try:

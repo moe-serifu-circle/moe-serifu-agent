@@ -84,3 +84,4 @@ async def get_scripts(self) -> List[Dict]:
 def register_endpoints(api_binder):
     api_binder.register_method()(upload_script)
     api_binder.register_method()(list_scripts)
+    api_binder.register_method()(get_scripts)

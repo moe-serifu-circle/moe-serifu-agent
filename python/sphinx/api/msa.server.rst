@@ -12,10 +12,26 @@ msa.server.default\_routes module
     :undoc-members:
     :show-inheritance:
 
+msa.server.event\_propagate module
+----------------------------------
+
+.. automodule:: msa.server.event_propagate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msa.server.route\_adapter module
 --------------------------------
 
 .. automodule:: msa.server.route_adapter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+msa.server.server\_request module
+---------------------------------
+
+.. automodule:: msa.server.server_request
     :members:
     :undoc-members:
     :show-inheritance:

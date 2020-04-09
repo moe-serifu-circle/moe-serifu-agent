@@ -7,7 +7,7 @@ from msa.builtins.signals import events as signal_events
 
 class ConversationInputEventHandler(EventHandler):
     """
-    Handles ConversatoinInputEvents
+    Handles ConversationInputEvents
     """
 
     def __init__(self, loop, event_bus, logger, config=None):

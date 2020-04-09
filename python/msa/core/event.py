@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union
 from schema import Schema
 import datetime
 
@@ -69,7 +69,7 @@ class Event(object):
             and self.priority <= other.priority
         )
 
-    def init(self, data: Dict = None) -> None:
+    def init(self, data: Union[Dict, None] = None) -> None:
         """
         Sets the data property on this event. Used when creating a new event, and when deserializing an event.
 

@@ -291,7 +291,7 @@ class Supervisor:
             with suppress(asyncio.CancelledError):
                 self.coroutine_futures = await asyncio.gather(*primed_coros)
         except Exception as err:
-            self.logger.error(err, traceback.print_exc())
+            self.logger.error(err, traceback.format_exc())
 
         self.logger.debug("Startup Coroutine: Finished startup")
 

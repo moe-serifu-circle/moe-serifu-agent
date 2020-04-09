@@ -7,6 +7,7 @@ handler_factories = [
     handlers.AddScriptHandler,
     handlers.StartupEventHandler,
     handlers.TriggerScriptRunHandler,
+    handlers.TriggerScriptListHandler,
 ]
 
 

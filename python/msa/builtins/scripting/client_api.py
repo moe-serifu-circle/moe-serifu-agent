@@ -1,3 +1,6 @@
+from typing import Dict, List
+from tabulate import tabulate
+
 
 async def upload_script(self, name, crontab=None, file_name=None, script_contents=None):
     """
@@ -43,5 +46,41 @@ async def upload_script(self, name, crontab=None, file_name=None, script_content
     print(response.raw)
 
 
+async def list_scripts(self) -> None:
+    """
+    Prints scripts that have been uploaded to the deamon.
+
+    :return:
+    :rtype: None
+    """
+
+    response = await self.client.get("/scripting/script")
+
+    if response.status != "success":
+        raise Exception(response.json["message"])
+
+    scripts = response.json["scripts"]
+
+    print(tabulate(scripts, tablefmt="fancy_grid", headers="keys"))
+
+
+async def get_scripts(self) -> List[Dict]:
+    """
+    Fetches scripts uploaded to the daemon and returns them as a list of objects
+
+    :param self:
+    :return:
+    """
+
+    response = await self.client.get("/scripting/script")
+
+    if response.status != "success":
+        raise Exception(response.json["message"])
+
+    scripts = response.json["scripts"]
+    return scripts
+
+
 def register_endpoints(api_binder):
     api_binder.register_method()(upload_script)
+    api_binder.register_method()(list_scripts)

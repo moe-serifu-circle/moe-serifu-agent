@@ -117,7 +117,7 @@ class RouteAdapter:
                         continue
 
                     try:
-                        response = await route_func(ApiContext.websocket, request)
+                        response = await route_func(request)
 
                         if response is None:
                             wrapped_response = {"type": "empty_response"}
@@ -158,7 +158,7 @@ class RouteAdapter:
                     else: 
                         payload = None
 
-                response = await func(ApiContext.rest, payload)
+                response = await func(payload)
                 return web.Response(**response)
             return wrapped_route
 

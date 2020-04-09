@@ -10,7 +10,6 @@ import json
 import traceback
 
 from msa.core.event import Event
-from msa.api import ApiContext
 from msa.server.server_request import SeverRequest
 
 
@@ -190,7 +189,7 @@ class ApiLocalClient(dict):
         request = SeverRequest("local", verb, route, payload)
 
         try:
-            result_payload = await func(ApiContext.local, request)
+            result_payload = await func(request)
             return ApiResponse("success", payload=result_payload)
         except Exception as e:
             return ApiResponse("failed", raw=traceback.format_exc())

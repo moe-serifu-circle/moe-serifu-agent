@@ -3,6 +3,7 @@ import traceback
 import os
 import asyncio
 import webbrowser
+import signal
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
@@ -107,10 +108,12 @@ class Interpreter:
                 if self.quit:
                     break
 
-            print("Goodbye")
-            quit(self.exit_code)
         finally:
             await self.api.client.disconnect()
+            print("Goodbye")
+            await asyncio.sleep(0)
+
+            #exit(self.exit_code)
 
     def generate_prompt_text(self):
         if self.indent_level == 0:
@@ -158,7 +161,7 @@ class Interpreter:
             await self.aexec(text.strip())
         except SystemExit as e:
             self.quit = True
-            self.exit_code = e.code
+            self.exit_code = e.code or 0
             return
         except:
             self.print_traceback(traceback.format_exc())
@@ -189,8 +192,6 @@ class Interpreter:
         print(highlight(stringify, Python3TracebackLexer(), TerminalFormatter()))
 
     def parse_command(self, text):
-        
-
         clean_text = text.strip()
         if len(clean_text) == 0: # obviously there is no command to parse 
             return

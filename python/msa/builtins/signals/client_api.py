@@ -6,12 +6,12 @@ async def trigger_event(self, event):
     Takes an `msa.core.event.Event` subclass to propagate to the daemon.
 
     :async:
-    :param msa.core.event.Event event: The event to propagate to the daemon. `event.network_propagate` must be set to
+    :param msa.core.event.Event event: The event to propagate to the daemon. `event._network_propagate` must be set to
         `True`, otherwise the event will not be propagated.
     :return: `None`
     """
-    if not event.network_propagate:
-        print("WARNING: event.network_propagate is not True, cancelling network propagation.")
+    if not event._network_propagate:
+        print("WARNING: event._network_propagate is not True, cancelling network propagation.")
 
     response = await self.client.post(
         "/signals/trigger_event",

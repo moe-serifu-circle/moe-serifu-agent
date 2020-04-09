@@ -11,6 +11,7 @@ import traceback
 
 from msa.core.event import Event
 from msa.api import ApiContext
+from msa.server.server_request import SeverRequest
 
 
 class ApiResponse:
@@ -33,7 +34,10 @@ class ApiResponse:
         if self.payload:
             return self.payload
         elif self.raw:
-            return json.loads(self.text)
+            try:
+                return json.loads(self.text)
+            except:
+                return None
         else:
             return {}
 
@@ -90,9 +94,14 @@ class ApiWebsocketClient:
 
         self.queue = asyncio.Queue()
         self.propagate_queue = asyncio.Queue()
+        self.client_id = None
+
+        self.client_session = None
+        self.ws = None
 
     async def connect(self):
         async with aiohttp.ClientSession() as session:
+            self.client_session = session
             async with session.ws_connect(self.base_url) as ws:
                 self.ws = ws
 
@@ -111,11 +120,17 @@ class ApiWebsocketClient:
 
                         elif data["type"] == "event_propagate":
                             new_event = Event.deserialize(data["payload"])
-                            new_event._network_propagate = False
-                            self.propagate_queue.put_nowait(new_event)
+                            new_event.network_propagate = False
+                            if new_event.propagate_target == self.client_id or new_event.propagate_target == "all":
+                                self.propagate_queue.put_nowait(new_event)
                             continue
+
                         elif data["type"] == "empty_response":
                             pass #TODO figure out what to do about this
+
+                        elif data["type"] == "notify_id":
+                            self.client_id = data["payload"]["id"]
+                            continue
                         else:
                             response = ApiResponse("failed", payload=data["payload"])
 
@@ -123,7 +138,10 @@ class ApiWebsocketClient:
 
     async def disconnect(self):
         if self.ws:
-            self.ws.disconnect()
+            await self.ws.close()
+
+        if self.client_session:
+            await self.client_session.close()
 
     async def _wrap_api_call(self, verb, endpoint, payload):
 
@@ -169,18 +187,13 @@ class ApiLocalClient(dict):
         if not callable(func):
             raise Exception(f"{self.__class__.__name__}: api route is not callable: {func}")
 
-        if payload is not None:
-            try:
-                result_payload = await func(ApiContext.local, payload)
-                return ApiResponse("success", payload=result_payload)
-            except Exception as e:
-                return ApiResponse("failed", raw=traceback.format_exc())
-        else:
-            try:
-                result_payload = await func(ApiContext.local)
-                return ApiResponse("success", payload=result_payload)
-            except Exception as e:
-                return ApiResponse("failed", raw=traceback.format_exc())
+        request = SeverRequest("local", verb, route, payload)
+
+        try:
+            result_payload = await func(ApiContext.local, request)
+            return ApiResponse("success", payload=result_payload)
+        except Exception as e:
+            return ApiResponse("failed", raw=traceback.format_exc())
 
     async def get(self, route):
         return await self._call_api_route("get", route)

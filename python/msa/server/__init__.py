@@ -1,4 +1,6 @@
 import asyncio
+from aiohttp import WSCloseCode
+
 from msa.data import start_db_engine, stop_db_engine
 from msa.server.route_adapter import RouteAdapter
 from msa.server.default_routes import register_default_routes
@@ -18,6 +20,12 @@ async def start_supervisor(app):
 async def stop_supervisor(app):
     app["supervisor"].logger.info("*** trigger shutdown")
     await app["supervisor"].exit()
+
+
+async def on_shutdown(app):
+    for ws in set(app['websockets']):
+        await ws.close(code=WSCloseCode.GOING_AWAY,
+                       message='Server shutdown')
 
 
 def start_server(config_context):
@@ -49,9 +57,12 @@ def start_server(config_context):
     app.on_startup.append(event_propagation_router.app_start)
     app.on_startup.append(start_supervisor)
 
+    # onshutdown
+    app.on_shutdown.append(on_shutdown)
+
     # cleanup routes
-    app.on_startup.append(event_propagation_router.app_stop)
     app.on_cleanup.append(stop_supervisor)
+    app.on_cleanup.append(event_propagation_router.app_stop)
     app.on_cleanup.append(stop_db_engine)
 
     try:
@@ -61,7 +72,21 @@ def start_server(config_context):
         locals_ = {"port": port, "host": host}
         with aiomonitor.start_monitor(loop=loop, locals=locals_):
             # run application with built in aiohttp run_app function
-            web.run_app(app, port=port, host=host)
+
+            try:
+                web.run_app(app, port=port, host=host)
+            except:
+                pass
+            finally:
+                loop.close()
+
+
+
 
     except:
-        web.run_app(app)
+        try:
+            web.run_app(app)
+        except:
+            pass
+        finally:
+            loop.close()

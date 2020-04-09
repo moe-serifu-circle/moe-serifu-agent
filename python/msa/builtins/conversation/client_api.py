@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 async def talk(self, input):
     """
     Interact with the conversation module builtin to MSA. Expects a natural language message, MSA should respond in kind.
@@ -14,7 +15,7 @@ async def talk(self, input):
         payload={"input": input})
 
     if response.status == "failed":
-        raise Exception(response.json)
+        raise Exception("Server Error: \n" + response.json["message"])
 
     try:
         print(response.json["text"])

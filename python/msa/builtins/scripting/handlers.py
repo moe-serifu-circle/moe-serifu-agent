@@ -160,6 +160,10 @@ class AddScriptHandler(EventHandler):
             supervisor.fire_event(
                 new_event
             )
+
+
+class ListScriptHandler():
+    pass
                 
 
 class TriggerScriptRunHandler(EventHandler):

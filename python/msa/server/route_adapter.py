@@ -1,8 +1,11 @@
 import aiohttp
 from aiohttp import web
 import json
+from uuid import uuid4
 
 from msa.api import ApiContext
+from msa.server.server_request import SeverRequest
+
 
 class RouteAdapter:
     cache = None
@@ -63,6 +66,8 @@ class RouteAdapter:
                 host, port = peername[:2]
             else:
                 host, port = "Unknown", "xxxx"
+            uuid = str(uuid4())
+            client_id = f"{host}:{port}:{uuid}"
 
             ws = web.WebSocketResponse()
             await ws.prepare(response)
@@ -70,31 +75,49 @@ class RouteAdapter:
             print(f"Client {host}:{port} connected")
             self.app["websockets"].append(ws)
 
+            # send client id to client
+            await ws.send_str(
+                json.dumps({
+                    "type": "notify_id",
+                    "payload": {
+                        "id": client_id
+                    }
+                })
+            )
+
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     payload = json.loads(msg.data)
 
                     if "verb" not in payload:
-                        await ws.send_str(json.dumps({"type": "error", "message": "Websocket payload requires a verb field."}))
+                        await ws.send_str(
+                            json.dumps({"type": "error", "message": "Websocket payload requires a verb field."}))
                         continue
 
                     if "route" not in payload:
-                        await ws.send_str(json.dumps({"type": "error", "message": "Websocket payload requires a route field."}))
+                        await ws.send_str(
+                            json.dumps({"type": "error", "message": "Websocket payload requires a route field."}))
                         continue
 
                     if "data" not in payload:
-                        await ws.send_str(json.dumps({"type": "error", "message": "Websocket payload requires a data field."}))
+                        await ws.send_str(
+                            json.dumps({"type": "error", "message": "Websocket payload requires a data field."}))
+
+                    request = SeverRequest(
+                        client_id,
+                        payload["verb"],
+                        payload["route"],
+                        payload["data"],
+                    )
 
                     try:
-                        route_func = route_adapter.lookup_route(payload["verb"], payload["route"])
+                        route_func = route_adapter.lookup_route(request.verb, request.route)
                     except Exception as e:
                         await ws.send_str(json.dumps({"type": "error", "message": str(e)}))
                         continue
 
                     try:
-                        request_data = payload["data"]
-
-                        response = await route_func(ApiContext.websocket, request_data)
+                        response = await route_func(ApiContext.websocket, request)
 
                         if response is None:
                             wrapped_response = {"type": "empty_response"}
@@ -118,9 +141,6 @@ class RouteAdapter:
 
             print(f"Client {host}:{port} disconnected")
             return ws
-
-                    
-
         return websocket_route
 
     def get_route_table(self):
@@ -172,7 +192,6 @@ class RouteAdapter:
 
         all_routes.append(web.get("/ws", self.generate_websocket_route()))
         return all_routes
-
 
     def lookup_route(self, verb, route):
         if verb in self.routes:

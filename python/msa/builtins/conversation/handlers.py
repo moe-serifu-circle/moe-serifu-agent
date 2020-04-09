@@ -28,11 +28,11 @@ class ConversationInputEventHandler(EventHandler):
             output = "I am well thank you. What can I do for you?"
 
         else:
-            output =  "I am afraid I don't know what to say."
+            output = "I am afraid I don't know what to say."
 
         new_event = (events.ConversationOutputEvent()
-                     .init({"output": output})
-                     .network_propagate())
+                     .init({"output": output}))
+
         supervisor.fire_event(new_event)
 
     def normalize(self, string):

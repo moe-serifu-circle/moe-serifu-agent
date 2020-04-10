@@ -1,6 +1,10 @@
 - [X] enable submitting scripts to server and running on a schedule
 - [X] enable creating custom db tables for plugins
 
+- [ ] Schema versioning and migrations for entities
+  - consider switching to sql alchemy
+  - homeassistant reference: https://github.com/home-assistant/core/blob/7dd42bc32d70f5ef2bb7a5910226a6672523d3eb/homeassistant/components/recorder/migration.py
+
 - [x] implement listing uploaded scripts
   - if there is a crontab, include the time of next execution
 - [x] implement deleting uploaded scripts

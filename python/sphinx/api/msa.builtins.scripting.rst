@@ -36,6 +36,14 @@ msa.builtins.scripting.handlers module
     :undoc-members:
     :show-inheritance:
 
+msa.builtins.scripting.script\_execution\_manager module
+--------------------------------------------------------
+
+.. automodule:: msa.builtins.scripting.script_execution_manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 msa.builtins.scripting.server\_api module
 -----------------------------------------
 

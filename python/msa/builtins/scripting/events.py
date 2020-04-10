@@ -4,6 +4,44 @@ from schema import Schema, And, Or, Optional
 from msa.core.event import Event
 
 
+class TriggerGetScriptEvent(Event):
+    """
+    TriggerListScriptEvent schema:
+
+    *No schema is required.*
+    """
+    def __init__(self):
+        super().__init__(
+            priority=50,
+            schema=Schema({
+                "name": And(str, len)
+            })
+        )
+
+
+class GetScriptEvent(Event):
+    """
+    TriggerListScriptEvent schema:
+
+    *No schema is required.*
+    """
+    def __init__(self):
+        super().__init__(
+            priority=50,
+            schema=Schema({
+                "id": int,
+                "name": And(str, len),
+                "crontab": Or(And(str, len), None),
+                "created": str,
+                "last_edited": str,
+                "last_run": str,
+                "scheduled_for": Or(And(str, len), None),
+                "content": And(str, len),
+                "running": bool,
+            })
+        )
+
+
 class TriggerListScriptsEvent(Event):
     """
     TriggerListScriptEvent schema:

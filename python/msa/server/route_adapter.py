@@ -2,9 +2,10 @@ import aiohttp
 from aiohttp import web
 import json
 from uuid import uuid4
+import traceback
 
-from msa.api import ApiContext
 from msa.server.server_request import SeverRequest
+from msa.server.url_param_parser import UrlParamParser
 
 
 class RouteAdapter:
@@ -12,7 +13,7 @@ class RouteAdapter:
 
     def __init__(self):
         self.routes = {"get" : {}, "put": {}, "post": {}, "delete": {}}
-        self.sync_routes = { "get": {}, "put": {}, "post": {}, "delete":{}}
+        self.param_matchers = []
         self.app = None
 
     @staticmethod
@@ -103,18 +104,22 @@ class RouteAdapter:
                         await ws.send_str(
                             json.dumps({"type": "error", "message": "Websocket payload requires a data field."}))
 
+                    try:
+                        route_func, url_params = route_adapter.lookup_route_and_resolve_url_params(
+                            payload["verb"],
+                            payload["route"]
+                        )
+                    except Exception as e:
+                        await ws.send_str(json.dumps({"type": "error", "message": str(e)}))
+                        continue
+
                     request = SeverRequest(
                         client_id,
                         payload["verb"],
                         payload["route"],
                         payload["data"],
+                        url_params
                     )
-
-                    try:
-                        route_func = route_adapter.lookup_route(request.verb, request.route)
-                    except Exception as e:
-                        await ws.send_str(json.dumps({"type": "error", "message": str(e)}))
-                        continue
 
                     try:
                         response = await route_func(request)
@@ -128,7 +133,7 @@ class RouteAdapter:
                         await ws.send_str(json.dumps({
                             "type": "error",
                             "payload": {
-                                "message": str(e)
+                                "message": traceback.format_exc()
                             }
                         }))
                         continue
@@ -146,19 +151,34 @@ class RouteAdapter:
     def get_route_table(self):
         all_routes = [ ]
 
-        def route_wrapper(func):
+        def route_wrapper(verb, route, func):
+
+            self.param_matchers.append(
+                UrlParamParser(route)
+            )
+
             async def wrapped_route(request, raw_data=None):
                 if raw_data:
                     payload = raw_data
+                    url_vars = {}  # TODO: find some way to get url params from local client
                 else:
                     dump = await request.read()
+                    url_vars = request.match_info
                     decoded = dump.decode("utf-8")
                     if len(decoded) != 0:
                         payload = json.loads(decoded)
                     else: 
                         payload = None
 
-                response = await func(payload)
+                server_request = SeverRequest(
+                    "rest" + str(uuid4()),
+                    verb,
+                    route,
+                    payload,
+                    url_vars
+                )
+
+                response = await func(server_request)
                 return web.Response(**response)
             return wrapped_route
 
@@ -166,28 +186,28 @@ class RouteAdapter:
             all_routes.append(
                 web.get(
                     route,
-                    route_wrapper(route_func)
+                    route_wrapper("get", route, route_func)
                 ))
 
         for route, route_func in self.routes["put"].items():
             all_routes.append(
                 web.put(
                     route,
-                    route_wrapper(route_func)
+                    route_wrapper("put", route, route_func)
                 ))
 
         for route, route_func in self.routes["post"].items():
             all_routes.append(
                 web.post(
                     route, 
-                    route_wrapper(route_func)
+                    route_wrapper("post", route, route_func)
                 ))
 
         for route, route_func in self.routes["delete"].items():
             all_routes.append(
                 web.delete(
                     route,
-                    route_wrapper(route_func)
+                    route_wrapper("delete", route, route_func)
                 ))
 
         all_routes.append(web.get("/ws", self.generate_websocket_route()))
@@ -198,4 +218,13 @@ class RouteAdapter:
             if route in self.routes[verb]:
                 return self.routes[verb][route]
         return None
+
+    def lookup_route_and_resolve_url_params(self, verb, route):
+        if verb in self.routes:
+            for matcher in self.param_matchers:
+                if matcher.match(route) and matcher.route in self.routes[verb]:
+                    return self.routes[verb][matcher.route], matcher.resolve_params(route)
+
+        raise Exception("Failed to resolve url:", verb, route)
+
 

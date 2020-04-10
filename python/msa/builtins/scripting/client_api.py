@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 from tabulate import tabulate
 
 
@@ -50,6 +50,7 @@ async def list_scripts(self) -> None:
     """
     Prints scripts that have been uploaded to the deamon.
 
+    :param self:
     :return:
     :rtype: None
     """
@@ -81,7 +82,59 @@ async def get_scripts(self) -> List[Dict]:
     return scripts
 
 
+async def get_script(self, name: str) -> Union[Dict, None]:
+    """
+    Fetches a script uploaded to the daemon and returns them as a list of objects
+
+    :param self:
+    :param name: The name of the script to fetch.
+    :type name: :class:`str`
+    :return: The script and metadata associated with the requested script. None if the script was not found.
+    :rtype: :class:`Dict` or :class:`NoneType`
+    """
+
+    response = await self.client.get("/scripting/script", payload={"name": name})
+
+    if response.status != "success":
+        raise Exception(response.json["message"])
+
+    return response.json["script"]
+
+async def print_script(self, name: str) -> Union[Dict, None]:
+    """
+    Fetches a script uploaded to the daemon and prints its details.
+
+    :param self:
+    :param name: The name of the script to fetch.
+    :type name: :class:`str`
+    :rtype: :class:`NoneType`
+    """
+
+    response = await self.client.get(f"/scripting/script/{name}")
+
+    if response.status != "success":
+        raise Exception(response.json["message"])
+
+    script = response.json["script"]
+
+    script = [
+        ["Id", script["id"]],
+        ["Name ", script["name"]],
+        ["Created", script["created"]],
+        ["Last Edited", script["last_edited"]],
+        ["Last Run", script["last_run"]],
+        ["Currently Running", "Yes" if script["running"] else "No"],
+        ["Crontab", script["crontab"]],
+        ["Scheduled For", script["scheduled_for"] if script["scheduled_for"] else "N/A"],
+        ["Content", script["content"]],
+    ]
+
+    print(tabulate(script, tablefmt="fancy_grid"))
+
+
 def register_endpoints(api_binder):
     api_binder.register_method()(upload_script)
     api_binder.register_method()(list_scripts)
     api_binder.register_method()(get_scripts)
+    api_binder.register_method()(get_script)
+    api_binder.register_method()(print_script)

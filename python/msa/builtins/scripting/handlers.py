@@ -91,7 +91,6 @@ class StartupEventHandler(EventHandler):
     def __init__(self, loop, event_bus, logger, config=None):
         super().__init__(loop, event_bus, logger, config)
         self.script_manager = ScriptExecutionManager(loop)
-        print("StartupEventHandler scripting/handlers")
 
         self.event_bus.subscribe(signal_events.StartupEvent, self.handle_startup_event)
 
@@ -147,6 +146,53 @@ class TriggerScriptListHandler(EventHandler):
             "scripts": scripts
         })
         supervisor.fire_event(new_event)
+
+
+
+class TriggerGetScriptHandler(EventHandler):
+    """
+    Handles :class:`TriggerGetScriptEvent` Events
+    """
+
+    def __init__(self, loop, event_bus, logger, config=None):
+        super().__init__(loop, event_bus, logger, config)
+        self.script_execution_manager = ScriptExecutionManager(loop)
+
+        self.event_bus.subscribe(events.TriggerGetScriptEvent, self.handle_trigger_get_script_event)
+
+    async def handle_trigger_get_script_event(self, event):
+
+        event_name = event.data["name"]
+
+        script_entity = await ScriptEntity.filter(name=event_name).first()
+
+        if script_entity.name in self.script_execution_manager.scheduled_scripts:
+            aiocron_instance = self.script_execution_manager.scheduled_scripts[script_entity.name]["aiocron_instance"]
+            time_sec =  aiocron_instance.handle.when() + aiocron_instance.time
+            scheduled_for = datetime.fromtimestamp(time_sec)
+
+            scheduled_for = scheduled_for.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        else:
+            scheduled_for = None
+
+        script = {
+            "id": script_entity.id,
+            "name": script_entity.name,
+            "crontab": script_entity.crontab,
+            "content": script_entity.script_contents,
+            "created": script_entity.created.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "last_edited": script_entity.last_edited.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "last_run": script_entity.last_run.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "running": script_entity.name in self.script_execution_manager.running_scripts,
+            "scheduled_for": scheduled_for,
+        }
+
+
+        new_event = events.GetScriptEvent().init(script)
+        supervisor.fire_event(new_event)
+
+
+
 
 
 

@@ -11,6 +11,7 @@ import traceback
 
 from msa.core.event import Event
 from msa.server.server_request import SeverRequest
+from msa.server.url_param_parser import UrlParamParser
 
 
 class ApiResponse:
@@ -130,8 +131,10 @@ class ApiWebsocketClient:
                         elif data["type"] == "notify_id":
                             self.client_id = data["payload"]["id"]
                             continue
-                        else:
+                        elif data["type"] == "error":
                             response = ApiResponse("failed", payload=data["payload"])
+                        else:
+                            raise Exception("Bad payload response:", data)
 
                         self.queue.put_nowait(response)
 
@@ -179,14 +182,14 @@ class ApiLocalClient(dict):
         self.client = self
 
     async def _call_api_route(self, verb, route, payload=None):
-        func = self.route_adapter.lookup_route(verb, route)
+        func, url_params = self.route_adapter.lookup_route_and_resolve_url_params(verb, route)
         if func is None:
             raise Exception(f"{self.__class__.__name__}: no api route {verb}:{route} exists.")
 
         if not callable(func):
             raise Exception(f"{self.__class__.__name__}: api route is not callable: {func}")
 
-        request = SeverRequest("local", verb, route, payload)
+        request = SeverRequest("local", verb, route, payload, url_params)
 
         try:
             result_payload = await func(request)

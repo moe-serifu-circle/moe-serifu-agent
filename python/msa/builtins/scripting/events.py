@@ -4,11 +4,47 @@ from schema import Schema, And, Or, Optional
 from msa.core.event import Event
 
 
+class ScriptDeletedEvent(Event):
+    """
+    ScriptDeletedEvent schema:
+
+    name:
+        The name of the script that was deleted
+
+    """
+    def __init__(self):
+        super().__init__(
+            priority=50,
+            schema=Schema({
+                "name": And(str, len),
+                "status": Or("success", "failure"),
+                Optional("reason"): And(str, len)
+            })
+        )
+
+
+class TriggerDeleteScriptEvent(Event):
+    """
+    TriggerDeleteScriptEvent schema:
+
+    name:
+        The name of the script to deleted
+    """
+    def __init__(self):
+        super().__init__(
+            priority=50,
+            schema=Schema({
+                "name": And(str, len)
+            })
+        )
+
+
 class TriggerGetScriptEvent(Event):
     """
     TriggerListScriptEvent schema:
 
-    *No schema is required.*
+    name:
+        The name of the script to fetch
     """
     def __init__(self):
         super().__init__(
@@ -23,7 +59,24 @@ class GetScriptEvent(Event):
     """
     TriggerListScriptEvent schema:
 
-    *No schema is required.*
+    id:
+        The id of the script
+    name:
+        The name of the script
+    crontab:
+        The crontab of the script
+    created:
+        The created timestamp of the script
+    last_edited:
+        The last edited timestamp of the script
+    last_run:
+        The last run timestamp of the script
+    scheduled_for:
+        The next timestamp the script is scheduled to execute at.
+    content:
+        Content of the script
+    running:
+        A boolean indicating whether or not the script is currently running.
     """
     def __init__(self):
         super().__init__(
@@ -32,9 +85,9 @@ class GetScriptEvent(Event):
                 "id": int,
                 "name": And(str, len),
                 "crontab": Or(And(str, len), None),
-                "created": str,
-                "last_edited": str,
-                "last_run": str,
+                "created": And(str, len),
+                "last_edited": And(str, len),
+                "last_run": Or(And(str, len), None),
                 "scheduled_for": Or(And(str, len), None),
                 "content": And(str, len),
                 "running": bool,
@@ -59,6 +112,22 @@ class ListScriptsEvent(Event):
     """
     ListScriptEvent schema:
 
+    id:
+        The id of the script
+    name:
+        The name of the script
+    crontab:
+        The crontab of the script
+    created:
+        The created timestamp of the script
+    last_edited:
+        The last edited timestamp of the script
+    last_run:
+        The last run timestamp of the script
+    scheduled_for:
+        The next timestamp the script is scheduled to execute at.
+    running:
+        A boolean indicating whether or not the script is currently running.
     """
     def __init__(self):
         super().__init__(
@@ -68,9 +137,9 @@ class ListScriptsEvent(Event):
                     "id": int,
                     "name": And(str, len),
                     "crontab": Or(And(str, len), None),
-                    "created": str,
-                    "last_edited": str,
-                    "last_run": str,
+                    "created": And(str, len),
+                    "last_edited": And(str, len),
+                    "last_run": Or(And(str, len), None),
                     "scheduled_for": Or(And(str, len), None),
                     "running": bool,
                 }]

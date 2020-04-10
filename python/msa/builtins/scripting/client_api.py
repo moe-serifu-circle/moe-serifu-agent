@@ -43,7 +43,6 @@ async def upload_script(self, name, crontab=None, file_name=None, script_content
 
     if response.status != "success":
         raise Exception(response.json["message"])
-    print(response.raw)
 
 
 async def list_scripts(self) -> None:
@@ -93,7 +92,7 @@ async def get_script(self, name: str) -> Union[Dict, None]:
     :rtype: :class:`Dict` or :class:`NoneType`
     """
 
-    response = await self.client.get("/scripting/script", payload={"name": name})
+    response = await self.client.get(f"/scripting/script/{name}")
 
     if response.status != "success":
         raise Exception(response.json["message"])
@@ -132,9 +131,35 @@ async def print_script(self, name: str) -> Union[Dict, None]:
     print(tabulate(script, tablefmt="fancy_grid"))
 
 
+async def delete_script(self, name: str) -> Union[Dict, None]:
+    """
+    Deletes a script uploaded to the daemon, stopping it if it was running, and cancelling it if it was scheduled
+    to run.
+
+    :param self:
+    :param name: The name of the script to delete.
+    :type name: :class:`str`
+    :return:
+    :rtype: None
+    """
+
+    response = await self.client.delete(f"/scripting/script/{name}")
+
+    if response.status != "success":
+        raise Exception(response.json["message"])
+
+    data = response.json
+
+    if data["status"] == "failure":
+        raise Exception(data["reason"])
+
+    return
+
+
 def register_endpoints(api_binder):
     api_binder.register_method()(upload_script)
     api_binder.register_method()(list_scripts)
     api_binder.register_method()(get_scripts)
     api_binder.register_method()(get_script)
     api_binder.register_method()(print_script)
+    api_binder.register_method()(delete_script)

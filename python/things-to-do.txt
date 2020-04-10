@@ -3,12 +3,12 @@
 
 - [x] implement listing uploaded scripts
   - if there is a crontab, include the time of next execution
-- [ ] implement deleting uploaded scripts
+- [x] implement deleting uploaded scripts
 - [ ] implement logging script results
   - should this include stdout + stderr outputs?
   - how should this be cleaned up?
 - [ ] implement pullinhg script run logs
-- [ ] implement downloading uploaded scripts
+- [x] implement downloading uploaded scripts
 - [ ] impoement adhoc running an uploaded script.
 
 - [ ] implement basic counter service

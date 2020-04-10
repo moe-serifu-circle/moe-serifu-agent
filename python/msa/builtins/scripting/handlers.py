@@ -135,7 +135,9 @@ class TriggerScriptListHandler(EventHandler):
                 "crontab": script_entity.crontab,
                 "created": script_entity.created.strftime("%Y-%m-%dT%H:%M:%S.%f"),
                 "last_edited": script_entity.last_edited.strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "last_run": script_entity.last_run.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "last_run": script_entity.last_run.strftime("%Y-%m-%dT%H:%M:%S.%f")
+                    if script_entity.last_run is not None
+                    else None,
                 "running": script_entity.name in self.script_execution_manager.running_scripts,
                 "scheduled_for": scheduled_for,
             }
@@ -190,6 +192,89 @@ class TriggerGetScriptHandler(EventHandler):
 
         new_event = events.GetScriptEvent().init(script)
         supervisor.fire_event(new_event)
+
+
+class TriggerDeleteScriptHandler(EventHandler):
+    """
+    Handles :class:`TriggerDeleteScriptEvent` Events
+    """
+
+    def __init__(self, loop, event_bus, logger, config=None):
+        super().__init__(loop, event_bus, logger, config)
+        self.script_execution_manager = ScriptExecutionManager(loop)
+
+        self.event_bus.subscribe(events.TriggerDeleteScriptEvent, self.handle_trigger_delete_script_event)
+
+    async def handle_trigger_delete_script_event(self, event):
+
+        entity_name = event.data["name"]
+
+        script_entity = await ScriptEntity.filter(name=entity_name).first()
+
+        if script_entity is None:
+            self.logger.debug(f"Could not find {entity_name} in database.")
+            new_event = events.ScriptDeletedEvent().init({
+                "name": entity_name,
+                "status": "failure",
+                "reason": f"Unable to find script with name {entity_name}."
+            })
+            supervisor.fire_event(new_event)
+            return
+
+        if script_entity.name in self.script_execution_manager.running_scripts:
+            task = self.script_execution_manager.scheduled_scripts[script_entity.name]["task"]
+
+            self.logger.debug(f"Canceling running script task {entity_name}.")
+            task.cancel()
+
+            try:
+                await task
+            except asyncio.CancelledError:
+                self.logger.debug(f"Canceled script task {entity_name} successfully.")
+            except:
+                self.logger.debug(f"Failed to cancel script {entity_name} task.")
+                new_event = events.ScriptDeletedEvent().init({
+                    "name": entity_name,
+                    "status": "failure",
+                    "reason": f"Failed to cancel script with name {entity_name}."
+                })
+                supervisor.fire_event(new_event)
+                return
+        else:
+            self.logger.debug(f"Script {entity_name} not running, so there is no task to cancel.")
+
+        if script_entity.name in self.script_execution_manager.scheduled_scripts:
+            del self.script_execution_manager.scheduled_scripts[script_entity.name]
+
+        if script_entity.name in self.script_execution_manager.running_scripts:
+            self.script_execution_manager.running_scripts.remove(script_entity.name)
+
+        try:
+            await script_entity.delete()
+        except Exception as e:
+            self.logger.warn(f"Failed to delete script {entity_name} from database. Exception: ", e)
+            new_event = events.ScriptDeletedEvent().init({
+                "name": entity_name,
+                "status": "failure",
+                "reason": f"Failed to cancel script with name {entity_name}."
+            })
+            supervisor.fire_event(new_event)
+            return
+
+        # record that the event has been successfully deleted
+        new_event = events.ScriptDeletedEvent().init({
+            "name": entity_name,
+            "status": "success",
+        })
+        supervisor.fire_event(new_event)
+
+
+
+
+
+
+
+
 
 
 

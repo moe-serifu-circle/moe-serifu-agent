@@ -9,6 +9,7 @@ handler_factories = [
     handlers.TriggerScriptRunHandler,
     handlers.TriggerScriptListHandler,
     handlers.TriggerGetScriptHandler,
+    handlers.TriggerDeleteScriptHandler,
 ]
 
 

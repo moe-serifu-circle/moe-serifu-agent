@@ -17,10 +17,11 @@ CONFIG_SCHEMA = Schema({
     },
 
     "logging": {
-        "global_log_level": And(str,
+        "global_log_level": Or(None,
+                                And(str,
                                 Use(str.upper),
                                 lambda s: s in ("DEBUG", "INFO", "ERROR", "WARN"),
-                                Use(lambda e: getattr(logging, e))),
+                                )),
         "log_file_location": And(str, len),
         "granular_log_levels": [
             {
@@ -38,10 +39,10 @@ CONFIG_SCHEMA = Schema({
 
 class ConfigManager:
     """A class that reads, validates, and exposes the application configuration."""
-    def __init__(self, cli_config):
+    def __init__(self, config_file, cli_overrides):
 
-        self.config_file = cli_config["config_file"]
-        self.cli_config = cli_config
+        self.config_file = config_file
+        self.cli_overrides = cli_overrides
         self.config = None
 
         self.load()
@@ -56,10 +57,9 @@ class ConfigManager:
 
     def apply_cli_overrides(self):
         """Applies any command line interface overrides of configuration file values."""
-
-        log_level = self.cli_config.get("log_level", None)
-        if log_level:
-            self.config["logging"]["global_log_level"] = log_level
+        for key,value in self.cli_overrides.items():
+            if key == "log_level" and value is not None:
+                self.config["logging"]["global_log_level"] = value
 
     def validate(self):
         """Validates the configfile against the config schema."""

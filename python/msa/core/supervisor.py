@@ -11,7 +11,7 @@ from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
 from msa.core.config_manager import ConfigManager
 from msa.server.route_adapter import RouteAdapter
-from msa.api import get_api 
+from msa.api import get_api
 from msa.api.context import ApiContext
 from msa.data import __models__
 
@@ -90,14 +90,14 @@ class Supervisor:
 
         Parameters
         ----------
-        loop : Asynio Event Loop    
+        loop : Asynio Event Loop
             An asyncio event loop the supervisor should use.
         cli_config: Dict
             A dictionary containing configuration options derived from the command line interface.
         route_adapter: ** fix docstrings **
         """
         if not os.environ.get("TEST"):
-            self.loop = loop 
+            self.loop = loop
             self.event_bus = EventBus(self.loop)
             self.event_queue = asyncio.Queue(self.loop)
             # block getting a loop if we are running unit tests
@@ -106,7 +106,10 @@ class Supervisor:
 
 
         # ### PLACEHOLDER - Load Configuration file here --
-        self.config_manager = ConfigManager(cli_config)
+        self.config_manager = ConfigManager(
+                cli_config["config_file"],
+                cli_config["cli_overrides"]
+        )
         config = self.config_manager.get_config()
 
         client_api_binder= get_api(ApiContext.local, config["plugin_modules"], loop=loop)

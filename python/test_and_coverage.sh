@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # run coverage and unittests
-coverage run --omit **/virtualenvs/** -m unittest discover -p "*_test.py"
+coverage run --omit **/virtualenvs/**,**/tests/**  -m unittest discover -p "*_test.py"
 
 exit_code=$?
 

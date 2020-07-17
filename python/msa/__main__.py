@@ -4,12 +4,13 @@ import click
 
 @click.group(invoke_without_command=True)
 @click.option("--config-file", default="msa_config.json", help="The config file to use")
-@click.option('--log-level', help="Override the log level defined in the config file. Can be either: "
-                                                  "'debug', 'info' 'warn', or 'error'")
+@click.option('--log-level', default=None, help="Override the log level defined in the config file. Can be either: 'debug', 'info' 'warn', or 'error'. Defaults to None.")
 @click.pass_context
 def main(ctx, config_file, log_level):
 
-    ctx.obj["log_level"] = log_level
+    ctx.obj["cli_overrides"] = {
+            "log_level": log_level
+    }
 
     ctx.obj["config_file"] = config_file
 

@@ -110,7 +110,7 @@ class EventTest(unittest.TestCase):
         assert low <= low2
         assert not medium <= low
         assert low <= medium
-        
+
     def test_greater_than(self):
 
         high = HighPriority()
@@ -150,6 +150,8 @@ class EventTest(unittest.TestCase):
 
     def test_get_metadata_and_deserialize(self):
         dummy_event = DummyEvent().init({"prop_1": 1, "prop_2": "hello"})
+        dummy_event.source("you")
+        dummy_event.target("me!")
 
         raw_dict = dummy_event.get_metadata()
 
@@ -174,7 +176,7 @@ class EventTest(unittest.TestCase):
 
 
     def test_str(self):
-        
+
         fake_a = FakeA()
         fake_a_str = str(fake_a)
 

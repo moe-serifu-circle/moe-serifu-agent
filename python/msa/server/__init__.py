@@ -13,21 +13,21 @@ route_adapter_instance = RouteAdapter()
 register_default_routes(route_adapter_instance)
 
 
-async def start_supervisor(app):
+async def start_supervisor(app):  # pragma: no coverage
     app["supervisor"].start()
 
 
-async def stop_supervisor(app):
+async def stop_supervisor(app):  # pragma: no coverage
     app["supervisor"].logger.info("*** trigger shutdown")
     await app["supervisor"].exit()
 
 
-async def on_shutdown(app):
+async def on_shutdown(app):  # pragma: no coverage
     for ws in set(app["websockets"]):
         await ws.close(code=WSCloseCode.GOING_AWAY, message="Server shutdown")
 
 
-def start_server(config_context):
+def start_server(config_context):  # pragma: no coverage
     app = web.Application()
 
     event_propagation_router = EventPropagationRouter()

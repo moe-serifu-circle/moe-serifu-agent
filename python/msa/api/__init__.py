@@ -16,6 +16,9 @@ def get_api(context, plugin_whitelist=None, **kwargs):
         raise Exception("get_api: context cannot be None.")
 
 
+    if not isinstance(context, ApiContext):
+        raise Exception(f"Invalid api context provided: '{context}'.")
+
     if len(kwargs.keys()) == 0:
         api_instance = ApiPatcher.load(context)
     else:
@@ -27,7 +30,7 @@ def get_api(context, plugin_whitelist=None, **kwargs):
 
         elif context == ApiContext.websocket:
             api_client = api_clients.ApiWebsocketClient(**kwargs)
-            
+
         if plugin_whitelist is None:
             raise Exception("get_api: plugin_whitelist cannot be none when **kwargs are provided to get_api.")
 

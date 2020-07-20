@@ -157,7 +157,7 @@ class EventTest(unittest.TestCase):
 
         deserialized = Event.deserialize(raw_dict)
 
-        assert dummy_event == deserialized
+        self.assertEqual(dummy_event, deserialized)
 
     def test_deserialize_no_event_type(self):
         with self.assertRaises(Exception):

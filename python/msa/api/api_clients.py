@@ -52,10 +52,10 @@ class ApiRestClient:
 
         self.session = None
 
-    async def connect(self):
+    async def connect(self):  # pragma: no coverage
         self.session = aiohttp.ClientSession()
 
-    async def disconnect(self):
+    async def disconnect(self):  # pragma: no coverage
         await self.session.close()
         self.session = None
 
@@ -74,15 +74,20 @@ class ApiRestClient:
     async def put(self, endpoint, payload=None):
         return await self._wrap_api_call(self.session.put, endpoint, payload)
     
-    async def update(self, endpoint, payload=None):
-        return await self._wrap_api_call(self.session.update, endpoint, payload)
-    
-    def delete(self, endpoint, payload=None):
-        return self._wrap_api_call(self.session.delete, endpoint, payload)
+    async def delete(self, endpoint, payload=None):
+        return await self._wrap_api_call(self.session.delete, endpoint, payload)
 
 class ApiWebsocketClient:
 
     def __init__(self, loop, interact, propagate, host="localhost", port=8080):
+        """
+
+        :param loop:
+        :param interact:
+        :param propagate:
+        :param host:
+        :param port:
+        """
         self.loop = loop
         self.host = host
         self.port = port
@@ -126,7 +131,7 @@ class ApiWebsocketClient:
                             continue
 
                         elif data["type"] == "empty_response":
-                            pass #TODO figure out what to do about this
+                            pass
 
                         elif data["type"] == "notify_id":
                             self.client_id = data["payload"]["id"]
@@ -138,7 +143,7 @@ class ApiWebsocketClient:
 
                         self.queue.put_nowait(response)
 
-    async def disconnect(self):
+    async def disconnect(self):  # pragma: no coverage
         if self.ws:
             await self.ws.close()
 
@@ -165,9 +170,6 @@ class ApiWebsocketClient:
 
     async def put(self, endpoint, payload=None):
         return await self._wrap_api_call("put", endpoint, payload)
-    
-    async def update(self, endpoint, payload=None):
-        return await self._wrap_api_call("update", endpoint, payload)
     
     async def delete(self, endpoint, payload=None):
         return await self._wrap_api_call("delete", endpoint, payload)

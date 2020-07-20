@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from enum import Enum
 
 
-class ApiContext:
+class ApiContext(Enum):
     # use if instead of using a network transport we should call the api implementations
     # directly
     local = 0

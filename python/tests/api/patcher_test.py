@@ -36,7 +36,7 @@ class PatcherTest(unittest.TestCase):
 
     def test_init_and_load_first_time_with_api_client(self):
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         api_context = ApiContext.local
         api_client = api_clients.ApiLocalClient(loop)
         print(api_client)

@@ -9,6 +9,7 @@ async def trigger_event(request):
     :return:
     """
     from msa.core.event import Event
+
     new_event = Event.deserialize(request.payload)
     supervisor.fire_event(new_event)
 
@@ -22,7 +23,10 @@ async def get_events(request):
     :return:
     """
 
-    from msa.builtins.signals.events import RequestDisburseEventsToNetworkEvent, DisburseEventsToNetworkEvent
+    from msa.builtins.signals.events import (
+        RequestDisburseEventsToNetworkEvent,
+        DisburseEventsToNetworkEvent,
+    )
 
     new_event = RequestDisburseEventsToNetworkEvent().init({})
     supervisor.fire_event(new_event)

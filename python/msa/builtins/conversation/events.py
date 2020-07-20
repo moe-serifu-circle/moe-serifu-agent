@@ -12,12 +12,7 @@ class ConversationInputEvent(Event):
     """
 
     def __init__(self):
-        super().__init__(
-            priority=50,
-            schema=Schema({
-                "input": And(str, len)
-            })
-        )
+        super().__init__(priority=50, schema=Schema({"input": And(str, len)}))
 
 
 class ConversationOutputEvent(Event):
@@ -27,9 +22,4 @@ class ConversationOutputEvent(Event):
     """
 
     def __init__(self):
-        super().__init__(
-            priority=50,
-            schema=Schema({
-                "output": And(str, len)
-            })
-        )
+        super().__init__(priority=50, schema=Schema({"output": And(str, len)}))

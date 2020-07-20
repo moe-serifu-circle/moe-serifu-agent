@@ -6,16 +6,15 @@ import unittest
 
 from msa.api.patchable_api import MsaApi
 
-class PatchableApiTest(unittest.TestCase):
 
+class PatchableApiTest(unittest.TestCase):
     def test_str(self):
         api = MsaApi()
         api_str = str(api)
-        
+
         assert MsaApi.__name__ in api_str
 
     def test_patching_methods_onto_api(self):
-
         def new_method():
             return "patched_method_result"
 
@@ -27,6 +26,3 @@ class PatchableApiTest(unittest.TestCase):
         assert callable(api.new_method)
 
         assert api.new_method() == "patched_method_result"
-
-
-        

@@ -5,16 +5,13 @@ from schema import Schema, And
 
 from msa.core.event import Event
 
-class EventTest(unittest.TestCase):
 
+class EventTest(unittest.TestCase):
     def test_init_valid_data(self):
 
         new_event = DummyEvent()
 
-        data = {
-            "prop_1": 5,
-            "prop_2": "ASDF"
-        }
+        data = {"prop_1": 5, "prop_2": "ASDF"}
 
         new_event.init(data)
 
@@ -22,45 +19,24 @@ class EventTest(unittest.TestCase):
 
         new_event = DummyEvent()
 
-        data = {
-            "prop_1": "5",
-            "prop_2": "ASDF"
-        }
+        data = {"prop_1": "5", "prop_2": "ASDF"}
 
-        self.assertRaises(
-            schema.SchemaError,
-            new_event.init,
-            data
-        )
+        self.assertRaises(schema.SchemaError, new_event.init, data)
 
     def test_init_empty_str(self):
 
         new_event = DummyEvent()
 
-        data = {
-            "prop_1": 5,
-            "prop_2": ""
-        }
+        data = {"prop_1": 5, "prop_2": ""}
 
-        self.assertRaises(
-            schema.SchemaError,
-            new_event.init,
-            data
-        )
+        self.assertRaises(schema.SchemaError, new_event.init, data)
 
     def test_init_bad_str(self):
 
         new_event = DummyEvent()
-        data = {
-            "prop_1": 5,
-            "prop_2": 123
-        }
+        data = {"prop_1": 5, "prop_2": 123}
 
-        self.assertRaises(
-            schema.SchemaError,
-            new_event.init,
-            data
-        )
+        self.assertRaises(schema.SchemaError, new_event.init, data)
 
     def test_equality(self):
 
@@ -147,7 +123,6 @@ class EventTest(unittest.TestCase):
         assert medium >= low
         assert not low >= medium
 
-
     def test_get_metadata_and_deserialize(self):
         dummy_event = DummyEvent().init({"prop_1": 1, "prop_2": "hello"})
         dummy_event.source("you")
@@ -172,8 +147,7 @@ class EventTest(unittest.TestCase):
         assert not new_event._network_propagate
         new_event_instance = new_event.network_propagate()
         assert new_event._network_propagate
-        assert new_event_instance == new_event # verify functional programming works
-
+        assert new_event_instance == new_event  # verify functional programming works
 
     def test_str(self):
 
@@ -183,22 +157,25 @@ class EventTest(unittest.TestCase):
         assert FakeA.__name__ in fake_a_str
 
 
-
 class FakeA(Event):
     def __init__(self):
         super().__init__(priority=10, schema=Schema({"key": int}))
+
 
 class FakeB(Event):
     def __init__(self):
         super().__init__(priority=10, schema=Schema({}))
 
+
 class LowPriority(Event):
     def __init__(self):
         super().__init__(priority=100, schema=Schema({}))
 
+
 class MediumPriority(Event):
     def __init__(self):
         super().__init__(priority=50, schema=Schema({}))
+
 
 class HighPriority(Event):
     def __init__(self):
@@ -209,9 +186,9 @@ class LowPriority(Event):
     def __init__(self):
         super().__init__(priority=100, schema=Schema({}))
 
+
 class DummyEvent(Event):
     def __init__(self):
-        super().__init__(priority=10, schema=Schema({
-            "prop_1": int,
-            "prop_2": And(str, len)
-        }))
+        super().__init__(
+            priority=10, schema=Schema({"prop_1": int, "prop_2": And(str, len)})
+        )

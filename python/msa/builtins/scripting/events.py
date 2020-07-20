@@ -12,14 +12,17 @@ class ScriptDeletedEvent(Event):
         The name of the script that was deleted
 
     """
+
     def __init__(self):
         super().__init__(
             priority=50,
-            schema=Schema({
-                "name": And(str, len),
-                "status": Or("success", "failure"),
-                Optional("reason"): And(str, len)
-            })
+            schema=Schema(
+                {
+                    "name": And(str, len),
+                    "status": Or("success", "failure"),
+                    Optional("reason"): And(str, len),
+                }
+            ),
         )
 
 
@@ -30,13 +33,9 @@ class TriggerDeleteScriptEvent(Event):
     name:
         The name of the script to deleted
     """
+
     def __init__(self):
-        super().__init__(
-            priority=50,
-            schema=Schema({
-                "name": And(str, len)
-            })
-        )
+        super().__init__(priority=50, schema=Schema({"name": And(str, len)}))
 
 
 class TriggerGetScriptEvent(Event):
@@ -46,13 +45,9 @@ class TriggerGetScriptEvent(Event):
     name:
         The name of the script to fetch
     """
+
     def __init__(self):
-        super().__init__(
-            priority=50,
-            schema=Schema({
-                "name": And(str, len)
-            })
-        )
+        super().__init__(priority=50, schema=Schema({"name": And(str, len)}))
 
 
 class GetScriptEvent(Event):
@@ -78,20 +73,23 @@ class GetScriptEvent(Event):
     running:
         A boolean indicating whether or not the script is currently running.
     """
+
     def __init__(self):
         super().__init__(
             priority=50,
-            schema=Schema({
-                "id": int,
-                "name": And(str, len),
-                "crontab": Or(And(str, len), None),
-                "created": And(str, len),
-                "last_edited": And(str, len),
-                "last_run": Or(And(str, len), None),
-                "scheduled_for": Or(And(str, len), None),
-                "content": And(str, len),
-                "running": bool,
-            })
+            schema=Schema(
+                {
+                    "id": int,
+                    "name": And(str, len),
+                    "crontab": Or(And(str, len), None),
+                    "created": And(str, len),
+                    "last_edited": And(str, len),
+                    "last_run": Or(And(str, len), None),
+                    "scheduled_for": Or(And(str, len), None),
+                    "content": And(str, len),
+                    "running": bool,
+                }
+            ),
         )
 
 
@@ -101,11 +99,9 @@ class TriggerListScriptsEvent(Event):
 
     *No schema is required.*
     """
+
     def __init__(self):
-        super().__init__(
-            priority=50,
-            schema=Schema(None)
-        )
+        super().__init__(priority=50, schema=Schema(None))
 
 
 class ListScriptsEvent(Event):
@@ -129,22 +125,26 @@ class ListScriptsEvent(Event):
     running:
         A boolean indicating whether or not the script is currently running.
     """
+
     def __init__(self):
         super().__init__(
             priority=50,
-            schema=Schema({
-                "scripts": [{
-                    "id": int,
-                    "name": And(str, len),
-                    "crontab": Or(And(str, len), None),
-                    "created": And(str, len),
-                    "last_edited": And(str, len),
-                    "last_run": Or(And(str, len), None),
-                    "scheduled_for": Or(And(str, len), None),
-                    "running": bool,
-                }]
-
-            })
+            schema=Schema(
+                {
+                    "scripts": [
+                        {
+                            "id": int,
+                            "name": And(str, len),
+                            "crontab": Or(And(str, len), None),
+                            "created": And(str, len),
+                            "last_edited": And(str, len),
+                            "last_run": Or(And(str, len), None),
+                            "scheduled_for": Or(And(str, len), None),
+                            "running": bool,
+                        }
+                    ]
+                }
+            ),
         )
 
 
@@ -164,14 +164,13 @@ class AddScriptEvent(Event):
     def __init__(self):
         super().__init__(
             priority=100,
-            schema=Schema({
-                "name": And(
-                    str,
-                    len,
-                    lambda s: (sum(c.isspace() for c in s) == 0)),
-                Optional("crontab"): And(str, len, croniter.is_valid),
-                "script_contents": And(str, len)
-            })
+            schema=Schema(
+                {
+                    "name": And(str, len, lambda s: (sum(c.isspace() for c in s) == 0)),
+                    Optional("crontab"): And(str, len, croniter.is_valid),
+                    "script_contents": And(str, len),
+                }
+            ),
         )
 
 
@@ -188,14 +187,17 @@ class AddScriptFailedEvent(Event):
         A humanly readable explanation for the error. May not include stack traces,
         and should be simple enough to use with a Text-to-Speech service.
     """
+
     def __init__(self):
         super().__init__(
             priority=20,
-            schema=Schema({
-                "error": And(str, len),
-                "description": And(str, len),
-                "description_verbose": And(str, len),
-            })
+            schema=Schema(
+                {
+                    "error": And(str, len),
+                    "description": And(str, len),
+                    "description_verbose": And(str, len),
+                }
+            ),
         )
 
 
@@ -208,12 +210,7 @@ class TriggerScriptRunEvent(Event):
     """
 
     def __init__(self):
-        super().__init__(
-            priority=50,
-            schema=Schema({
-                "name": And(str, len),
-            })
-        )
+        super().__init__(priority=50, schema=Schema({"name": And(str, len)}))
 
 
 class RunScriptResultEvent(Event):
@@ -231,10 +228,11 @@ class RunScriptResultEvent(Event):
     def __init__(self):
         super().__init__(
             priority=50,
-            schema=Schema({
-                "name": And(str, len),
-                "error": Or(None, And(str, len)),
-                "log": And(str)
-            })
+            schema=Schema(
+                {
+                    "name": And(str, len),
+                    "error": Or(None, And(str, len)),
+                    "log": And(str),
+                }
+            ),
         )
-

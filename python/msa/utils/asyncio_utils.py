@@ -7,8 +7,11 @@ def sync_to_async(func):
 
         def func_with_args():
             func(*args, **kwargs)
+
         return await loop.run_in_executor(None, func_with_args)
+
     return wrap_async
+
 
 @sync_to_async
 def async_read(file_name, mode):

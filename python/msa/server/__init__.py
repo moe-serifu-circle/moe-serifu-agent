@@ -23,9 +23,8 @@ async def stop_supervisor(app):
 
 
 async def on_shutdown(app):
-    for ws in set(app['websockets']):
-        await ws.close(code=WSCloseCode.GOING_AWAY,
-                       message='Server shutdown')
+    for ws in set(app["websockets"]):
+        await ws.close(code=WSCloseCode.GOING_AWAY, message="Server shutdown")
 
 
 def start_server(config_context):
@@ -41,6 +40,7 @@ def start_server(config_context):
     # init supervisor
     from msa import core as msa_core
     from msa.core.supervisor import Supervisor
+
     supervisor = Supervisor()
     msa_core.supervisor = supervisor
     app["supervisor"] = supervisor
@@ -79,9 +79,6 @@ def start_server(config_context):
                 pass
             finally:
                 loop.close()
-
-
-
 
     except:
         try:

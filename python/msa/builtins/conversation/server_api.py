@@ -10,11 +10,12 @@ async def talk(request):
     :param request:
     :return:
     """
-    from msa.builtins.conversation.events import ConversationInputEvent, ConversationOutputEvent
+    from msa.builtins.conversation.events import (
+        ConversationInputEvent,
+        ConversationOutputEvent,
+    )
 
-    new_event = (ConversationInputEvent()
-                 .init(request.data)
-                 .source(request.source))
+    new_event = ConversationInputEvent().init(request.data).source(request.source)
 
     supervisor.fire_event(new_event)
 

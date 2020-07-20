@@ -8,7 +8,6 @@ from tests.async_test_util import AsyncMock, async_run
 
 
 class EventBusTest(unittest.TestCase):
-
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         self.event_bus = EventBus(self.loop)
@@ -18,6 +17,7 @@ class EventBusTest(unittest.TestCase):
         self.event_bus.subscribe(FakeEventA, fake_handler.callback)
 
         new_event = FakeEventB()
+
         async def main():
             await self.event_bus.fire_event(new_event)
             await self.event_bus.listen(timeout=0.1)
@@ -85,7 +85,7 @@ class EventBusTest(unittest.TestCase):
 
         assert fake_handler_1.callback_called
         assert fake_handler_1.event == new_event
-        
+
         assert fake_handler_2.callback_called
         assert fake_handler_2.event == new_event
 
@@ -116,10 +116,9 @@ class EventBusTest(unittest.TestCase):
 
         assert fake_handler_1.callback_called
         assert fake_handler_1.event == new_event_a
-        
+
         assert fake_handler_2.callback_called
         assert fake_handler_2.event == new_event_b
-
 
     def test_unsubscribe(self):
 
@@ -170,7 +169,7 @@ class EventBusTest(unittest.TestCase):
 
         assert not fake_handler_1.callback_called
         assert fake_handler_1.event == None
-        
+
     def test_complex_subscribers(self):
 
         fake_handler_1 = FakeHandler()
@@ -269,13 +268,11 @@ class EventBusTest(unittest.TestCase):
         assert fake_handler_2.callback_called
         assert fake_handler_2.event == new_event_b
 
-
     def test_listen_for_result(self):
 
         new_event = FakeEventA()
 
         async def main():
-
             def insert():
                 self.event_bus.queue.put_nowait((new_event.priority, new_event))
 
@@ -306,7 +303,6 @@ class EventBusTest(unittest.TestCase):
         new_event = FakeEventA()
 
         async def main():
-
             def insert():
                 self.event_bus.queue.put_nowait((new_event.priority, new_event))
 
@@ -340,7 +336,6 @@ class EventBusTest(unittest.TestCase):
         new_event = FakeEventA()
 
         async def main():
-
             def insert():
                 self.event_bus.queue.put_nowait((new_event.priority, new_event))
 
@@ -365,7 +360,7 @@ class EventBusTest(unittest.TestCase):
         self.loop.close()
 
         assert result == new_event
-    
+
     def test_listen_for_result_with_timeout_and_actually_timeout(self):
 
         new_event = FakeEventA()
@@ -392,24 +387,30 @@ class EventBusTest(unittest.TestCase):
 
         assert result == None
 
+
 ### Helpers
+
 
 class FakeEventA(Event):
     def __init__(self):
         super().__init__(priority=0, schema={})
 
+
 class FakeEventB(Event):
     def __init__(self):
         super().__init__(priority=0, schema={})
 
-class FakeHandler():
+
+class FakeHandler:
     def __init__(self):
         self.event = None
         self.callback_called = False
+
     async def callback(self, event):
         self.event = event
         self.callback_called = True
         return "callback result"
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

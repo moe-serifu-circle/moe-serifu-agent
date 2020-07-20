@@ -1,7 +1,7 @@
 import json
 
-class EventPropagationRouter:
 
+class EventPropagationRouter:
     def __init__(self):
         self.app = None
         self.event_bus = None
@@ -15,7 +15,7 @@ class EventPropagationRouter:
 
     async def app_stop(self, app):
         pass
-        #self.event_bus.unsubscri
+        # self.event_bus.unsubscri
 
     async def handle_event_propagate(self, event):
         if not event._network_propagate:
@@ -24,11 +24,12 @@ class EventPropagationRouter:
         if "websockets" not in self.app:
             return
 
-        for ws in self.app['websockets']:
+        for ws in self.app["websockets"]:
             try:
-                await ws.send_str(json.dumps({
-                    "type": "event_propagate",
-                    "payload": event.get_metadata()
-                }))
+                await ws.send_str(
+                    json.dumps(
+                        {"type": "event_propagate", "payload": event.get_metadata()}
+                    )
+                )
             except:
                 pass

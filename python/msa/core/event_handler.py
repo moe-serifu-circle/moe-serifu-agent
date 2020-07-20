@@ -5,6 +5,7 @@ import logging
 import msa
 from msa.core.event_bus import EventBus
 
+
 class EventHandler:
     """The base event handler class, all other event handlers should be a subclass of this type.
 
@@ -16,8 +17,13 @@ class EventHandler:
         an event loop that this handler may attempt to read events out of by awaiting on
         it."""
 
-    def __init__(self, loop: asyncio.AbstractEventLoop, event_bus: EventBus, logger: logging.Logger,
-                 config: Optional[Dict] = None):
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        event_bus: EventBus,
+        logger: logging.Logger,
+        config: Optional[Dict] = None,
+    ):
         """Creates a new event handler. Subclasses should call the base constructor before setting up their own internal
         state.
 
@@ -38,8 +44,3 @@ class EventHandler:
         """An optional initialization hook, may be used for executing setup code before all handlers have benn fully
         started."""
         pass
-
-
-
-
-

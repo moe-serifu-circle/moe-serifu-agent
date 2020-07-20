@@ -20,13 +20,12 @@ from msa.core.config_manager import ConfigManager
 use_asyncio_event_loop()
 
 
-
 class Interpreter:
     def __init__(self):
-        history_file = FileHistory('.msa_cli_history')
+        history_file = FileHistory(".msa_cli_history")
         self.prompt_session = PromptSession(
-                lexer=PygmentsLexer(Python3Lexer),
-                history=history_file)
+            lexer=PygmentsLexer(Python3Lexer), history=history_file
+        )
 
         self.config_manager = ConfigManager({"config_file": "msa_config.json"})
         self.config = self.config_manager.get_config()
@@ -82,7 +81,7 @@ class Interpreter:
 
         while True:
             event = await event_queue.get()
-            #print("Got background event", event)
+            # print("Got background event", event)
 
         return
 
@@ -93,7 +92,9 @@ class Interpreter:
             while True:
                 try:
                     prompt_text, prompt_default = self.generate_prompt_text()
-                    text = await self.prompt_session.prompt(prompt_text, default=prompt_default, async_=True)
+                    text = await self.prompt_session.prompt(
+                        prompt_text, default=prompt_default, async_=True
+                    )
 
                 except KeyboardInterrupt:
                     continue
@@ -113,23 +114,24 @@ class Interpreter:
             print("Goodbye")
             await asyncio.sleep(0)
 
-            #exit(self.exit_code)
+            # exit(self.exit_code)
 
     def generate_prompt_text(self):
         if self.indent_level == 0:
-            prompt_text = '>>> '
+            prompt_text = ">>> "
             prompt_default = ""
         else:
-            prompt_text = '...'
-            prompt_default = ' '*self.indent_level*self.indent_size
+            prompt_text = "..."
+            prompt_default = " " * self.indent_level * self.indent_size
 
         return prompt_text, prompt_default
 
     async def parse_statement(self, text):
         if self.indent_level == 0:
-            
+
             skip_loop = self.parse_command(text)
-            if skip_loop: return 
+            if skip_loop:
+                return
 
         if self.recording:
             self.record_buffer += text + "\n"
@@ -139,7 +141,7 @@ class Interpreter:
             if len(text.strip()) == 0:
                 self.indent_level = 0
             else:
-                current_indent = (len(text) - len(text.lstrip()))//self.indent_size
+                current_indent = (len(text) - len(text.lstrip())) // self.indent_size
                 self.indent_level = current_indent
 
         # if we see a colon, begin buffer
@@ -153,7 +155,7 @@ class Interpreter:
             if len(self.buffer) > 0:
                 text = self.buffer + "\n" + text
                 self.buffer = ""
-        
+
             await self.execute_block(text)
 
     async def execute_block(self, text):
@@ -171,59 +173,70 @@ class Interpreter:
 
         effective_globals = {**self.locals, **self.globals}
         exec(
-            f'async def __ex(): ' +
-            ''.join(f'\n {l}' for l in code.split('\n')) + "\n return locals()",
-        effective_globals, self.locals)
+            f"async def __ex(): "
+            + "".join(f"\n {l}" for l in code.split("\n"))
+            + "\n return locals()",
+            effective_globals,
+            self.locals,
+        )
 
         # Get `__ex` from local variables, call it and return the result
-        self.func_locals = await self.locals['__ex']()
+        self.func_locals = await self.locals["__ex"]()
 
         for key in list(self.func_locals.keys()):
             if key in self.globals:
                 del self.func_locals[key]
-                raise Exception(f"Statement attempted to override global variable \"{key}\". This is not allowed.")
+                raise Exception(
+                    f'Statement attempted to override global variable "{key}". This is not allowed.'
+                )
 
         # patch func locals into locals
-        self.locals = { **self.locals, **self.func_locals}
-
+        self.locals = {**self.locals, **self.func_locals}
 
     def print_traceback(self, *args, **kwargs):
-        stringify = ' '.join(str(e) for e in args)
+        stringify = " ".join(str(e) for e in args)
         print(highlight(stringify, Python3TracebackLexer(), TerminalFormatter()))
 
     def parse_command(self, text):
         clean_text = text.strip()
-        if len(clean_text) == 0: # obviously there is no command to parse 
+        if len(clean_text) == 0:  # obviously there is no command to parse
             return
 
         if clean_text[0] == "#":
             tokens = clean_text[1::].split()
 
-
             if tokens[0] == "record":
                 if len(tokens) < 2:
-                    print("Record command requires either 'stop' or a file name to record to.")
+                    print(
+                        "Record command requires either 'stop' or a file name to record to."
+                    )
                     return True
 
                 if tokens[1] == "stop":
                     self.recording = False
 
-                    with open(self.record_buffer_name,"w") as f:
+                    with open(self.record_buffer_name, "w") as f:
                         f.write(self.record_buffer)
                     self.record_buffer = ""
 
                     editor = os.getenv("EDITOR")
                     if editor == None or editor == "":
                         print("Opening {}".format(self.record_buffer_name))
-                        webbrowser.open("file://" + os.path.abspath(self.record_buffer_name))
+                        webbrowser.open(
+                            "file://" + os.path.abspath(self.record_buffer_name)
+                        )
                     else:
-                        print("Opening {} via {}".format(self.record_buffer_name, editor))
-                        os.system('%s %s' % (editor, self.record_buffer_name))
+                        print(
+                            "Opening {} via {}".format(self.record_buffer_name, editor)
+                        )
+                        os.system("%s %s" % (editor, self.record_buffer_name))
 
                     return True
                 else:
                     if len(tokens) < 2:
-                        print("Record command requires a file name to record to. e.g. #record a.py")
+                        print(
+                            "Record command requires a file name to record to. e.g. #record a.py"
+                        )
                         return True
 
                     self.record_buffer_name = tokens[1]
@@ -233,15 +246,16 @@ class Interpreter:
                 print(chr(27) + "[2J")
 
             elif tokens[0] == "help":
-                print('\n'.join(("MSA Interpreter Help:",
-                        " Availiable Commands:",
-                        "  # help: Show this help text",
-                        "  # record <file name>: Begin recording commands to a script.",
-                        "  # record stop: stop recording commands, save the script, and open to review.")))
+                print(
+                    "\n".join(
+                        (
+                            "MSA Interpreter Help:",
+                            " Availiable Commands:",
+                            "  # help: Show this help text",
+                            "  # record <file name>: Begin recording commands to a script.",
+                            "  # record stop: stop recording commands, save the script, and open to review.",
+                        )
+                    )
+                )
 
         return False
-
-
-
-
-

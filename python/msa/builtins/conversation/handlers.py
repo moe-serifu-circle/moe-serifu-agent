@@ -5,6 +5,7 @@ from msa.core import supervisor
 from msa.builtins.conversation import events
 from msa.builtins.signals import events as signal_events
 
+
 class ConversationInputEventHandler(EventHandler):
     """
     Handles ConversationInputEvents
@@ -15,7 +16,7 @@ class ConversationInputEventHandler(EventHandler):
         self.event_bus.subscribe(events.ConversationInputEvent, self.handle)
 
     async def handle(self, event):
-        # consider 
+        # consider
         # - https://github.com/gunthercox/ChatterBot
         # - https://github.com/huggingface/transformers
 
@@ -30,8 +31,7 @@ class ConversationInputEventHandler(EventHandler):
         else:
             output = "I am afraid I don't know what to say."
 
-        new_event = (events.ConversationOutputEvent()
-                     .init({"output": output}))
+        new_event = events.ConversationOutputEvent().init({"output": output})
 
         supervisor.fire_event(new_event)
 

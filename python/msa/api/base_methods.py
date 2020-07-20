@@ -3,6 +3,7 @@ import time
 
 from msa.version import v as msa_version
 
+
 async def ping(self, quiet=False):
     """
     Send's a ping to the daemon. If the ping succeeds, you should see a pong response.
@@ -49,6 +50,7 @@ async def check_version(self, quiet=False):
             print("Warning: Client and server versions mismatch.\nExiting.", flush=True)
             exit(1)
 
+
 async def get_version(self):
     """
     Fetches the daemon's version.
@@ -67,6 +69,7 @@ async def get_version(self):
         raise Exception(response.raw)
 
     return response.text
+
 
 async def check_connection(self):
     """
@@ -92,10 +95,15 @@ async def check_connection(self):
                 print("Hmm, something must be up.")
             time.sleep(2)
 
-
-    print("Unfortunately I was unable to reach the msa daemon instance at {}".format(self.base_url), flush=True)
+    print(
+        "Unfortunately I was unable to reach the msa daemon instance at {}".format(
+            self.base_url
+        ),
+        flush=True,
+    )
     print("Exiting.", flush=True)
     exit(1)
+
 
 def register_base_methods(api_wrapper):
 

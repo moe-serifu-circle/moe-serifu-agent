@@ -6,10 +6,10 @@ from msa.api import get_api, run_async
 from msa.api.context import ApiContext
 from msa.api import api_clients, patchable_api
 from msa.api.patcher import ApiPatcher
-from msa.core.loader import  builtin_module_names
+from msa.core.loader import builtin_module_names
+
 
 class GetApiTest(unittest.TestCase):
-
     def setUp(self):
         # rest cache between tests
         ApiPatcher.cache = {}
@@ -20,8 +20,7 @@ class GetApiTest(unittest.TestCase):
             get_api("Fake context")
 
         self.assertEqual(
-            "Invalid api context provided: 'Fake context'.",
-            str(cm.exception)
+            "Invalid api context provided: 'Fake context'.", str(cm.exception)
         )
 
     def test_get_api_no_context(self):
@@ -29,10 +28,7 @@ class GetApiTest(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             get_api(None)
 
-        self.assertEqual(
-            "get_api: context cannot be None.",
-            str(cm.exception)
-        )
+        self.assertEqual("get_api: context cannot be None.", str(cm.exception))
 
     def test_get_api_local_context_no_args(self):
 
@@ -41,7 +37,7 @@ class GetApiTest(unittest.TestCase):
 
         self.assertEqual(
             "ApiPatcher: api_client cannot be None when context 'ApiContext.local' has never been patched and loaded.",
-            str(cm.exception)
+            str(cm.exception),
         )
 
     def test_get_api_rest_context_no_args(self):
@@ -51,7 +47,7 @@ class GetApiTest(unittest.TestCase):
 
         self.assertEqual(
             "ApiPatcher: api_client cannot be None when context 'ApiContext.rest' has never been patched and loaded.",
-            str(cm.exception)
+            str(cm.exception),
         )
 
     def test_get_api_websocket_context_no_args(self):
@@ -61,7 +57,7 @@ class GetApiTest(unittest.TestCase):
 
         self.assertEqual(
             "ApiPatcher: api_client cannot be None when context 'ApiContext.websocket' has never been patched and loaded.",
-            str(cm.exception)
+            str(cm.exception),
         )
 
     def test_get_api_local_no_plugin_whitelist(self):
@@ -71,7 +67,7 @@ class GetApiTest(unittest.TestCase):
 
         self.assertEqual(
             "get_api: plugin_whitelist cannot be none when **kwargs are provided to get_api.",
-            str(cm.exception)
+            str(cm.exception),
         )
 
     def test_get_api_rest_no_plugin_whitelist(self):
@@ -81,7 +77,7 @@ class GetApiTest(unittest.TestCase):
 
         self.assertEqual(
             "get_api: plugin_whitelist cannot be none when **kwargs are provided to get_api.",
-            str(cm.exception)
+            str(cm.exception),
         )
 
     def test_get_api_websockets_no_plugin_whitelist(self):
@@ -100,14 +96,13 @@ class GetApiTest(unittest.TestCase):
                 interact=interact,
                 propagate=propagate,
                 host="localhost",
-                port="8080"
+                port="8080",
             )
 
         self.assertEqual(
             "get_api: plugin_whitelist cannot be none when **kwargs are provided to get_api.",
-            str(cm.exception)
+            str(cm.exception),
         )
-
 
     @patch("importlib.import_module")
     def test_get_api_local(self, import_module_mock):
@@ -119,18 +114,15 @@ class GetApiTest(unittest.TestCase):
             FakeModule(),
         ]
         import_module_mock.side_effect = fake_plugins
-        white_list = [
-            "a",
-            "b",
-            "c"
-        ]
-        api_instance = get_api(ApiContext.local, plugin_whitelist=white_list, loop=fake_loop)
+        white_list = ["a", "b", "c"]
+        api_instance = get_api(
+            ApiContext.local, plugin_whitelist=white_list, loop=fake_loop
+        )
         self.assertIsInstance(api_instance, patchable_api.MsaApi)
 
         self.assertEqual(api_instance.context, ApiContext.local)
         self.assertIsInstance(api_instance.client, api_clients.ApiLocalClient)
         self.assertTrue("ping" in api_instance)
-
 
     @patch("importlib.import_module")
     def test_get_api_rest(self, import_module_mock):
@@ -142,18 +134,15 @@ class GetApiTest(unittest.TestCase):
             FakeModule(),
         ]
         import_module_mock.side_effect = fake_plugins
-        white_list = [
-            "a",
-            "b",
-            "c"
-        ]
-        api_instance = get_api(ApiContext.rest, plugin_whitelist=white_list, host="localhost", port="8080")
+        white_list = ["a", "b", "c"]
+        api_instance = get_api(
+            ApiContext.rest, plugin_whitelist=white_list, host="localhost", port="8080"
+        )
         self.assertIsInstance(api_instance, patchable_api.MsaApi)
 
         self.assertEqual(api_instance.context, ApiContext.rest)
         self.assertIsInstance(api_instance.client, api_clients.ApiRestClient)
         self.assertTrue("ping" in api_instance)
-
 
     @patch("importlib.import_module")
     def test_get_api_websockets(self, import_module_mock):
@@ -165,23 +154,22 @@ class GetApiTest(unittest.TestCase):
             FakeModule(),
         ]
         import_module_mock.side_effect = fake_plugins
-        white_list = [
-            "a",
-            "b",
-            "c"
-        ]
+        white_list = ["a", "b", "c"]
+
         async def propagate(self, event_queue):
             event = await event_queue.get()
 
         async def interact(self):
             pass
+
         api_instance = get_api(
             ApiContext.websocket,
             plugin_whitelist=white_list,
             loop=fake_loop,
             interact=interact,
             propagate=propagate,
-            host="localhost", port="8080"
+            host="localhost",
+            port="8080",
         )
         self.assertIsInstance(api_instance, patchable_api.MsaApi)
 
@@ -191,20 +179,17 @@ class GetApiTest(unittest.TestCase):
 
 
 class RunAsyncTest(unittest.TestCase):
-
     def test_successful_run(self):
-
         async def test_func():
-            return 1+1
+            return 1 + 1
 
         result = run_async(test_func())
         self.assertEqual(2, result)
 
     def test_unsucessful_run(self):
-
         async def test_wrapper():
             async def test_func():
-                return 1+1
+                return 1 + 1
 
             run_async(test_func())
 
@@ -215,7 +200,7 @@ class RunAsyncTest(unittest.TestCase):
 
         self.assertEqual(
             "Asyncio event loop cannot be running in order to use run_async helper function.",
-            str(cm.exception)
+            str(cm.exception),
         )
 
 

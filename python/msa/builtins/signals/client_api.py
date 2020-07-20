@@ -1,5 +1,5 @@
-
 from msa.core.event import Event
+
 
 async def trigger_event(self, event):
     """
@@ -11,11 +11,13 @@ async def trigger_event(self, event):
     :return: `None`
     """
     if not event._network_propagate:
-        print("WARNING: event._network_propagate is not True, cancelling network propagation.")
+        print(
+            "WARNING: event._network_propagate is not True, cancelling network propagation."
+        )
 
     response = await self.client.post(
-        "/signals/trigger_event",
-        payload=event.get_metadata())
+        "/signals/trigger_event", payload=event.get_metadata()
+    )
 
     if not response:
         return

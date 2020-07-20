@@ -17,9 +17,9 @@ class UrlParamParser:
         for grp in matches:
             self.fields.append(grp)
 
-            url_matcher = url_matcher.replace("{"+grp+"}", "([a-zA-Z0-9-_.]+)")
+            url_matcher = url_matcher.replace("{" + grp + "}", "([a-zA-Z0-9-_.]+)")
 
-        self.matcher = re.compile("^"+url_matcher+"/?$")
+        self.matcher = re.compile("^" + url_matcher + "/?$")
 
     def match(self, route):
         return self.matcher.match(route) is not None

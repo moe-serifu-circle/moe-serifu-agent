@@ -3,42 +3,43 @@ import logging
 from types import MappingProxyType
 from schema import Schema, And, Or, Use
 
-CONFIG_SCHEMA = Schema({
-    "agent": {
-        "name": And(str, len),
-        "user_title": And(str, len)
-    },
-    "plugin_modules": [
-        And(str, len)
-    ],
-
-    "module_config": {
-        # namespace of module -> dict of config values
-    },
-
-    "logging": {
-        "global_log_level": Or(None,
-                                And(str,
-                                Use(str.upper),
-                                lambda s: s in ("DEBUG", "INFO", "ERROR", "WARN"),
-                                )),
-        "log_file_location": And(str, len),
-        "granular_log_levels": [
-            {
-                "namespace": And(str, len),
-                "level": And(str,
-                             Use(str.upper),
-                             lambda s: s in ("DEBUG", "INFO", "ERROR", "WARN"),
-                             Use(lambda e: getattr(logging, e)))
-            }
-        ],
-        "truncate_log_file": bool,
+CONFIG_SCHEMA = Schema(
+    {
+        "agent": {"name": And(str, len), "user_title": And(str, len)},
+        "plugin_modules": [And(str, len)],
+        "module_config": {
+            # namespace of module -> dict of config values
+        },
+        "logging": {
+            "global_log_level": Or(
+                None,
+                And(
+                    str,
+                    Use(str.upper),
+                    lambda s: s in ("DEBUG", "INFO", "ERROR", "WARN"),
+                ),
+            ),
+            "log_file_location": And(str, len),
+            "granular_log_levels": [
+                {
+                    "namespace": And(str, len),
+                    "level": And(
+                        str,
+                        Use(str.upper),
+                        lambda s: s in ("DEBUG", "INFO", "ERROR", "WARN"),
+                        Use(lambda e: getattr(logging, e)),
+                    ),
+                }
+            ],
+            "truncate_log_file": bool,
+        },
     }
-})
+)
 
 
 class ConfigManager:
     """A class that reads, validates, and exposes the application configuration."""
+
     def __init__(self, config_file, cli_overrides):
 
         self.config_file = config_file
@@ -57,7 +58,7 @@ class ConfigManager:
 
     def apply_cli_overrides(self):
         """Applies any command line interface overrides of configuration file values."""
-        for key,value in self.cli_overrides.items():
+        for key, value in self.cli_overrides.items():
             if key == "log_level" and value is not None:
                 self.config["logging"]["global_log_level"] = value
 
@@ -65,9 +66,6 @@ class ConfigManager:
         """Validates the configfile against the config schema."""
         self.config = CONFIG_SCHEMA.validate(self.config)
 
-
     def get_config(self):
         """Returns the validated application configuration."""
         return self.config
-
-

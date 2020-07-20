@@ -8,6 +8,7 @@ async def add_script(request):
     :return:
     """
     from msa.builtins.scripting.events import AddScriptEvent
+
     new_event = AddScriptEvent().init(request.data)
     supervisor.fire_event(new_event)
 
@@ -25,11 +26,13 @@ async def list_scripts(request):
     """
 
     from msa.builtins.scripting.events import TriggerListScriptsEvent, ListScriptsEvent
+
     new_event = TriggerListScriptsEvent().init(None)
     supervisor.fire_event(new_event)
 
     response_event = await supervisor.listen_for_result(ListScriptsEvent)
     return {"scripts": response_event.data["scripts"]}
+
 
 async def get_script(request):
     """
@@ -42,9 +45,8 @@ async def get_script(request):
     """
 
     from msa.builtins.scripting.events import TriggerGetScriptEvent, GetScriptEvent
-    new_event = TriggerGetScriptEvent().init({
-        "name":  request.url_variables["name"]
-    })
+
+    new_event = TriggerGetScriptEvent().init({"name": request.url_variables["name"]})
     supervisor.fire_event(new_event)
 
     response_event = await supervisor.listen_for_result(GetScriptEvent)
@@ -61,10 +63,12 @@ async def delete_script(request):
     :rtype: :class:`Dict` or :class:`NoneType`
     """
 
-    from msa.builtins.scripting.events import TriggerDeleteScriptEvent, ScriptDeletedEvent
-    new_event = TriggerDeleteScriptEvent().init({
-        "name":  request.url_variables["name"]
-    })
+    from msa.builtins.scripting.events import (
+        TriggerDeleteScriptEvent,
+        ScriptDeletedEvent,
+    )
+
+    new_event = TriggerDeleteScriptEvent().init({"name": request.url_variables["name"]})
     supervisor.fire_event(new_event)
 
     response_event = await supervisor.listen_for_result(ScriptDeletedEvent)

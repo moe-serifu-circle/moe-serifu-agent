@@ -11,12 +11,7 @@ class StartupEvent(Event):
     """
 
     def __init__(self):
-        super().__init__(
-            priority=0,
-            schema=Schema({
-                "timestamp": And(str, len)
-            })
-        )
+        super().__init__(priority=0, schema=Schema({"timestamp": And(str, len)}))
 
 
 class RequestDisburseEventsToNetworkEvent(Event):
@@ -25,11 +20,8 @@ class RequestDisburseEventsToNetworkEvent(Event):
     """
 
     def __init__(self):
-        super().__init__(
-            priority=0,
-            schema=Schema({
-            })
-        )
+        super().__init__(priority=0, schema=Schema({}))
+
 
 class DisburseEventsToNetworkEvent(Event):
     """
@@ -37,11 +29,4 @@ class DisburseEventsToNetworkEvent(Event):
     """
 
     def __init__(self):
-        super().__init__(
-            priority=0,
-            schema=Schema({
-                "events": [
-                    dict
-                ]
-            })
-        )
+        super().__init__(priority=0, schema=Schema({"events": [dict]}))

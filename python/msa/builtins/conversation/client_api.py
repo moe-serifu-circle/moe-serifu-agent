@@ -10,9 +10,7 @@ async def talk(self, input):
     :param input: A natural language message to send to MSA.
     :return: `None`
     """
-    response = await self.client.post(
-        "/conversation/talk",
-        payload={"input": input})
+    response = await self.client.post("/conversation/talk", payload={"input": input})
 
     if response.status == "failed":
         raise Exception("Server Error: \n" + response.json["message"])
@@ -25,5 +23,3 @@ async def talk(self, input):
 
 def register_endpoints(api_binder):
     api_binder.register_method()(talk)
-
-

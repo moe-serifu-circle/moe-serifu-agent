@@ -27,7 +27,6 @@ class Supervisor:
 
         self.coroutine_futures = []
 
-
         self.loaded_modules = []
 
         self.initialized_event_handlers = []
@@ -51,10 +50,14 @@ class Supervisor:
         self.root_logger.setLevel(logging_config["global_log_level"])
 
         mode = "w" if logging_config["truncate_log_file"] else "a"
-        file_handler = logging.FileHandler(logging_config["log_file_location"], mode=mode)
+        file_handler = logging.FileHandler(
+            logging_config["log_file_location"], mode=mode
+        )
         file_handler.setLevel(logging.DEBUG)
 
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        formatter = logging.Formatter(
+            "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+        )
 
         file_handler.setFormatter(formatter)
         self.root_logger.addHandler(file_handler)
@@ -75,12 +78,16 @@ class Supervisor:
 
         # order by length shortest namespaces will be the highest level, and should be applied first so that lower
         # level rules may be applied without being overwritten.
-        granular_level_config = sorted(granular_level_config, key=lambda e: len(e["namespace"]), reverse=True)
+        granular_level_config = sorted(
+            granular_level_config, key=lambda e: len(e["namespace"]), reverse=True
+        )
 
         for log_config in granular_level_config:
             for namespace, logger in self.loggers.items():
                 if log_config["namespace"] in namespace:
-                    effective_log_level = log_config.get("level", logger.getEffectiveLevel())
+                    effective_log_level = log_config.get(
+                        "level", logger.getEffectiveLevel()
+                    )
                     logger.setLevel(effective_log_level)
 
         self.logger.info("Finished setting granular log levels.")
@@ -103,16 +110,15 @@ class Supervisor:
             # block getting a loop if we are running unit tests
             # helps suppress a warning.
 
-
-
         # ### PLACEHOLDER - Load Configuration file here --
         self.config_manager = ConfigManager(
-                cli_config["config_file"],
-                cli_config["cli_overrides"]
+            cli_config["config_file"], cli_config["cli_overrides"]
         )
         config = self.config_manager.get_config()
 
-        client_api_binder= get_api(ApiContext.local, config["plugin_modules"], loop=loop)
+        client_api_binder = get_api(
+            ApiContext.local, config["plugin_modules"], loop=loop
+        )
         server_api_binder = route_adapter
 
         # Initialize logging
@@ -137,20 +143,27 @@ class Supervisor:
 
         self.loaded_modules = bultin_modules + plugin_modules
 
-
         # ### Registering Handlers
         self.logger.info("Registering handlers.")
         for module in self.loaded_modules:
             # Note client api registration is handled by the patcher
 
-            self.logger.debug("Registering server api endpoints for module msa.{}".format(module.__name__))
-            if hasattr(module, "register_server_api") and callable(module.register_server_api):
+            self.logger.debug(
+                "Registering server api endpoints for module msa.{}".format(
+                    module.__name__
+                )
+            )
+            if hasattr(module, "register_server_api") and callable(
+                module.register_server_api
+            ):
                 module.register_server_api(server_api_binder)
 
             if hasattr(module, "entities") and isinstance(module.entities, list):
                 __models__.extend(module.entities)
 
-            self.logger.debug("Registering handlers for module msa.{}".format(module.__name__))
+            self.logger.debug(
+                "Registering handlers for module msa.{}".format(module.__name__)
+            )
             for handler in module.handler_factories:
 
                 namespace = "{}.{}".format(module.__name__[4:], handler.__name__)
@@ -162,18 +175,23 @@ class Supervisor:
 
                 module_config = config["module_config"].get(full_namespace, None)
 
-                inited_handler = handler(self.loop, self.event_bus, handler_logger, module_config)
+                inited_handler = handler(
+                    self.loop, self.event_bus, handler_logger, module_config
+                )
 
                 self.initialized_event_handlers.append(inited_handler)
                 self.handler_lookup[handler] = inited_handler
 
-                self.logger.debug("Finished registering handler: {}".format(full_namespace))
-            self.logger.debug("Finished registering handlers for module {}".format(module.__name__))
+                self.logger.debug(
+                    "Finished registering handler: {}".format(full_namespace)
+                )
+            self.logger.debug(
+                "Finished registering handlers for module {}".format(module.__name__)
+            )
 
         self.logger.info("Finished registering handlers.")
 
         self.apply_granular_log_levels(config["logging"]["granular_log_levels"])
-
 
     def start(self, additional_coros=[]):
         r"""Starts the supervisor.
@@ -194,7 +212,6 @@ class Supervisor:
             self.loop.create_task(primed_coro)
             self.logger.debug("Finished running startup coroutine.")
 
-
     async def exit(self):
         """Shuts down running tasks and stops the event loop, exiting the application."""
         self.logger.info("Stopping handlers.")
@@ -206,7 +223,6 @@ class Supervisor:
         self.logger.debug("Calling shutdown callbacks.")
         for callback in self.shutdown_callbacks:
             callback()
-
 
         self.logger.debug("Exit: Cancelling remaining futures.")
         for future in self.coroutine_futures:
@@ -224,15 +240,11 @@ class Supervisor:
         if self.stop_future is not None:
             asyncio.gather(self.stop_future)
 
-
-        #await asyncio.sleep(0.5) # let most of the handlers finish their current loop
-        #await asyncio.sleep(0.5) # let most of the handlers finish their current loop
+        # await asyncio.sleep(0.5) # let most of the handlers finish their current loop
+        # await asyncio.sleep(0.5) # let most of the handlers finish their current loop
 
         self.logger.info("Exit: finished shutting down supervisor.")
         print("\rGoodbye!\n")
-
-
-
 
     def fire_event(self, new_event):
         """Fires an event to all event listeners.
@@ -243,6 +255,7 @@ class Supervisor:
             A new instance of a subclass of `Event` to be propagated to other event handlers.
         """
         self.logger.debug("Fire event: {}".format(new_event))
+
         def fire():
             self.loop.create_task(self.event_bus.fire_event(new_event))
 
@@ -250,7 +263,6 @@ class Supervisor:
 
     async def listen_for_result(self, event_type):
         return await self.event_bus.listen_for_result(event_type)
-
 
     async def startup_coroutine(self, additional_coros=[]):
         """The main coroutine that manages starting the handlers, and waiting for a shutdown signal.
@@ -267,27 +279,29 @@ class Supervisor:
         self.logger.info("Initializing database add-ons")
         for module in self.loaded_modules:
             if hasattr(module, "entity_setup"):
-                self.logger.debug(f"Initializing database for module msa.{module.__name__}")
+                self.logger.debug(
+                    f"Initializing database for module msa.{module.__name__}"
+                )
                 await module.entity_setup()
-                self.logger.debug(f"Finished initializing database for module msa.{module.__name__}")
+                self.logger.debug(
+                    f"Finished initializing database for module msa.{module.__name__}"
+                )
 
         self.logger.debug("Startup Coroutine: Call async init on handlers.")
-        init_coros = [
-            handler.init()
-            for handler in self.initialized_event_handlers
-        ]
+        init_coros = [handler.init() for handler in self.initialized_event_handlers]
 
         await asyncio.gather(*init_coros)
 
         self.logger.debug("Startup Coroutine: Prime EventBus coroutine.")
-        primed_coros = [
-            self.event_bus.listen()
-        ]
+        primed_coros = [self.event_bus.listen()]
 
-        self.logger.debug("Startup Coroutine: Prime additional coroutines: {}".format(len(additional_coros)))
+        self.logger.debug(
+            "Startup Coroutine: Prime additional coroutines: {}".format(
+                len(additional_coros)
+            )
+        )
         if len(additional_coros) > 0:
             primed_coros.extend(additional_coros)
-
 
         try:
             self.logger.debug("Beginning handler execution.")
@@ -297,7 +311,6 @@ class Supervisor:
             self.logger.error(err, traceback.format_exc())
 
         self.logger.debug("Startup Coroutine: Finished startup")
-
 
     def should_stop(self):
         """Indicates whether the supervisor is in the process is shutting down.
@@ -312,4 +325,3 @@ class Supervisor:
         ----------
         - handler_type: A type of handler."""
         return self.handler_lookup.get(handler_type)
-

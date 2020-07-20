@@ -8,4 +8,6 @@ class MsaApi(dict):
         self.__dict__ = self
 
     def __str__(self):
-        return f"<{self.__class__.__module__}.{self.__class__.__name__} at {hex(id(self))}"
+        return (
+            f"<{self.__class__.__module__}.{self.__class__.__name__} at {hex(id(self))}"
+        )

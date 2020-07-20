@@ -3,9 +3,7 @@ import asyncio
 
 from msa.api.patcher import ApiPatcher
 from msa.api.context import ApiContext
-from msa.api import api_clients 
-
-
+from msa.api import api_clients
 
 
 def get_api(context, plugin_whitelist=None, **kwargs):
@@ -14,7 +12,6 @@ def get_api(context, plugin_whitelist=None, **kwargs):
     """
     if context is None:
         raise Exception("get_api: context cannot be None.")
-
 
     if not isinstance(context, ApiContext):
         raise Exception(f"Invalid api context provided: '{context}'.")
@@ -32,7 +29,9 @@ def get_api(context, plugin_whitelist=None, **kwargs):
             api_client = api_clients.ApiWebsocketClient(**kwargs)
 
         if plugin_whitelist is None:
-            raise Exception("get_api: plugin_whitelist cannot be none when **kwargs are provided to get_api.")
+            raise Exception(
+                "get_api: plugin_whitelist cannot be none when **kwargs are provided to get_api."
+            )
 
         api_instance = ApiPatcher.load(context, api_client, plugin_whitelist)
 
@@ -42,5 +41,7 @@ def get_api(context, plugin_whitelist=None, **kwargs):
 def run_async(coroutine):
     loop = asyncio.get_event_loop()
     if loop.is_running():
-        raise Exception("Asyncio event loop cannot be running in order to use run_async helper function.")
+        raise Exception(
+            "Asyncio event loop cannot be running in order to use run_async helper function."
+        )
     return loop.run_until_complete(coroutine)

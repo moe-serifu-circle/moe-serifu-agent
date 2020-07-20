@@ -19,9 +19,9 @@ class ScriptEntity(Model):
 
 class ScriptRunResultEntity(Model):
     id = fields.IntField(pk=True)
-    script = fields.ForeignKeyField("models.ScriptEntity", related_name="script_run_results")
+    script = fields.ForeignKeyField(
+        "models.ScriptEntity", related_name="script_run_results"
+    )
     run_log = fields.TextField()
     run_result = fields.TextField()
     created = fields.DatetimeField(auto_now_add=True)
-
-

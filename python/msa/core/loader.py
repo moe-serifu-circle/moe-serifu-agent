@@ -2,17 +2,12 @@ import importlib
 
 
 # builtin modules to load
-builtin_module_names = [
-    "signals",
-    "scripting",
-    "conversation",
-]
+builtin_module_names = ["signals", "scripting", "conversation"]
 
 
 def load_builtin_modules():
     """Loads builtin modules."""
     plugin_modules = []
-
 
     for module_name in builtin_module_names:
         module = importlib.import_module("msa.builtins.{}".format(module_name))

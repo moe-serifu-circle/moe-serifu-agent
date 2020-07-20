@@ -43,7 +43,6 @@ class ApiResponse:
 
 
 class ApiRestClient:
-
     def __init__(self, host="localhost", port=8080):
 
         self.host = host
@@ -61,7 +60,7 @@ class ApiRestClient:
 
     async def _wrap_api_call(self, func, endpoint, payload=None):
 
-        async with  func(self.base_url + endpoint, json=payload) as response:
+        async with func(self.base_url + endpoint, json=payload) as response:
             raw_text = await response.text()
             return ApiResponse(response.status, raw=raw_text)
 
@@ -73,12 +72,12 @@ class ApiRestClient:
 
     async def put(self, endpoint, payload=None):
         return await self._wrap_api_call(self.session.put, endpoint, payload)
-    
+
     async def delete(self, endpoint, payload=None):
         return await self._wrap_api_call(self.session.delete, endpoint, payload)
 
-class ApiWebsocketClient:
 
+class ApiWebsocketClient:
     def __init__(self, loop, interact, propagate, host="localhost", port=8080):
         """
 
@@ -114,6 +113,7 @@ class ApiWebsocketClient:
 
                 async def prop():
                     await self.propagate(self.propagate_queue)
+
                 self.loop.create_task(prop())
 
                 async for msg in ws:
@@ -126,7 +126,10 @@ class ApiWebsocketClient:
                         elif data["type"] == "event_propagate":
                             new_event = Event.deserialize(data["payload"])
                             new_event.network_propagate = False
-                            if new_event.propagate_target == self.client_id or new_event.propagate_target == "all":
+                            if (
+                                new_event.propagate_target == self.client_id
+                                or new_event.propagate_target == "all"
+                            ):
                                 self.propagate_queue.put_nowait(new_event)
                             continue
 
@@ -152,12 +155,7 @@ class ApiWebsocketClient:
 
     async def _wrap_api_call(self, verb, endpoint, payload):
 
-        wrapped_payload = {
-            "verb": verb,
-            "route": endpoint,
-            "data":  payload
-            
-        }
+        wrapped_payload = {"verb": verb, "route": endpoint, "data": payload}
         await self.ws.send_json(wrapped_payload)
         response = await self.queue.get()
         return response
@@ -170,7 +168,7 @@ class ApiWebsocketClient:
 
     async def put(self, endpoint, payload=None):
         return await self._wrap_api_call("put", endpoint, payload)
-    
+
     async def delete(self, endpoint, payload=None):
         return await self._wrap_api_call("delete", endpoint, payload)
 
@@ -180,16 +178,23 @@ class ApiLocalClient(dict):
         self.loop = loop
 
         from msa.server import route_adapter_instance
+
         self.route_adapter = route_adapter_instance
         self.client = self
 
     async def _call_api_route(self, verb, route, payload=None):
-        func, url_params = self.route_adapter.lookup_route_and_resolve_url_params(verb, route)
+        func, url_params = self.route_adapter.lookup_route_and_resolve_url_params(
+            verb, route
+        )
         if func is None:
-            raise Exception(f"{self.__class__.__name__}: no api route {verb}:{route} exists.")
+            raise Exception(
+                f"{self.__class__.__name__}: no api route {verb}:{route} exists."
+            )
 
         if not callable(func):
-            raise Exception(f"{self.__class__.__name__}: api route is not callable: {func}")
+            raise Exception(
+                f"{self.__class__.__name__}: api route is not callable: {func}"
+            )
 
         request = SeverRequest("local", verb, route, payload, url_params)
 
@@ -210,10 +215,3 @@ class ApiLocalClient(dict):
 
     async def delete(self, route, payload=None):
         return await self._call_api_route("delete", route, payload=payload)
-        
-
-
-
-
-
-

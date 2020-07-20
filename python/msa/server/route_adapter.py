@@ -12,7 +12,7 @@ class RouteAdapter:
     cache = None
 
     def __init__(self):
-        self.routes = {"get" : {}, "put": {}, "post": {}, "delete": {}}
+        self.routes = {"get": {}, "put": {}, "post": {}, "delete": {}}
         self.param_matchers = []
         self.app = None
 
@@ -60,9 +60,10 @@ class RouteAdapter:
 
     def generate_websocket_route(self):
         route_adapter = self
+
         async def websocket_route(response):
 
-            peername = response.transport.get_extra_info('peername')
+            peername = response.transport.get_extra_info("peername")
             if peername is not None:
                 host, port = peername[:2]
             else:
@@ -78,12 +79,7 @@ class RouteAdapter:
 
             # send client id to client
             await ws.send_str(
-                json.dumps({
-                    "type": "notify_id",
-                    "payload": {
-                        "id": client_id
-                    }
-                })
+                json.dumps({"type": "notify_id", "payload": {"id": client_id}})
             )
 
             async for msg in ws:
@@ -92,25 +88,44 @@ class RouteAdapter:
 
                     if "verb" not in payload:
                         await ws.send_str(
-                            json.dumps({"type": "error", "message": "Websocket payload requires a verb field."}))
+                            json.dumps(
+                                {
+                                    "type": "error",
+                                    "message": "Websocket payload requires a verb field.",
+                                }
+                            )
+                        )
                         continue
 
                     if "route" not in payload:
                         await ws.send_str(
-                            json.dumps({"type": "error", "message": "Websocket payload requires a route field."}))
+                            json.dumps(
+                                {
+                                    "type": "error",
+                                    "message": "Websocket payload requires a route field.",
+                                }
+                            )
+                        )
                         continue
 
                     if "data" not in payload:
                         await ws.send_str(
-                            json.dumps({"type": "error", "message": "Websocket payload requires a data field."}))
+                            json.dumps(
+                                {
+                                    "type": "error",
+                                    "message": "Websocket payload requires a data field.",
+                                }
+                            )
+                        )
 
                     try:
                         route_func, url_params = route_adapter.lookup_route_and_resolve_url_params(
-                            payload["verb"],
-                            payload["route"]
+                            payload["verb"], payload["route"]
                         )
                     except Exception as e:
-                        await ws.send_str(json.dumps({"type": "error", "message": str(e)}))
+                        await ws.send_str(
+                            json.dumps({"type": "error", "message": str(e)})
+                        )
                         continue
 
                     request = SeverRequest(
@@ -118,7 +133,7 @@ class RouteAdapter:
                         payload["verb"],
                         payload["route"],
                         payload["data"],
-                        url_params
+                        url_params,
                     )
 
                     try:
@@ -130,85 +145,70 @@ class RouteAdapter:
                             wrapped_response = {"type": "response", "payload": response}
                         await ws.send_str(json.dumps(wrapped_response))
                     except Exception as e:
-                        await ws.send_str(json.dumps({
-                            "type": "error",
-                            "payload": {
-                                "message": traceback.format_exc()
-                            }
-                        }))
+                        await ws.send_str(
+                            json.dumps(
+                                {
+                                    "type": "error",
+                                    "payload": {"message": traceback.format_exc()},
+                                }
+                            )
+                        )
                         continue
 
                 elif msg.type == aiohttp.WSMsgType.ERROR:
-                    print('ws connection closed with exception %s' %
-                          ws.exception())
+                    print("ws connection closed with exception %s" % ws.exception())
 
                     self.app["websockets"].remove(ws)
 
             print(f"Client {host}:{port} disconnected")
             return ws
+
         return websocket_route
 
     def get_route_table(self):
-        all_routes = [ ]
+        all_routes = []
 
         def route_wrapper(verb, route, func):
 
-            self.param_matchers.append(
-                UrlParamParser(route)
-            )
+            self.param_matchers.append(UrlParamParser(route))
 
             async def wrapped_route(request, raw_data=None):
                 if raw_data:
                     payload = raw_data
-                    url_vars = {}  # TODO: find some way to get url params from local client
+                    url_vars = (
+                        {}
+                    )  # TODO: find some way to get url params from local client
                 else:
                     dump = await request.read()
                     url_vars = request.match_info
                     decoded = dump.decode("utf-8")
                     if len(decoded) != 0:
                         payload = json.loads(decoded)
-                    else: 
+                    else:
                         payload = None
 
                 server_request = SeverRequest(
-                    "rest" + str(uuid4()),
-                    verb,
-                    route,
-                    payload,
-                    url_vars
+                    "rest" + str(uuid4()), verb, route, payload, url_vars
                 )
 
                 response = await func(server_request)
                 return web.Response(**response)
+
             return wrapped_route
 
         for route, route_func in self.routes["get"].items():
-            all_routes.append(
-                web.get(
-                    route,
-                    route_wrapper("get", route, route_func)
-                ))
+            all_routes.append(web.get(route, route_wrapper("get", route, route_func)))
 
         for route, route_func in self.routes["put"].items():
-            all_routes.append(
-                web.put(
-                    route,
-                    route_wrapper("put", route, route_func)
-                ))
+            all_routes.append(web.put(route, route_wrapper("put", route, route_func)))
 
         for route, route_func in self.routes["post"].items():
-            all_routes.append(
-                web.post(
-                    route, 
-                    route_wrapper("post", route, route_func)
-                ))
+            all_routes.append(web.post(route, route_wrapper("post", route, route_func)))
 
         for route, route_func in self.routes["delete"].items():
             all_routes.append(
-                web.delete(
-                    route,
-                    route_wrapper("delete", route, route_func)
-                ))
+                web.delete(route, route_wrapper("delete", route, route_func))
+            )
 
         all_routes.append(web.get("/ws", self.generate_websocket_route()))
         return all_routes
@@ -223,8 +223,9 @@ class RouteAdapter:
         if verb in self.routes:
             for matcher in self.param_matchers:
                 if matcher.match(route) and matcher.route in self.routes[verb]:
-                    return self.routes[verb][matcher.route], matcher.resolve_params(route)
+                    return (
+                        self.routes[verb][matcher.route],
+                        matcher.resolve_params(route),
+                    )
 
         raise Exception("Failed to resolve url:", verb, route)
-
-

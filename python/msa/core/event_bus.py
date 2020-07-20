@@ -1,7 +1,6 @@
 import asyncio
 import re
 
-    
 
 class EventBus:
     """The event bus is responsible for tracking event queues and pushing new events into the event queues so that the
@@ -23,8 +22,6 @@ class EventBus:
 
         self.task = None
 
-
-
     def subscribe(self, event_type, callback):
 
         if isinstance(event_type, str):
@@ -37,8 +34,6 @@ class EventBus:
                 self.subscriptions[event_type] = {callback}
             else:
                 self.subscriptions[event_type].add(callback)
-
-
 
     def unsubscribe(self, event_type, callback):
         if event_type in self.subscriptions:
@@ -61,29 +56,25 @@ class EventBus:
 
         return list(set(subs))
 
-
     async def listen(self, timeout=None):
         """Listens for a new event to be passed into the event bus queue via EventBus.fire_event. """
-
 
         while True:
 
             if timeout is None:
-                _, event = await self.queue.get() # pragma: no cover
+                _, event = await self.queue.get()  # pragma: no cover
             else:
                 try:
-                    _, event = await asyncio.wait_for(
-                        self.queue.get(),
-                        timeout
-                    )
+                    _, event = await asyncio.wait_for(self.queue.get(), timeout)
                 except asyncio.TimeoutError:
                     return
-
 
             event_type = type(event)
             subs = self._get_subscribers(event_type)
             if len(subs) == 0 and not event in list(self.result_listeners.keys()):
-                print(f"WARNING: propagated event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
+                print(
+                    f'WARNING: propagated event type "{event_type}" that nothing was subscribed to. Dropping event.'
+                )
 
             if event_type in self.result_listeners:
                 async_event = self.result_listeners[event_type]
@@ -91,17 +82,9 @@ class EventBus:
                 self.event_result[event_type] = event
                 async_event.set()
 
-
-            self.task = asyncio.gather(*[
-                callback(event) 
-                for callback in 
-                    subs
-                 ])
+            self.task = asyncio.gather(*[callback(event) for callback in subs])
 
             result = await self.task
-
-
-
 
     async def listen_for_result(self, event_type, timeout=None):
         if event_type not in self.result_listeners:
@@ -119,8 +102,6 @@ class EventBus:
                 return None
         return self.event_result[event_type]
 
-
-
     async def fire_event(self, new_event):
         """Fires an event to each event handler via its corresponding event queue.
 
@@ -133,11 +114,8 @@ class EventBus:
 
         subs = self._get_subscribers(event_type)
         if len(subs) == 0:
-            print(f"WARNING: attempted to propagate event type \"{event_type}\" that nothing was subscribed to. Dropping event.")
+            print(
+                f'WARNING: attempted to propagate event type "{event_type}" that nothing was subscribed to. Dropping event.'
+            )
         else:
             self.queue.put_nowait((new_event.priority, new_event))
-
-
-
-
-

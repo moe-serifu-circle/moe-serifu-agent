@@ -16,30 +16,25 @@ async def upload_script(self, name, crontab=None, file_name=None, script_content
     :return: Response message from the daemon
     """
     if file_name and script_contents:
-        raise Exception("MSA API - upload_script - cannot provide file_name and script_contents")
+        raise Exception(
+            "MSA API - upload_script - cannot provide file_name and script_contents"
+        )
 
     if file_name:
         with open(file_name, "rb") as f:
             try:
                 script_contents = f.read().decode("utf-8")
             except:
-                raise Exception("MSA API - upload_script - failed to decode file, expects utf-8 encoding.")
+                raise Exception(
+                    "MSA API - upload_script - failed to decode file, expects utf-8 encoding."
+                )
 
     if crontab is not None:
-        payload = {
-            "name": name,
-            "script_contents": script_contents,
-            "crontab": crontab
-        }
+        payload = {"name": name, "script_contents": script_contents, "crontab": crontab}
     else:
-        payload = {
-            "name": name,
-            "script_contents": script_contents,
-        }
+        payload = {"name": name, "script_contents": script_contents}
 
-    response = await self.client.post(
-        "/scripting/script",
-        payload=payload)
+    response = await self.client.post("/scripting/script", payload=payload)
 
     if response.status != "success":
         raise Exception(response.json["message"])
@@ -99,6 +94,7 @@ async def get_script(self, name: str) -> Union[Dict, None]:
 
     return response.json["script"]
 
+
 async def print_script(self, name: str) -> Union[Dict, None]:
     """
     Fetches a script uploaded to the daemon and prints its details.
@@ -124,7 +120,10 @@ async def print_script(self, name: str) -> Union[Dict, None]:
         ["Last Run", script["last_run"]],
         ["Currently Running", "Yes" if script["running"] else "No"],
         ["Crontab", script["crontab"]],
-        ["Scheduled For", script["scheduled_for"] if script["scheduled_for"] else "N/A"],
+        [
+            "Scheduled For",
+            script["scheduled_for"] if script["scheduled_for"] else "N/A",
+        ],
         ["Content", script["content"]],
     ]
 

@@ -92,7 +92,7 @@ class Event(object):
         """Returns the metadata of this event. Used for network serialization of an event."""
         return {
             "event_type": self.__class__.__name__,
-            "generation_time": self.generation_time.strftime('%Y-%m-%d %H:%M:%S.%f'),
+            "generation_time": self.generation_time.strftime("%Y-%m-%d %H:%M:%S.%f"),
             "priority": self.priority,
             "propagate": self.propagate,
             "_network_propagate": self._network_propagate,
@@ -156,7 +156,9 @@ class Event(object):
         subclasses = Event.__subclasses__()
 
         if not event_type:
-            raise Exception("Attempted to deserialize an event that does not have a defined event type.")
+            raise Exception(
+                "Attempted to deserialize an event that does not have a defined event type."
+            )
 
         for cls in subclasses:
             if event_type == cls.__name__:
@@ -164,12 +166,6 @@ class Event(object):
                 new_event.set_metadata(event_data)
                 return new_event
 
-        raise Exception(f"Attempted to deserialize an event of type {event_type} but an event class of that type could not be found.")
-
-
-
-
-
-
-
-
+        raise Exception(
+            f"Attempted to deserialize an event of type {event_type} but an event class of that type could not be found."
+        )

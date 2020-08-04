@@ -20,7 +20,9 @@ class AddScriptHandler(EventHandler):
         self.script_manager = ScriptExecutionManager(loop)
 
     async def handle_add_script_event(self, event):
-        result = await ScriptEntity.filter(name=event.data["name"]).first()
+        coro = ScriptEntity.filter(name=event.data["name"])
+        coro2 = coro.first()
+        result = await coro2
 
         if not result:
             self.logger.debug(

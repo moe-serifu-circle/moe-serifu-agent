@@ -10,7 +10,7 @@ handler_factories = [
 
 # entity_setup = None
 
-entities = []
+entities_list = []
 
 
 register_client_api = client_api.register_endpoints

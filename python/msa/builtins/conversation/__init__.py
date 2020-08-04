@@ -9,7 +9,7 @@ from msa.builtins.conversation import client_api
 
 handler_factories = [handlers.ConversationInputEventHandler]
 
-entities = []
+entities_list = []
 
 register_client_api = client_api.register_endpoints
 register_server_api = server_api.register_routes

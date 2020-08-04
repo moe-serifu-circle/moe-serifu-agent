@@ -158,8 +158,8 @@ class Supervisor:
             ):
                 module.register_server_api(server_api_binder)
 
-            if hasattr(module, "entities") and isinstance(module.entities, list):
-                __models__.extend(module.entities)
+            if hasattr(module, "entities_list") and isinstance(module.entities, list):
+                __models__.extend(module.entities_list)
 
             self.logger.debug(
                 "Registering handlers for module msa.{}".format(module.__name__)

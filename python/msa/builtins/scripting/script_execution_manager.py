@@ -10,13 +10,13 @@ from datetime import datetime
 
 
 class ScriptExecutionManager:
-    __shared_state = None
+    shared_state = None
 
     def __init__(self, loop=None):
 
-        if ScriptExecutionManager.__shared_state is None:
-            ScriptExecutionManager.__shared_state = {}
-            self.__dict__ = ScriptExecutionManager.__shared_state
+        if ScriptExecutionManager.shared_state is None:
+            ScriptExecutionManager.shared_state = {}
+            self.__dict__ = ScriptExecutionManager.shared_state
 
             root_logger = logging.getLogger("msa")
             self.logger = root_logger.getChild(
@@ -34,7 +34,7 @@ class ScriptExecutionManager:
             self.locals = {}
 
         else:
-            self.__dict__ = ScriptExecutionManager.__shared_state
+            self.__dict__ = ScriptExecutionManager.shared_state
 
     async def aexec(self, identifier, code):
         self.logger.debug(f'Prepping execution of script "{identifier}"')

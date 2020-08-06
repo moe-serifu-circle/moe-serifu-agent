@@ -21,13 +21,13 @@ use_asyncio_event_loop()
 
 
 class Interpreter:
-    def __init__(self):
+    def __init__(self, cli_overrides):
         history_file = FileHistory(".msa_cli_history")
         self.prompt_session = PromptSession(
             lexer=PygmentsLexer(Python3Lexer), history=history_file
         )
 
-        self.config_manager = ConfigManager({"config_file": "msa_config.json"})
+        self.config_manager = ConfigManager("msa_config.json", cli_overrides)
         self.config = self.config_manager.get_config()
 
         self.loop = asyncio.get_event_loop()

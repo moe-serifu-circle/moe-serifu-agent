@@ -42,7 +42,7 @@ def start_server(config_context):  # pragma: no coverage
     from msa.core.supervisor import Supervisor
 
     supervisor = Supervisor()
-    msa_core.supervisor = supervisor
+    msa_core.supervisor_instance = supervisor
     app["supervisor"] = supervisor
     supervisor.init(loop, app["config_context"], route_adapter_instance)
     loop.run_until_complete(start_db_engine())

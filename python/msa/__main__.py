@@ -38,7 +38,7 @@ def daemon(ctx):
 def cli(ctx, script):
     from msa.cli.interpreter import Interpreter
 
-    interpreter = Interpreter()
+    interpreter = Interpreter(ctx.obj)
 
     if script is not None:
         if os.path.exists(script) and os.path.isfile(script):

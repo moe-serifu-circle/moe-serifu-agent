@@ -1,4 +1,4 @@
-from msa.core import supervisor
+from msa.core import get_supervisor
 
 
 async def add_script(request):
@@ -10,7 +10,7 @@ async def add_script(request):
     from msa.builtins.scripting.events import AddScriptEvent
 
     new_event = AddScriptEvent().init(request.data)
-    supervisor.fire_event(new_event)
+    get_supervisor().fire_event(new_event)
 
     return {"text": f"{request.data['name']} was sucessfully uploaded"}
 
@@ -28,9 +28,9 @@ async def list_scripts(request):
     from msa.builtins.scripting.events import TriggerListScriptsEvent, ListScriptsEvent
 
     new_event = TriggerListScriptsEvent().init(None)
-    supervisor.fire_event(new_event)
+    get_supervisor().fire_event(new_event)
 
-    response_event = await supervisor.listen_for_result(ListScriptsEvent)
+    response_event = await get_supervisor().listen_for_result(ListScriptsEvent)
     return {"scripts": response_event.data["scripts"]}
 
 
@@ -47,9 +47,9 @@ async def get_script(request):
     from msa.builtins.scripting.events import TriggerGetScriptEvent, GetScriptEvent
 
     new_event = TriggerGetScriptEvent().init({"name": request.url_variables["name"]})
-    supervisor.fire_event(new_event)
+    get_supervisor().fire_event(new_event)
 
-    response_event = await supervisor.listen_for_result(GetScriptEvent)
+    response_event = await get_supervisor().listen_for_result(GetScriptEvent)
     return {"script": response_event.data}
 
 
@@ -69,9 +69,9 @@ async def delete_script(request):
     )
 
     new_event = TriggerDeleteScriptEvent().init({"name": request.url_variables["name"]})
-    supervisor.fire_event(new_event)
+    get_supervisor().fire_event(new_event)
 
-    response_event = await supervisor.listen_for_result(ScriptDeletedEvent)
+    response_event = await get_supervisor().listen_for_result(ScriptDeletedEvent)
     return response_event.data
 
 

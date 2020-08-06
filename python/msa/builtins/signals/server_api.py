@@ -1,4 +1,4 @@
-from msa.core import supervisor
+from msa.core import get_supervisor
 import json
 
 
@@ -11,7 +11,7 @@ async def trigger_event(request):
     from msa.core.event import Event
 
     new_event = Event.deserialize(request.payload)
-    supervisor.fire_event(new_event)
+    get_supervisor().fire_event(new_event)
 
     return {"text": f"Event {new_event} sucessfully triggered."}
 
@@ -29,9 +29,11 @@ async def get_events(request):
     )
 
     new_event = RequestDisburseEventsToNetworkEvent().init({})
-    supervisor.fire_event(new_event)
+    get_supervisor().fire_event(new_event)
 
-    response_event = await supervisor.listen_for_result(DisburseEventsToNetworkEvent)
+    response_event = await get_supervisor().listen_for_result(
+        DisburseEventsToNetworkEvent
+    )
 
     return response_event.get_metadata()
 

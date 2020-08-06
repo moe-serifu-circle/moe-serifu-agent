@@ -1,7 +1,7 @@
 from collections import deque
 import datetime
 from msa.core.event_handler import EventHandler
-from msa.core import supervisor
+from msa.core import get_supervisor
 from msa.builtins.signals import events
 
 
@@ -22,7 +22,7 @@ class StartupEventTrigger(EventHandler):
         new_event.init(
             {"timestamp": datetime.datetime.now().strftime("%Y-%m-%d, %H:%M:%S:%f")}
         )
-        supervisor.fire_event(new_event)
+        get_supervisor().fire_event(new_event)
 
 
 class NetworkPropagateEventHandler(EventHandler):
@@ -49,4 +49,4 @@ class NetworkPropagateEventHandler(EventHandler):
             {"events": [event.get_metadata() for event in self.buffered_events]}
         )
         self.buffered_events.clear()
-        supervisor.fire_event(new_event)
+        get_supervisor().fire_event(new_event)

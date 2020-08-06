@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from msa.core import supervisor
+from msa.core import get_supervisor
 from msa.api import ApiContext
 
 
@@ -17,6 +17,7 @@ async def talk(request):
 
     new_event = ConversationInputEvent().init(request.data).source(request.source)
 
+    supervisor = get_supervisor()
     supervisor.fire_event(new_event)
 
     response_event = await supervisor.listen_for_result(ConversationOutputEvent)

@@ -7,6 +7,7 @@ import inspect
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
 
+from msa.core.event import Event
 from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
 from msa.core.config_manager import ConfigManager
@@ -158,7 +159,9 @@ class Supervisor:
             ):
                 module.register_server_api(server_api_binder)
 
-            if hasattr(module, "entities_list") and isinstance(module.entities, list):
+            if hasattr(module, "entities_list") and isinstance(
+                module.entities_list, list
+            ):
                 __models__.extend(module.entities_list)
 
             self.logger.debug(
@@ -246,7 +249,7 @@ class Supervisor:
         self.logger.info("Exit: finished shutting down supervisor.")
         print("\rGoodbye!\n")
 
-    def fire_event(self, new_event):
+    def fire_event(self, new_event: Event):
         """Fires an event to all event listeners.
 
         Parameters

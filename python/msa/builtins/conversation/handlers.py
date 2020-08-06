@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from msa.core.event_handler import EventHandler
-from msa.core import supervisor
+from msa.core import get_supervisor
 from msa.builtins.conversation import events
 from msa.builtins.signals import events as signal_events
 
@@ -33,7 +33,7 @@ class ConversationInputEventHandler(EventHandler):
 
         new_event = events.ConversationOutputEvent().init({"output": output})
 
-        supervisor.fire_event(new_event)
+        get_supervisor().fire_event(new_event)
 
     def normalize(self, string):
         return string.strip().lower().replace("\n", "")

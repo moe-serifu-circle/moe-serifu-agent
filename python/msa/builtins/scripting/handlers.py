@@ -5,7 +5,7 @@ from msa.core.event_handler import EventHandler
 from msa.builtins.scripting import events
 from msa.builtins.scripting.entities import ScriptEntity
 from msa.builtins.scripting.script_execution_manager import ScriptExecutionManager
-from msa.core import supervisor
+from msa.core import get_supervisor
 from msa.builtins.signals import events as signal_events
 
 
@@ -65,7 +65,7 @@ class AddScriptHandler(EventHandler):
                     ),
                 }
             )
-            supervisor.fire_event(new_event)
+            get_supervisor().fire_event(new_event)
 
 
 class TriggerScriptRunHandler(EventHandler):
@@ -91,9 +91,13 @@ class TriggerScriptRunHandler(EventHandler):
                 script.name, script.script_contents, None
             )
         else:
-            self.logger.warn(
-                f"Attempted to trigger script run for script \"{event.data['name']}\" but this script does not exist in the database."
+            msg = f"Attempted to trigger script run for script \"{event.data['name']}\" but this script does not exist in the database."
+            self.logger.warn(msg)
+
+            run_script_event = events.RunScriptResultEvent().init(
+                {"name": event.data["name"], "error": msg, "log": ""}
             )
+            get_supervisor().fire_event(run_script_event)
 
 
 class StartupEventHandler(EventHandler):
@@ -166,7 +170,7 @@ class TriggerScriptListHandler(EventHandler):
             scripts.append(script)
 
         new_event = events.ListScriptsEvent().init({"scripts": scripts})
-        supervisor.fire_event(new_event)
+        get_supervisor().fire_event(new_event)
 
 
 class TriggerGetScriptHandler(EventHandler):
@@ -213,7 +217,7 @@ class TriggerGetScriptHandler(EventHandler):
         }
 
         new_event = events.GetScriptEvent().init(script)
-        supervisor.fire_event(new_event)
+        get_supervisor().fire_event(new_event)
 
 
 class TriggerDeleteScriptHandler(EventHandler):
@@ -244,7 +248,7 @@ class TriggerDeleteScriptHandler(EventHandler):
                     "reason": f"Unable to find script with name {entity_name}.",
                 }
             )
-            supervisor.fire_event(new_event)
+            get_supervisor().fire_event(new_event)
             return
 
         if script_entity.name in self.script_execution_manager.running_scripts:
@@ -268,7 +272,7 @@ class TriggerDeleteScriptHandler(EventHandler):
                         "reason": f"Failed to cancel script with name {entity_name}.",
                     }
                 )
-                supervisor.fire_event(new_event)
+                get_supervisor().fire_event(new_event)
                 return
         else:
             self.logger.debug(
@@ -294,11 +298,11 @@ class TriggerDeleteScriptHandler(EventHandler):
                     "reason": f"Failed to cancel script with name {entity_name}.",
                 }
             )
-            supervisor.fire_event(new_event)
+            get_supervisor().fire_event(new_event)
             return
 
         # record that the event has been successfully deleted
         new_event = events.ScriptDeletedEvent().init(
             {"name": entity_name, "status": "success"}
         )
-        supervisor.fire_event(new_event)
+        get_supervisor().fire_event(new_event)

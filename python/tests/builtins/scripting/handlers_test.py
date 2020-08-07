@@ -3,6 +3,8 @@ import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
 from tortoise.contrib.test import initializer, finalizer
 from collections import namedtuple
+import aiocron
+
 
 from msa.builtins.scripting.handlers import *
 from msa.builtins.scripting.events import (
@@ -18,6 +20,10 @@ from msa import core as msa_core
 from tests.async_test_util import AsyncMock
 
 FakeScriptEntity = namedtuple("ScriptEntitiy", ["name", "script_contents", "crontab"])
+FullFakeScriptEntity = namedtuple(
+    "ScriptEntitiy",
+    ["id", "name", "script_contents", "crontab", "created", "last_edited", "last_run"],
+)
 
 
 class AddScriptHandlerTest(unittest.TestCase):
@@ -286,6 +292,99 @@ class StartupEventHandlerTest(unittest.TestCase):
             test_script.crontab,
         )
         self.assertEqual(schedule_script_args, expected_args)
+
+
+class TriggerScriptListHandlerTest(unittest.TestCase):
+    def setUp(self):
+        initializer(
+            ["msa.builtins.scripting.entities"], db_url="sqlite:///tmp/test-{}.sqlite"
+        )
+
+    def tearDown(self) -> None:
+        finalizer()
+
+    @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
+    @patch("msa.builtins.scripting.entities.ScriptEntity.all", new_callable=AsyncMock)
+    @patch("msa.core.supervisor_instance")
+    def test_schedule_script_with_crontab(
+        self, SupervisorMock, script_entity_all_mock, ScriptExecutionManagerMock
+    ):
+        [
+            "id",
+            "name",
+            "script_contents",
+            "crontab",
+            "created",
+            "last_edited",
+            "last_run",
+        ],
+
+        test_script1 = FullFakeScriptEntity(
+            1,
+            "test_script1",
+            """print("hello world")""",
+            "5 4 * * *",
+            datetime.now(),
+            datetime.now(),
+            datetime.now(),
+        )
+        test_script2 = FullFakeScriptEntity(
+            2,
+            "test_script2",
+            """print("hello world")""",
+            None,
+            datetime.now(),
+            datetime.now(),
+            None,
+        )
+        test_scripts = [test_script1, test_script2]
+
+        script_entity_all_mock.mock.return_value = test_scripts
+
+        loop = asyncio.get_event_loop()
+        loopMock = MagicMock()
+        eventBusMock = MagicMock()
+        loggerMock = MagicMock()
+
+        aiocronMock = MagicMock()
+
+        aiocronMock.handle.when.return_value = 5
+        aiocronMock.time.return_value = datetime.now().timestamp()
+
+        ScriptExecutionManagerMock.shared_state = {
+            "scheduled_scripts": {"test_script1": {"aiocron_instance": aiocronMock}},
+            "loop": loopMock,
+            "running_scripts": set(),
+        }
+
+        handler = TriggerScriptListHandler(loopMock, eventBusMock, loggerMock)
+        handler.script_manager = ScriptExecutionManagerMock
+
+        event = events.TriggerListScriptsEvent()
+        loop.run_until_complete(handler.handle_trigger_script_list_event(event))
+
+        fired_event = SupervisorMock.fire_event.call_args_list[0][0][0]
+        self.assertIsInstance(fired_event, events.ListScriptsEvent)
+
+        self.assertIn("scripts", fired_event.data)
+        validatedScripts = []
+        for script in fired_event.data["scripts"]:
+            if script["id"] == 1:
+                self.assertEqual(script["name"], test_script1.name)
+                self.assertEqual(script["crontab"], test_script1.crontab)
+                self.assertNotEqual(script["last_run"], None)
+                self.assertFalse(script["running"])
+                self.assertEqual(script["crontab"], test_script1.crontab)
+                validatedScripts.append(1)
+
+            elif script["id"] == 2:
+                self.assertEqual(script["name"], test_script2.name)
+                self.assertEqual(script["crontab"], test_script2.crontab)
+                self.assertEqual(script["last_run"], None)
+                self.assertFalse(script["running"])
+                validatedScripts.append(2)
+
+        self.assertEqual(validatedScripts, [1, 2])
 
 
 async def identity_coro(return_value=None):

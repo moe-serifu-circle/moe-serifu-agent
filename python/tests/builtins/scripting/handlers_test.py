@@ -306,19 +306,9 @@ class TriggerScriptListHandlerTest(unittest.TestCase):
     @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
     @patch("msa.builtins.scripting.entities.ScriptEntity.all", new_callable=AsyncMock)
     @patch("msa.core.supervisor_instance")
-    def test_schedule_script_with_crontab(
+    def test_list_scripts(
         self, SupervisorMock, script_entity_all_mock, ScriptExecutionManagerMock
     ):
-        [
-            "id",
-            "name",
-            "script_contents",
-            "crontab",
-            "created",
-            "last_edited",
-            "last_run",
-        ],
-
         test_script1 = FullFakeScriptEntity(
             1,
             "test_script1",
@@ -385,6 +375,118 @@ class TriggerScriptListHandlerTest(unittest.TestCase):
                 validatedScripts.append(2)
 
         self.assertEqual(validatedScripts, [1, 2])
+
+
+class TriggerGetScripHandlertTest(unittest.TestCase):
+    def setUp(self):
+        initializer(
+            ["msa.builtins.scripting.entities"], db_url="sqlite:///tmp/test-{}.sqlite"
+        )
+
+    def tearDown(self) -> None:
+        finalizer()
+
+    @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
+    @patch("msa.builtins.scripting.entities.ScriptEntity.filter")
+    @patch("msa.core.supervisor_instance")
+    def test_get_script_with_crontab(
+        self, SupervisorMock, ScriptEntity_filter_mock, ScriptExecutionManagerMock
+    ):
+        test_script = FullFakeScriptEntity(
+            1,
+            "test_script1",
+            """print("hello world")""",
+            "5 4 * * *",
+            datetime.now(),
+            datetime.now(),
+            datetime.now(),
+        )
+
+        first_mock = AsyncMock(return_value=test_script)
+        result_mock = MagicMock()
+        result_mock.first = first_mock
+        ScriptEntity_filter_mock.return_value = result_mock
+
+        loop = asyncio.get_event_loop()
+        loopMock = MagicMock()
+        eventBusMock = MagicMock()
+        loggerMock = MagicMock()
+
+        aiocronMock = MagicMock()
+
+        aiocronMock.handle.when.return_value = 5
+        aiocronMock.time.return_value = datetime.now().timestamp()
+
+        ScriptExecutionManagerMock.shared_state = {
+            "scheduled_scripts": {"test_script1": {"aiocron_instance": aiocronMock}},
+            "loop": loopMock,
+            "running_scripts": set(),
+        }
+
+        handler = TriggerGetScriptHandler(loopMock, eventBusMock, loggerMock)
+        handler.script_manager = ScriptExecutionManagerMock
+
+        event = events.TriggerGetScriptEvent().init({"name": test_script.name})
+        loop.run_until_complete(handler.handle_trigger_get_script_event(event))
+
+        fired_event = SupervisorMock.fire_event.call_args_list[0][0][0]
+        self.assertIsInstance(fired_event, events.GetScriptEvent)
+
+        self.assertEqual(fired_event.data["id"], test_script.id)
+        self.assertEqual(fired_event.data["name"], test_script.name)
+        self.assertEqual(fired_event.data["crontab"], test_script.crontab)
+        self.assertFalse(fired_event.data["running"])
+
+    @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
+    @patch("msa.builtins.scripting.entities.ScriptEntity.filter")
+    @patch("msa.core.supervisor_instance")
+    def test_get_script_without_crontab(
+        self, SupervisorMock, ScriptEntity_filter_mock, ScriptExecutionManagerMock
+    ):
+        test_script = FullFakeScriptEntity(
+            1,
+            "test_script1",
+            """print("hello world")""",
+            None,
+            datetime.now(),
+            datetime.now(),
+            datetime.now(),
+        )
+
+        first_mock = AsyncMock(return_value=test_script)
+        result_mock = MagicMock()
+        result_mock.first = first_mock
+        ScriptEntity_filter_mock.return_value = result_mock
+
+        loop = asyncio.get_event_loop()
+        loopMock = MagicMock()
+        eventBusMock = MagicMock()
+        loggerMock = MagicMock()
+
+        aiocronMock = MagicMock()
+
+        aiocronMock.handle.when.return_value = 5
+        aiocronMock.time.return_value = datetime.now().timestamp()
+
+        ScriptExecutionManagerMock.shared_state = {
+            "scheduled_scripts": {},
+            "loop": loopMock,
+            "running_scripts": set(),
+        }
+
+        handler = TriggerGetScriptHandler(loopMock, eventBusMock, loggerMock)
+        handler.script_manager = ScriptExecutionManagerMock
+
+        event = events.TriggerGetScriptEvent().init({"name": test_script.name})
+        loop.run_until_complete(handler.handle_trigger_get_script_event(event))
+
+        fired_event = SupervisorMock.fire_event.call_args_list[0][0][0]
+        self.assertIsInstance(fired_event, events.GetScriptEvent)
+
+        self.assertEqual(fired_event.data["id"], test_script.id)
+        self.assertEqual(fired_event.data["name"], test_script.name)
+        self.assertEqual(fired_event.data["crontab"], test_script.crontab)
+        self.assertFalse(fired_event.data["running"])
 
 
 async def identity_coro(return_value=None):

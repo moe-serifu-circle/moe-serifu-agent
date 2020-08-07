@@ -4,13 +4,14 @@ from unittest.mock import patch, MagicMock, PropertyMock
 from tortoise.contrib.test import initializer, finalizer
 from collections import namedtuple
 
-from msa.builtins.scripting.handlers import AddScriptHandler, TriggerScriptRunHandler
+from msa.builtins.scripting.handlers import *
 from msa.builtins.scripting.events import (
     AddScriptEvent,
     TriggerScriptRunEvent,
     AddScriptFailedEvent,
     RunScriptResultEvent,
 )
+from msa.builtins.signals.events import StartupEvent
 from msa.builtins.scripting import entities
 from msa import core as msa_core
 
@@ -231,6 +232,60 @@ class TriggerScriptRunHandlerTest(unittest.TestCase):
 
         self.assertIsInstance(fired_event, RunScriptResultEvent)
         self.assertIn("Attempted to trigger script run", fired_event.data["error"])
+
+
+class StartupEventHandlerTest(unittest.TestCase):
+    def setUp(self):
+        initializer(
+            ["msa.builtins.scripting.entities"], db_url="sqlite:///tmp/test-{}.sqlite"
+        )
+
+    def tearDown(self) -> None:
+        finalizer()
+
+    @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
+    @patch("msa.builtins.scripting.entities.ScriptEntity.all", new_callable=AsyncMock)
+    def test_schedule_script_with_crontab(
+        self, script_entity_all_mock, ScriptExecutionManagerMock
+    ):
+
+        test_script = FakeScriptEntity(
+            "test_script", """print("hello world")""", "5 4 * * *"
+        )
+        test_scripts = [test_script]
+
+        script_entity_all_mock.mock.return_value = test_scripts
+
+        loop = asyncio.get_event_loop()
+        loopMock = MagicMock()
+        eventBusMock = MagicMock()
+        loggerMock = MagicMock()
+
+        ScriptExecutionManagerMock.shared_state = {
+            "scheduled_scripts": {},
+            "loop": loopMock,
+        }
+
+        handler = StartupEventHandler(loopMock, eventBusMock, loggerMock)
+        handler.script_manager = ScriptExecutionManagerMock
+
+        event_data = {"timestamp": "fake timestamp"}
+        event = StartupEvent().init(event_data)
+
+        loop.run_until_complete(handler.handle_startup_event(event))
+
+        schedule_script_args = ScriptExecutionManagerMock.schedule_script.call_args_list[
+            0
+        ][
+            0
+        ]
+
+        expected_args = (
+            test_script.name,
+            test_script.script_contents,
+            test_script.crontab,
+        )
+        self.assertEqual(schedule_script_args, expected_args)
 
 
 async def identity_coro(return_value=None):

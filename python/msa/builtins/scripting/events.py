@@ -68,7 +68,7 @@ class GetScriptEvent(Event):
         The last run timestamp of the script
     scheduled_for:
         The next timestamp the script is scheduled to execute at.
-    content:
+    script_contents:
         Content of the script
     running:
         A boolean indicating whether or not the script is currently running.
@@ -86,7 +86,7 @@ class GetScriptEvent(Event):
                     "last_edited": And(str, len),
                     "last_run": Or(And(str, len), None),
                     "scheduled_for": Or(And(str, len), None),
-                    "content": And(str, len),
+                    "script_contents": And(str, len),
                     "running": bool,
                 }
             ),

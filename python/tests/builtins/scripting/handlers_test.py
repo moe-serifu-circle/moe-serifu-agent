@@ -435,6 +435,9 @@ class TriggerGetScripHandlertTest(unittest.TestCase):
         self.assertEqual(fired_event.data["id"], test_script.id)
         self.assertEqual(fired_event.data["name"], test_script.name)
         self.assertEqual(fired_event.data["crontab"], test_script.crontab)
+        self.assertEqual(
+            fired_event.data["script_contents"], test_script.script_contents
+        )
         self.assertFalse(fired_event.data["running"])
 
     @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
@@ -486,7 +489,196 @@ class TriggerGetScripHandlertTest(unittest.TestCase):
         self.assertEqual(fired_event.data["id"], test_script.id)
         self.assertEqual(fired_event.data["name"], test_script.name)
         self.assertEqual(fired_event.data["crontab"], test_script.crontab)
+        self.assertEqual(
+            fired_event.data["script_contents"], test_script.script_contents
+        )
         self.assertFalse(fired_event.data["running"])
+
+
+class TriggerDeleteScriptHandlerTest(unittest.TestCase):
+    def setUp(self):
+        initializer(
+            ["msa.builtins.scripting.entities"], db_url="sqlite:///tmp/test-{}.sqlite"
+        )
+
+    def tearDown(self) -> None:
+        finalizer()
+
+    @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
+    @patch("msa.builtins.scripting.entities.ScriptEntity.filter")
+    @patch("msa.core.supervisor_instance")
+    def test_delete_running_script_cancel_successfully(
+        self, SupervisorMock, ScriptEntity_filter_mock, ScriptExecutionManagerMock
+    ):
+        test_script = MagicMock()
+        test_script.name = "test_script"
+        test_script.script_contents = """print("hello world")"""
+        test_script.crontab = "5 4 * * *"
+        test_script.delete = AsyncMock()
+
+        first_mock = AsyncMock(return_value=test_script)
+        result_mock = MagicMock()
+        result_mock.first = first_mock
+        ScriptEntity_filter_mock.return_value = result_mock
+
+        loop = asyncio.get_event_loop()
+        loopMock = MagicMock()
+        eventBusMock = MagicMock()
+        loggerMock = MagicMock()
+
+        aiocronMock = MagicMock()
+
+        ScriptExecutionManagerMock.shared_state = {
+            "scheduled_scripts": {
+                test_script.name: {"aiocron_instance": aiocronMock, "task": None}
+            },
+            "loop": loopMock,
+            "running_scripts": set([test_script.name]),
+        }
+
+        handler = TriggerDeleteScriptHandler(loopMock, eventBusMock, loggerMock)
+        handler.script_manager = ScriptExecutionManagerMock
+
+        event = events.TriggerGetScriptEvent().init({"name": test_script.name})
+
+        async def runner():
+            ScriptExecutionManagerMock.shared_state["scheduled_scripts"][
+                test_script.name
+            ]["task"] = asyncio.create_task(identity_coro())
+            await handler.handle_trigger_delete_script_event(event)
+
+        loop.run_until_complete(runner())
+
+        fired_event = SupervisorMock.fire_event.call_args_list[0][0][0]
+        self.assertIsInstance(fired_event, events.ScriptDeletedEvent)
+
+        self.assertEqual(fired_event.data["status"], "success")
+        self.assertEqual(fired_event.data["name"], test_script.name)
+
+    @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
+    @patch("msa.builtins.scripting.entities.ScriptEntity.filter")
+    @patch("msa.core.supervisor_instance")
+    def test_delete_not_running_script(
+        self, SupervisorMock, ScriptEntity_filter_mock, ScriptExecutionManagerMock
+    ):
+        test_script = MagicMock()
+        test_script.name = "test_script"
+        test_script.script_contents = """print("hello world")"""
+        test_script.crontab = "5 4 * * *"
+        test_script.delete = AsyncMock()
+
+        first_mock = AsyncMock(return_value=test_script)
+        result_mock = MagicMock()
+        result_mock.first = first_mock
+        ScriptEntity_filter_mock.return_value = result_mock
+
+        loop = asyncio.get_event_loop()
+        loopMock = MagicMock()
+        eventBusMock = MagicMock()
+        loggerMock = MagicMock()
+
+        ScriptExecutionManagerMock.shared_state = {
+            "scheduled_scripts": {},
+            "loop": loopMock,
+            "running_scripts": set(),
+        }
+
+        handler = TriggerDeleteScriptHandler(loopMock, eventBusMock, loggerMock)
+        handler.script_manager = ScriptExecutionManagerMock
+
+        event = events.TriggerGetScriptEvent().init({"name": test_script.name})
+
+        loop.run_until_complete(handler.handle_trigger_delete_script_event(event))
+
+        fired_event = SupervisorMock.fire_event.call_args_list[0][0][0]
+        self.assertIsInstance(fired_event, events.ScriptDeletedEvent)
+
+        self.assertEqual(fired_event.data["status"], "success")
+        self.assertEqual(fired_event.data["name"], test_script.name)
+
+    @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
+    @patch("msa.builtins.scripting.entities.ScriptEntity.filter")
+    @patch("msa.core.supervisor_instance")
+    def test_fail_to_delete_script(
+        self, SupervisorMock, ScriptEntity_filter_mock, ScriptExecutionManagerMock
+    ):
+        test_script = MagicMock()
+        test_script.name = "test_script"
+        test_script.script_contents = """print("hello world")"""
+        test_script.crontab = "5 4 * * *"
+        test_script.delete = AsyncMock()
+        test_script.delete.mock.side_effect = Exception("fail to delete")
+
+        first_mock = AsyncMock(return_value=test_script)
+        result_mock = MagicMock()
+        result_mock.first = first_mock
+        ScriptEntity_filter_mock.return_value = result_mock
+
+        loop = asyncio.get_event_loop()
+        loopMock = MagicMock()
+        eventBusMock = MagicMock()
+        loggerMock = MagicMock()
+
+        ScriptExecutionManagerMock.shared_state = {
+            "scheduled_scripts": {},
+            "loop": loopMock,
+            "running_scripts": set(),
+        }
+
+        handler = TriggerDeleteScriptHandler(loopMock, eventBusMock, loggerMock)
+        handler.script_manager = ScriptExecutionManagerMock
+
+        event = events.TriggerGetScriptEvent().init({"name": test_script.name})
+
+        loop.run_until_complete(handler.handle_trigger_delete_script_event(event))
+
+        fired_event = SupervisorMock.fire_event.call_args_list[0][0][0]
+        self.assertIsInstance(fired_event, events.ScriptDeletedEvent)
+
+        self.assertEqual(fired_event.data["status"], "failure")
+        self.assertEqual(fired_event.data["name"], test_script.name)
+        self.assertEqual(
+            fired_event.data["reason"], "Failed to delete script with name test_script."
+        )
+
+    @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
+    @patch("msa.builtins.scripting.entities.ScriptEntity.filter")
+    @patch("msa.core.supervisor_instance")
+    def test_fail_to_delete_cannot_find_script(
+        self, SupervisorMock, ScriptEntity_filter_mock, ScriptExecutionManagerMock
+    ):
+
+        first_mock = AsyncMock(return_value=None)
+        result_mock = MagicMock()
+        result_mock.first = first_mock
+        ScriptEntity_filter_mock.return_value = result_mock
+
+        loop = asyncio.get_event_loop()
+        loopMock = MagicMock()
+        eventBusMock = MagicMock()
+        loggerMock = MagicMock()
+
+        ScriptExecutionManagerMock.shared_state = {
+            "scheduled_scripts": {},
+            "loop": loopMock,
+            "running_scripts": set(),
+        }
+
+        handler = TriggerDeleteScriptHandler(loopMock, eventBusMock, loggerMock)
+        handler.script_manager = ScriptExecutionManagerMock
+
+        event = events.TriggerGetScriptEvent().init({"name": "test_script"})
+
+        loop.run_until_complete(handler.handle_trigger_delete_script_event(event))
+
+        fired_event = SupervisorMock.fire_event.call_args_list[0][0][0]
+        self.assertIsInstance(fired_event, events.ScriptDeletedEvent)
+
+        self.assertEqual(fired_event.data["status"], "failure")
+        self.assertEqual(fired_event.data["name"], "test_script")
+        self.assertEqual(
+            fired_event.data["reason"], "Unable to find script with name test_script."
+        )
 
 
 async def identity_coro(return_value=None):

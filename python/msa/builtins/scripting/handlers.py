@@ -207,7 +207,7 @@ class TriggerGetScriptHandler(EventHandler):
             "id": script_entity.id,
             "name": script_entity.name,
             "crontab": script_entity.crontab,
-            "content": script_entity.script_contents,
+            "script_contents": script_entity.script_contents,
             "created": script_entity.created.strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "last_edited": script_entity.last_edited.strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "last_run": script_entity.last_run.strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -263,8 +263,10 @@ class TriggerDeleteScriptHandler(EventHandler):
                 await task
             except asyncio.CancelledError:
                 self.logger.debug(f"Canceled script task {entity_name} successfully.")
-            except:
-                self.logger.debug(f"Failed to cancel script {entity_name} task.")
+            except Exception as e:  # pragma: no coverage
+                self.logger.debug(
+                    f"Failed to cancel script {entity_name} task. Exception Message:\n{e}"
+                )
                 new_event = events.ScriptDeletedEvent().init(
                     {
                         "name": entity_name,
@@ -295,7 +297,7 @@ class TriggerDeleteScriptHandler(EventHandler):
                 {
                     "name": entity_name,
                     "status": "failure",
-                    "reason": f"Failed to cancel script with name {entity_name}.",
+                    "reason": f"Failed to delete script with name {entity_name}.",
                 }
             )
             get_supervisor().fire_event(new_event)

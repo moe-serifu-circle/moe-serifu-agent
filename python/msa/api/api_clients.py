@@ -24,7 +24,7 @@ class ApiResponse:
             if isinstance(raw, str):
                 self.text = raw
             else:
-                self.text = raw.decode("utf-8"())
+                self.text = raw.decode("utf-8")
         else:
             self.raw = ""
             self.text = ""

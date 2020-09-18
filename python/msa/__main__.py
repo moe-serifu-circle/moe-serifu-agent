@@ -26,7 +26,6 @@ def main(ctx, config_file, log_level):
 def daemon(ctx):
 
     from msa.server import start_server
-
     start_server(ctx.obj)
 
 

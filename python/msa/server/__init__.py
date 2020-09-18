@@ -68,22 +68,22 @@ def start_server(config_context):  # pragma: no coverage
     try:
         import aiomonitor
 
-        host, port = "localhost", 8080
+        host, port = "127.0.0.1", 8080
         locals_ = {"port": port, "host": host}
         with aiomonitor.start_monitor(loop=loop, locals=locals_):
             # run application with built in aiohttp run_app function
 
             try:
                 web.run_app(app, port=port, host=host)
-            except:
-                pass
+            except Exception as e:
+                print(e)
             finally:
                 loop.close()
 
     except:
         try:
             web.run_app(app)
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             loop.close()

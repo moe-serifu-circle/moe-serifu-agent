@@ -125,7 +125,7 @@ class Supervisor:
         # Initialize logging
         self.init_logging(config["logging"])
 
-        plugin_names = []
+        plugin_names = ["rss_feed"]
 
         # ### Loading Modules
         self.logger.info("Loading modules.")
@@ -176,7 +176,8 @@ class Supervisor:
                 handler_logger = self.root_logger.getChild(namespace)
                 self.loggers[full_namespace] = handler_logger
 
-                module_config = config["module_config"].get(full_namespace, None)
+                module_name_tail = module.__name__.split(".")[-1]
+                module_config = config["module_config"].get(module_name_tail, None)
 
                 inited_handler = handler(
                     self.loop, self.event_bus, handler_logger, module_config

@@ -7,9 +7,9 @@ CONFIG_SCHEMA = Schema(
     {
         "agent": {"name": And(str, len), "user_title": And(str, len)},
         "plugin_modules": [And(str, len)],
-        "module_config": {
+        "module_config": And(dict),
             # namespace of module -> dict of config values
-        },
+
         "logging": {
             "global_log_level": Or(
                 None,

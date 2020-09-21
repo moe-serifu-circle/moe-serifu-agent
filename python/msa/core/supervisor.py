@@ -6,6 +6,8 @@ import logging
 import inspect
 from contextlib import suppress
 from concurrent.futures import ThreadPoolExecutor
+from aiocron import crontab
+from datetime import datetime
 
 from msa.core.event import Event
 from msa.core.loader import load_builtin_modules, load_plugin_modules
@@ -294,10 +296,12 @@ class Supervisor:
         self.logger.debug("Startup Coroutine: Call async init on handlers.")
         init_coros = [handler.init() for handler in self.initialized_event_handlers]
 
+        scheduled_coros = self._get_prep_scheduled_coros()
+
         await asyncio.gather(*init_coros)
 
         self.logger.debug("Startup Coroutine: Prime EventBus coroutine.")
-        primed_coros = [self.event_bus.listen()]
+        primed_coros = [self.event_bus.listen(), *scheduled_coros]
 
         self.logger.debug(
             "Startup Coroutine: Prime additional coroutines: {}".format(
@@ -329,3 +333,24 @@ class Supervisor:
         ----------
         - handler_type: A type of handler."""
         return self.handler_lookup.get(handler_type)
+
+    def _get_prep_scheduled_coros(self):
+
+        coros = []
+
+        for handler in self.initialized_event_handlers:
+            if not hasattr(handler.schedule, "base_class"):
+                # then we know that this subclass has overwritten the base class with an implementation
+                coros_to_schedule = handler.schedule()
+
+                for [tab, coro] in coros_to_schedule:
+                    coros.append(self._wrap_scheduled_coro(tab, coro))
+
+        return coros
+
+    @staticmethod
+    async def _wrap_scheduled_coro(tab_str, coro):
+        tab = crontab(tab_str, func=lambda: datetime.now(), start=False)
+        while True:
+            time = await tab.next()
+            await coro(time)

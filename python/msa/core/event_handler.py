@@ -1,6 +1,8 @@
 import asyncio
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Tuple, Callable, Coroutine
 import logging
+from datetime import datetime
+
 
 import msa
 from msa.core.event_bus import EventBus
@@ -11,9 +13,9 @@ class EventHandler:
 
     Attributes
     ----------
-    self.loop : asyncio.AbstractEventLoop
+    loop : asyncio.AbstractEventLoop
         the main event loop.
-    self.event_queue : asyncio.Queue
+    event_bus : msa.core.event_bus.EventBus
         an event loop that this handler may attempt to read events out of by awaiting on
         it."""
 
@@ -44,3 +46,21 @@ class EventHandler:
         """An optional initialization hook, may be used for executing setup code before all handlers have benn fully
         started."""
         pass
+
+    def schedule(
+        self
+    ) -> List[Tuple[str, Callable[[], Coroutine[datetime, None, None]]]]:
+        """An optional hook, may be used for scheduling one or more methods/functions to be periodically called..
+
+        The expected return value is a list of tuples. Each tuple should be a crontab string, followed by a coroutine
+        that should be executed periodically based on the given crontab.
+
+        Invalid crontabs will result in a warning in the log, and the coroutine will not be scheduled.
+
+        Returns
+        ------
+        List[Tuple[str, Callable[[], Coroutine[None]]]]
+        """
+        return []
+
+    schedule.base_class = True

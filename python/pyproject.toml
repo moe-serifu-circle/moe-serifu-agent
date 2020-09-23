@@ -20,6 +20,7 @@ croniter = "^0.3.30"
 aiosqlite = "^0.10.0"
 tortoise-orm = "^0.13.7"
 tabulate = "^0.8.7"
+feedparser = { version = "^6.0.1", optional=true }
 
 [tool.poetry.dev-dependencies]
 sphinx = "^2.0"

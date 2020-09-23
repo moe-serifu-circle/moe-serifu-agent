@@ -4,11 +4,14 @@
        "user_title": "Onee-chan"
    },
   "plugin_modules": [
-
+    "rss_feed"
   ],
 
   "module_config": {
-
+    "rss_feed": {
+      "feed_url": "http://feeds.feedburner.com/crunchyroll/animenews",
+      "poll_crontab": "* * * * *"
+    }
   },
 
   "logging": {

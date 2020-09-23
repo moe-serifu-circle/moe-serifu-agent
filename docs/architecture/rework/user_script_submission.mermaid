@@ -1,0 +1,16 @@
+sequenceDiagram
+participant User
+participant cli as MSA CLI Tool
+participant daemon as MSA Daemon
+
+
+User->>User: User Writes script
+User->>daemon: Starts daemon
+User->>cli: Submits script to CLI
+cli->>daemon: Connect
+cli->>daemon: Upload Script and schedule
+loop Scheduling Loop
+     daemon->>daemon: Time passes
+     daemon->>daemon: MSA Daemon runs submitted script at scheduled time
+end
+

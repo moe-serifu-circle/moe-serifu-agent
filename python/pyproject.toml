@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "msa"
+version = "1.2.0"
+description = "Moe Serifu Agent (MSA) is an event-driven personal assistant system that presents itself as existing in a particular location (like a house or a smartphone) and performs various tasks as directed by the user."
+authors = ["moe-serifu-circle"]
+license = "LGPL-3.0+"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+click = "^7.0"
+schema = "^0.7.0"
+termcolor = "^1.1"
+colorama = "^0.4.1"
+prompt-toolkit = "^2.0"
+pygments = "^2.3"
+aiohttp = "^3.5"
+sphinx-rtd-theme = "^0.4.3"
+aiocron = "^1.3"
+croniter = "^0.3.30"
+aiosqlite = "^0.10.0"
+tortoise-orm = "^0.13.7"
+tabulate = "^0.8.7"
+
+[tool.poetry.dev-dependencies]
+sphinx = "^2.0"
+sphinx-rtd-theme = "^0.4.3"
+recommonmark = "^0.5.0"
+coverage = "^5.0.4"
+aiomonitor = "^0.4.5"
+asynctest = "^0.13.0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

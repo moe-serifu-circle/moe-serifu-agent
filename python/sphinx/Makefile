@@ -11,6 +11,10 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+api_dir:
+	rm -rf api
+	sphinx-apidoc -o api ../msa
+
 .PHONY: help Makefile
 
 # Catch-all target: route all unknown targets to Sphinx using the new

@@ -1,9 +1,9 @@
-from msa.core.supervisor import Supervisor
+from typing import TYPE_CHECKING
 
-supervisor = Supervisor()
+supervisor_instance = None
 
-class RunMode:
-    CLI = 0
-    SERVER = 1
-    CLIENT = 2
 
+def get_supervisor() -> "Supervisor":
+    if not supervisor_instance:
+        raise Exception("Supervisor has not yet been set up!")
+    return supervisor_instance

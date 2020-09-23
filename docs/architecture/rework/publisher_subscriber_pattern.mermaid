@@ -1,0 +1,37 @@
+sequenceDiagram
+participant u as User
+participant a as Asyncio
+participant s as Supervisor
+participant eb as EventBus
+participant hdlr1 as Event Handler 1
+participant hdlr2 as Event Handler 2
+
+u->>a:Start
+u->>s:Start
+s ->> eb: create
+s->>hdlr1: Load
+s->>hdlr2: Load
+s->>hdlr1:Tell handler to register event types
+hdlr1->>eb:Register event type
+s->>hdlr2:Tell handler to register event types
+hdlr2->>eb:Register event type
+s->>hdlr1: Tell handler to register event type subscriptions
+hdlr1->>eb: Register subscriptions
+s->>hdlr2:Tell handler to register event type subscriptions
+hdlr2->>eb: Register subscriptions
+s->>hdlr1:Signal start corioutine
+s->>hdlr2:Signal start corioutine
+hdlr1->eb:await event
+hdlr1->>a:yield
+hdlr2->eb:await event
+hdlr2->>a:yield
+loop supervisor wait
+ s->>s:Wait for shutdown
+end
+u->>a:Input
+a->>hdlr1:Pass text input
+hdlr1->>eb:Create event and propagate
+eb->eb:Search for handlers subscribed to event type
+eb->>hdlr2:Propogate event to handler subscribed to event type
+hdlr2->hdlr2:Handle event
+

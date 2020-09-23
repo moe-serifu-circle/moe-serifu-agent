@@ -10,35 +10,26 @@ The goal of this getting started guide is to walk you through the basic usage of
 
 ## Up and running
 
-To start MSA run, `moe-serifu-agent` in a terminal. You will be presented with a prompt. Interacting with the prompt is 
-the most basic way to interact with MSA. 
+### Starting the daemon
 
-To find available commands type `help` e.g.
+Before we can start interacting with MSA we need to start it. To start MSA, run `moe-serifu-agent daemon` in a terminal. By default the daemon will run on port `8080`. 
 
-```bash
->> help
-Available Commands:
-echo: Echos provided text back through the terminal
-quit: Shuts down the current Moe Serifu Agent instance
-help: Prints available commands and information about command usage.
-```
+### Connecting to the daemon with a client
 
-To read the help text for a specific command, type `help [name of a command]` e.g.
-```bash
->> help echo
-Help text for command 'echo':
-Usage: 'echo [text]'
-Options: No available options.
-Description: Echos provided text back through the terminal
-```
+#### The development Command Line Interface (also called the cli)
+
+To start the cli, open a new terminal on the same computer running the daemon. Then run `moe-serifu-agent cli`. 
+This should start the interactive cli. This tool is an interactive python interpreter for writing and uploading scripts. 
+It is the lowest level way of interacting with MSA.
+
+To exit at any time, press `Ctrl+c` or type `quit()`.
 
 
-To exit at any time, press `Ctrl+c` or type `quit`.
-
+## Next Steps
 
 Now that we have covered how to get up and running with MSA, here are a few more topics worth reading:
 - [Customizing your MSA](configuration): Covers setting up a configuration file that you can use to customize the 
 behavior of MSA.
-- [Built-in Commands](builtin_commands): Describes each of the builtin commands and what you can do with them.
+- [Using the CLI](using_the_cli): A tutorial on using the cli to write scripts for MSA to run, and to build custom automations.
 - [Extending MSA with plugins](plugins): Adding additional functionality through MSA plugins.
 

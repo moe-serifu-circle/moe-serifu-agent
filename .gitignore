@@ -154,3 +154,6 @@ dmypy.json
 msa.log
 
 _build/
+msa.db*
+.msa_cli_history
+

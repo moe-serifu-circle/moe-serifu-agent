@@ -3,46 +3,32 @@ import logging
 import unittest
 from unittest import mock
 
+from tests.async_test_util import async_run
 from msa.core.event_handler import EventHandler
 
-class EventHandlerTest(unittest.TestCase):
 
+class EventHandlerTest(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
-        self.event_queue = asyncio.PriorityQueue()
-        dummy_logger = logging.getLogger('foo')
-        dummy_logger.addHandler(logging.NullHandler())
-        self.event_handler = DummyEventHandler(self.loop, self.event_queue, dummy_logger)
+        self.dummy_logger = logging.getLogger("foo")
+        self.dummy_logger.addHandler(logging.NullHandler())
+        self.event_bus = FakeEventBus()
 
-    @mock.patch("msa.core.supervisor.should_stop", new=mock.MagicMock(side_effect=[i >= 20 for i in range(21)]))
-    def test_handle(self):
+    def test_constructor(self):
 
-        nums_10 = list(range(10))
-        nums_20 = list(range(10, 20))
+        self.event_handler = DummyEventHandler(
+            self.loop, self.event_bus, self.dummy_logger
+        )
 
-        # insert numbers 0-9
-        for i in nums_10:
-            self.loop.create_task(self.insert_into_queue(i))
+        assert self.event_handler.loop == self.loop
+        assert self.event_handler.event_bus == self.event_bus
+        assert self.event_handler.logger == self.dummy_logger
 
-        # queue handler
-        self.loop.create_task(self.event_handler.handle_wrapper())
-
-        # insert some more numbers
-        for i in nums_20:
-            self.loop.create_task(self.insert_into_queue(i))
-
-        # queue shutdown later (should be more than enough time to finish work)
-        self.loop.call_later(1, lambda: self.loop.stop())
-
-        # run loop and wait for it to stop
-        self.loop.run_forever()
-        self.loop.close()
-
-        # verify we read all the numbers
-        self.assertEqual(nums_10 + nums_20, self.event_handler.read_from_queue)
-
-    async def insert_into_queue(self, n):
-        self.event_queue.put_nowait(n)
+    def test_init_hook(self):
+        self.event_handler = DummyEventHandler(
+            self.loop, self.event_bus, self.dummy_logger
+        )
+        async_run(self.loop, self.event_handler.init())
 
 
 class DummyEventHandler(EventHandler):
@@ -51,10 +37,14 @@ class DummyEventHandler(EventHandler):
 
         self.read_from_queue = []
 
-
     async def handle(self):
         data = await self.event_queue.get()
         self.read_from_queue.append(data)
+
+
+class FakeEventBus:
+    pass
+
 
 if __name__ == "__main__":
     unittest.main()

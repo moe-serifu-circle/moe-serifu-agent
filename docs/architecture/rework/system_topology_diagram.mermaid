@@ -1,0 +1,18 @@
+graph TD;
+ subgraph Computer #1
+   u[User] --> cli[CLI Tool]  
+  end
+  subgraph Computer #2
+   u2[Other user] --> c[Front End Client]   
+  end
+
+subgraph network interaction
+c[Front End Client] --> api[MSA API]
+cli --> api
+end
+
+subgraph Computer #3 
+api --> s[MSA Daemon] 
+end
+
+

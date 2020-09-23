@@ -6,11 +6,9 @@ Subpackages
 
 .. toctree::
 
-    msa.builtins.command
-    msa.builtins.command_registry
-    msa.builtins.echo
-    msa.builtins.time
-    msa.builtins.tty
+    msa.builtins.conversation
+    msa.builtins.scripting
+    msa.builtins.signals
 
 Module contents
 ---------------

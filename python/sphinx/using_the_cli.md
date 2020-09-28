@@ -51,9 +51,9 @@ to the daemon.
 ```python
 $ moe-serifu-agent
 >>> # record test.py                                                                                                                                                                                                                  
->>> await msa_api.talk("Hello, how are you?")                                                                                                                                                                                         
+>>> await msa_api.talk("Hello, how are you?")                                                                                                                                     
 I am well thank you. What can I do for you?
->>> await msa_api.talk("Please turn on the livingroom light.")                                                                                                                                                                        
+>>> await msa_api.talk("Please turn on the livingroom light")
 I am afraid I don't know what to say.
 >>> # record stop                                                                                                                                                                                                                     
 Opening test.py

@@ -1,5 +1,7 @@
 # Getting Started
 
+!!! Until our first official release, the only supported way of installing MSA is from source. Please see [Running From Source](contributor_guide.html#running-from-source).:w
+
 The goal of this getting started guide is to walk you through the basic usage of MSA. 
 
 **Note:** This guide assumes that you have already installed the `moe-serifu-agent` package, if not, please see the 

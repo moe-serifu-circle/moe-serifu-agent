@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 from msa.core.event_handler import EventHandler
 from msa.core import get_supervisor
-from msa.builtins.conversation.events import ConversationOutputEvent, IntentEvent
-from msa.builtins.signals import events as signal_events
-from aiocron import crontab
-import asyncio
+from msa.builtins.conversation.events import ConversationOutputEvent
+from msa.plugins.rss_feed.events import RssFeedRequestEvent
 
 try:
     import feedparser
@@ -22,7 +20,7 @@ class RssPollingHandler(EventHandler):
     def __init__(self, loop, event_bus, logger, config=None):
         super().__init__(loop, event_bus, logger, config)
 
-        self.event_bus.subscribe(IntentEvent, self.handle_request_feed)
+        self.event_bus.subscribe(RssFeedRequestEvent, self.handle_request_feed)
 
         self.feed = None
 
@@ -36,9 +34,6 @@ class RssPollingHandler(EventHandler):
         return feedparser.parse(self.config["feed_url"])
 
     async def handle_request_feed(self, event):
-
-        if event.data["type"] != "rss_feed_request":
-            return
 
         if self.feed is None:
             await self.check_feed(None)

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from schema import Schema, And, Or, Optional
-
+from schema import Schema, And
 from msa.core.event import Event
 
 
@@ -23,17 +22,3 @@ class ConversationOutputEvent(Event):
 
     def __init__(self):
         super().__init__(priority=50, schema=Schema({"output": And(str, len)}))
-
-
-class IntentEvent(Event):
-    """
-    IntentEvent schema:
-    - type: The type of the intent.
-    - context: Contextual information for the intent handler
-    """
-
-    def __init__(self):
-        super().__init__(
-            priority=50,
-            schema=Schema({"type": And(str, len), Optional("context"): dict}),
-        )

@@ -83,8 +83,7 @@ class Event(object):
         ----------
         data : Dict
             """
-        self.schema.validate(data)
-        self.data = data
+        self.data = self.schema.validate(data)
 
         return self
 

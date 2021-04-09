@@ -48,7 +48,7 @@ class EventHandler:
         pass
 
     def schedule(
-        self
+        self,
     ) -> List[Tuple[str, Callable[[], Coroutine[datetime, None, None]]]]:
         """An optional hook, may be used for scheduling one or more methods/functions to be periodically called..
 

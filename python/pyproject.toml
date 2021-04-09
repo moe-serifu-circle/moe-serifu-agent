@@ -23,6 +23,7 @@ tabulate = "^0.8.7"
 
 # below `extras`. They can be opted into by apps.
 feedparser = { version = "^6.0.1",  optional=true }
+notifiers = { version = "^1.2.1", optional=true }
 
 
 [tool.poetry.dev-dependencies]
@@ -35,6 +36,7 @@ asynctest = "^0.13.0"
 
 [tool.poetry.extras]
 feed_plugin = ["feedparser"]
+notifications_plugin = ["notifiers"]
 
 [build-system]
 requires = ["poetry>=0.12"]

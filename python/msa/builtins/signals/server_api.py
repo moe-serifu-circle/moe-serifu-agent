@@ -15,7 +15,7 @@ async def trigger_event(request):
     """
     from msa.core.event import Event
 
-    new_event = Event.deserialize(request.payload)
+    new_event = Event.deserialize(request.data)
     get_supervisor().fire_event(new_event)
 
     return ServerResponseText(

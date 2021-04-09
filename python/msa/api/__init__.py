@@ -8,7 +8,7 @@ from msa.api import api_clients
 
 def get_api(context, plugin_whitelist=None, **kwargs):
     """
-        kwargs should only be provided if the context you are attempting to retrieve has not been loaded/patched yet.
+    kwargs should only be provided if the context you are attempting to retrieve has not been loaded/patched yet.
     """
     if context is None:
         raise Exception("get_api: context cannot be None.")

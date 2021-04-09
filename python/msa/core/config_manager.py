@@ -64,7 +64,7 @@ class ConfigManager:
         """Loads the configuration value into memory. The file location is derived from the command line interface
         options."""
 
-        paths_to_check = [Path("./msa_config.json"), Path.home() / ".msa_config.json" ]
+        paths_to_check = [Path("./msa_config.json"), Path.home() / ".msa_config.json"]
         if self.config_file is not None:
             paths_to_check.insert(0, Path(self.config_file))
 

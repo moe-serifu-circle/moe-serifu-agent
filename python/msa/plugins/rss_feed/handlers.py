@@ -10,7 +10,7 @@ import asyncio
 try:
     import feedparser
 except:
-    print("rss_feed plugin, requires the feedparser library to be installed.")
+    print("rss_feed plugin, requires the feed_plugin extra to be installed.")
     exit()
 
 

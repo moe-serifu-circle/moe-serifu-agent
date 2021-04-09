@@ -119,9 +119,7 @@ class ApiWebsocketClient:
                             self.client_id = data["payload"]["id"]
                             continue
                         elif data["type"] == "error":
-                            raise Exception(
-                                f"Bad request:\n{data['payload']['message']}"
-                            )
+                            raise Exception(f"Bad request:\n{data['message']}")
                         else:
                             raise Exception("Bad payload response:", data)
 

@@ -124,18 +124,21 @@ class RouteAdapter:
                         )
                         continue
 
-                    if "data" not in payload:
+                    if "payload" not in payload:
                         await ws.send_str(
                             json.dumps(
                                 {
                                     "type": "error",
-                                    "message": "Websocket payload requires a data field.",
+                                    "message": "Websocket payload requires a payload field.",
                                 }
                             )
                         )
 
                     try:
-                        route_func, url_params = route_adapter.lookup_route_and_resolve_url_params(
+                        (
+                            route_func,
+                            url_params,
+                        ) = route_adapter.lookup_route_and_resolve_url_params(
                             payload["verb"], payload["route"]
                         )
                     except Exception as e:
@@ -148,7 +151,7 @@ class RouteAdapter:
                         client_id,
                         payload["verb"],
                         payload["route"],
-                        payload["data"],
+                        payload["payload"],
                         url_params,
                     )
 
@@ -164,10 +167,7 @@ class RouteAdapter:
                     except Exception as e:
                         await ws.send_str(
                             json.dumps(
-                                {
-                                    "type": "error",
-                                    "payload": {"message": traceback.format_exc()},
-                                }
+                                {"type": "error", "message": traceback.format_exc()}
                             )
                         )
                         continue

@@ -2,8 +2,8 @@ import asyncio
 
 
 def sync_to_async(func):
-    async def wrap_async(*args, kwargs):
-        loop = asyncio.getjrunning_loop()
+    async def wrap_async(*args, **kwargs):
+        loop = asyncio.get_running_loop()
 
         def func_with_args():
             func(*args, **kwargs)

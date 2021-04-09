@@ -1,4 +1,4 @@
-from schema import Schema, Optional, And
+from schema import Schema, Optional, And, Or
 
 from msa.plugins.notifications import handlers
 
@@ -8,6 +8,7 @@ entities_list = []
 
 config_schema = Schema(
     {
+        Optional("preferred_provider"): Or("pushbullet", "email", "slack"),
         "providers": {
             Optional("pushbullet"): {"token": And(str, len)},
             Optional("email"): {
@@ -25,6 +26,6 @@ config_schema = Schema(
                 Optional("icon_url"): And(str, len),
                 Optional("icon_emoji"): And(str, len),
             },
-        }
+        },
     }
 )

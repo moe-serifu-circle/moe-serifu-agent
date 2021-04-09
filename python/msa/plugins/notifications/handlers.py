@@ -1,12 +1,17 @@
 from msa.core.event_handler import EventHandler
-from msa.plugins.notifications.events import SendNotificationEvent
+from msa.plugins.notifications.events import (
+    SendNotificationEvent,
+    SendPreferredNotificationEvent,
+)
 from msa.plugins.notifications.notification_providers import NotificationProvider
 from msa.utils.asyncio_utils import sync_to_async
 
 try:
     from notifiers import get_notifier
 except:
-    print("notifications plugin, requires the notifications_plugin extra to be installed.")
+    print(
+        "notifications plugin, requires the notifications_plugin extra to be installed."
+    )
     exit()
 
 
@@ -63,9 +68,17 @@ class SendNotificationEventHandler(EventHandler):
                     send_notification
                 )
 
-        self.event_bus.subscribe(SendNotificationEvent, self.handle_event)
+        preferred_provider = config.get("preferred_provider", None)
+        if preferred_provider:
+            preferred_provider_type = NotificationProvider[preferred_provider]
+            self.preferred_provider = self.providers[preferred_provider_type]
+            self.event_bus.subscribe(
+                SendPreferredNotificationEvent, self.handle_preferred
+            )
 
-    async def handle_event(self, event):
+        self.event_bus.subscribe(SendNotificationEvent, self.handle_notify)
+
+    async def handle_notify(self, event):
 
         provider = event.data["provider"]
         provider_enum = NotificationProvider(provider)
@@ -79,3 +92,10 @@ class SendNotificationEventHandler(EventHandler):
             )
 
         await self.providers[provider_enum](title, message, target)
+
+    async def handle_preferred(self, event):
+        title = event.data["title"]
+        message = event.data["message"]
+        target = event.data.get("target", None)
+
+        await self.preferred_provider(title, message, target)

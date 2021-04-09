@@ -25,3 +25,22 @@ class SendNotificationEvent(Event):
                 }
             ),
         )
+
+
+class SendPreferredNotificationEvent(Event):
+    """
+    SendNotificationEvent schema:
+    - timestamp: datetime in yyyy-mm-dd hh:mm:ss:xx format of starup event
+    """
+
+    def __init__(self):
+        super().__init__(
+            priority=40,
+            schema=Schema(
+                {
+                    Optional("target"): And(str, len),
+                    "title": And(str, len),
+                    "message": And(str, len),
+                }
+            ),
+        )

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from msa.builtins.intents.events import IntentEvent
 from msa.core.event_handler import EventHandler
 from msa.core import get_supervisor
 from msa.builtins.conversation.events import ConversationOutputEvent
@@ -47,8 +48,19 @@ class RssPollingHandler(EventHandler):
 
             output += f"• {title}: {link}\n"
 
-        new_event = (
+        output_event = (
             ConversationOutputEvent().init({"output": output}).network_propagate()
         )
 
-        get_supervisor().fire_event(new_event)
+        notify_intent = IntentEvent().init(
+            {
+                "type": "msa.plugins.notifications.events.SendPreferredNotificationEvent",
+                "context": {
+                    "title": "RSS Feeds Ready",
+                    "message": "I finished loading your RSS feeds!",
+                },
+            }
+        )
+
+        get_supervisor().fire_event(output_event)
+        get_supervisor().fire_event(notify_intent)

@@ -42,5 +42,13 @@ class IntentToEventHandler(EventHandler):
             )
             return
 
-        new_event = cls().init(event_data)
+        try:
+            new_event = cls().init(event_data)
+        except:
+            self.logger.exception(
+                "While attempting to convert an intent to an event, the event initialization failed "
+                "due to a schema validation error"
+            )
+            return
+
         get_supervisor().fire_event(new_event)

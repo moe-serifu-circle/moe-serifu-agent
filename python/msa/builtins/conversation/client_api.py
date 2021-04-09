@@ -13,10 +13,10 @@ async def talk(self, input):
     response = await self.client.post("/conversation/talk", payload={"input": input})
 
     if response.status == "failed":
-        raise Exception("Server Error: \n" + response.json["message"])
+        raise Exception("Server Error: \n" + response.text)
 
     try:
-        print(response.json["text"])
+        print(response.text)
     except:
         print("It seems there was an issue.")
 

@@ -13,9 +13,7 @@ import click
 @click.pass_context
 def main(ctx, config_file, log_level):
 
-    ctx.obj["cli_overrides"] = {"log_level": log_level}
-
-    ctx.obj["config_file"] = config_file
+    ctx.obj["cli_overrides"] = {"log_level": log_level, "config_file": config_file}
 
     if ctx.invoked_subcommand is None:
         ctx.invoke(daemon)

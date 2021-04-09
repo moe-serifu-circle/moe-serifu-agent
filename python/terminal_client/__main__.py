@@ -43,6 +43,7 @@ run_async(startup_check())
 
 # start websocket connection
 
+
 async def interact(api, state):
     try:
         while True:
@@ -51,7 +52,6 @@ async def interact(api, state):
                 state["prompt_session"] = prompt_session
             else:
                 prompt_session = state["prompt_session"]
-
 
             try:
                 text = await prompt_session.prompt(">>> ", async_=True)
@@ -66,18 +66,12 @@ async def interact(api, state):
                 print("Shutting down...")
             finally:
                 await api.client.stop()
-                return 
+                return
     finally:
         await ws_client.client.stop()
 
 
-
-
-ws_client = get_api(ApiContext.websocket, plugins, interact=interact, loop=loop, host=host, port=port)
+ws_client = get_api(
+    ApiContext.websocket, plugins, interact=interact, loop=loop, host=host, port=port
+)
 ws_client.client.start()
-
-
-
-    
-
-

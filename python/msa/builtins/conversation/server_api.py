@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from msa.core import get_supervisor
 from msa.api import ApiContext
+from msa.server.server_response import ServerResponseText, ServerResponseType
 
 
 async def talk(request):
@@ -21,7 +22,7 @@ async def talk(request):
     supervisor.fire_event(new_event)
 
     response_event = await supervisor.listen_for_result(ConversationOutputEvent)
-    return {"text": response_event.data["output"]}
+    return ServerResponseText(ServerResponseType.success, response_event.data["output"])
 
 
 def register_routes(route_binder):

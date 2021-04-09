@@ -1,5 +1,10 @@
 from msa.core import get_supervisor
 import json
+from msa.server.server_response import (
+    ServerResponseText,
+    ServerResponseType,
+    ServerResponseJson,
+)
 
 
 async def trigger_event(request):
@@ -13,7 +18,9 @@ async def trigger_event(request):
     new_event = Event.deserialize(request.payload)
     get_supervisor().fire_event(new_event)
 
-    return {"text": f"Event {new_event} sucessfully triggered."}
+    return ServerResponseText(
+        ServerResponseType.success, text=f"Event {new_event} sucessfully triggered."
+    )
 
 
 async def get_events(request):
@@ -35,7 +42,9 @@ async def get_events(request):
         DisburseEventsToNetworkEvent
     )
 
-    return response_event.get_metadata()
+    return ServerResponseJson(
+        ServerResponseType.success, payload=response_event.get_metadata()
+    )
 
 
 def register_routes(route_binder):

@@ -15,31 +15,10 @@ from msa.server.url_param_parser import UrlParamParser
 
 
 class ApiResponse:
-    def __init__(self, status, raw=None, payload=None):
-        self.status = status
-        self.raw = raw
-        self.payload = payload
-
-        if self.raw is not None:
-            if isinstance(raw, str):
-                self.text = raw
-            else:
-                self.text = raw.decode("utf-8")
-        else:
-            self.raw = ""
-            self.text = ""
-
-    @property
-    def json(self):
-        if self.payload:
-            return self.payload
-        elif self.raw:
-            try:
-                return json.loads(self.text)
-            except:
-                return None
-        else:
-            return {}
+    def __init__(self, data):
+        self.status = data["status"]
+        self.text = data.get("text", None)
+        self.json = data.get("payload", None)
 
 
 class ApiRestClient:
@@ -61,8 +40,8 @@ class ApiRestClient:
     async def _wrap_api_call(self, func, endpoint, payload=None):
 
         async with func(self.base_url + endpoint, json=payload) as response:
-            raw_text = await response.text()
-            return ApiResponse(response.status, raw=raw_text)
+            data = await response.json()
+            return ApiResponse(data)
 
     async def get(self, endpoint):
         return await self._wrap_api_call(self.session.get, endpoint)
@@ -121,7 +100,7 @@ class ApiWebsocketClient:
                         data = json.loads(msg.data)
 
                         if data["type"] == "response":
-                            response = ApiResponse("success", payload=data["payload"])
+                            response = ApiResponse(data["payload"])
 
                         elif data["type"] == "event_propagate":
                             new_event = Event.deserialize(data["payload"])
@@ -140,7 +119,9 @@ class ApiWebsocketClient:
                             self.client_id = data["payload"]["id"]
                             continue
                         elif data["type"] == "error":
-                            response = ApiResponse("failed", payload=data["payload"])
+                            raise Exception(
+                                f"Bad request:\n{data['payload']['message']}"
+                            )
                         else:
                             raise Exception("Bad payload response:", data)
 
@@ -155,7 +136,7 @@ class ApiWebsocketClient:
 
     async def _wrap_api_call(self, verb, endpoint, payload):
 
-        wrapped_payload = {"verb": verb, "route": endpoint, "data": payload}
+        wrapped_payload = {"verb": verb, "route": endpoint, "payload": payload}
         await self.ws.send_json(wrapped_payload)
         response = await self.queue.get()
         return response
@@ -199,10 +180,10 @@ class ApiLocalClient(dict):
         request = SeverRequest("local", verb, route, payload, url_params)
 
         try:
-            result_payload = await func(request)
-            return ApiResponse("success", payload=result_payload)
+            response = await func(request)
+            return ApiResponse(response.get_data())
         except Exception as e:
-            return ApiResponse("failed", raw=traceback.format_exc())
+            return ApiResponse({"status": "failed", "text": traceback.format_exc()})
 
     async def get(self, route):
         return await self._call_api_route("get", route)

@@ -3,6 +3,8 @@
 import asyncio
 from functools import partial
 
+from msa.api.context import ApiContext
+from msa.utils.asyncio_utils import run_async
 from msa.api.patchable_api import MsaApi
 
 from msa.api.base_methods import register_base_methods
@@ -18,6 +20,7 @@ class ApiPatcher:
         self.api.client = api_client
         self.api.client.api = self.api
         self.plugin_whitelist = plugin_whitelist
+        self.endpoints = []
 
         self._registration_frozen = False
         self._process_registrations()
@@ -66,11 +69,27 @@ class ApiPatcher:
             ):
                 module.register_client_api(self)
 
+        def help_func():
+            # TODO enhance this a lot
+            print("List of active functions:\n", "\n- ".join(self.endpoints))
+
+        self.api["help"] = help_func
+
     def register_method(self):
         if not self._registration_frozen:
 
             def decorator(func):
-                self.api[func.__name__] = partial(func, self.api)
+                async_name = func.__name__
+                async_func = partial(func, self.api)
+                self.api[async_name] = async_func
+                self.endpoints.append(async_name)
+
+                if self.api.context is ApiContext.rest:
+                    sync_name = "sync_" + func.__name__
+                    self.api[sync_name] = lambda *args, **kwargs: run_async(
+                        async_func(*args, **kwargs)
+                    )
+                    self.endpoints.append(sync_name)
 
             return decorator
         else:

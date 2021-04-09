@@ -114,9 +114,7 @@ class Supervisor:
             # helps suppress a warning.
 
         # ### PLACEHOLDER - Load Configuration file here --
-        self.config_manager = ConfigManager(
-            cli_config["config_file"], cli_config["cli_overrides"]
-        )
+        self.config_manager = ConfigManager(cli_config["cli_overrides"])
         config = self.config_manager.get_config()
 
         client_api_binder = get_api(

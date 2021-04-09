@@ -1,7 +1,7 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class NotificationProvider(Enum):
-    pushbullet = auto()
-    email = auto()
-    slack = auto()
+    pushbullet = "pushbullet"
+    email = "email"
+    slack = "slack"

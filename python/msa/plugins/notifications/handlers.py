@@ -1,3 +1,5 @@
+from functools import partial
+
 from msa.core.event_handler import EventHandler
 from msa.plugins.notifications.events import (
     SendNotificationEvent,
@@ -15,6 +17,11 @@ except:
     exit()
 
 
+class WrapperProvider:
+    def __init__(self):
+        pass
+
+
 class SendNotificationEventHandler(EventHandler):
     """
     Handles ConversationInputEvents
@@ -30,42 +37,37 @@ class SendNotificationEventHandler(EventHandler):
             if provider_type_enum == NotificationProvider.pushbullet:
                 pushbullet = get_notifier("pushbullet")
 
-                def send_notification(title, message, target):
-                    pushbullet.notify(
-                        title=title, message=message, token=provider_config["token"]
-                    )
+                part = partial(pushbullet.notify, token=provider_config["token"])
 
                 self.providers[NotificationProvider.pushbullet] = sync_to_async(
-                    send_notification
+                    lambda title, message, target: part(title=title, message=message)
                 )
 
             elif provider_type_enum == NotificationProvider.email:
                 email = get_notifier("email")
 
-                def send_notification(title, message, target):
-                    email.notify(
-                        subject=title,
-                        message=message,
-                        to=target,
-                        from_=provider_config["from"],
-                        username=provider_config.get("username"),
-                        password=provider_config.get("password"),
-                        ssl=provider_config.get("ssl", False),
-                        tls=provider_config.get("tls", False),
-                    )
+                part = partial(
+                    email.notify,
+                    from_=provider_config["from"],
+                    username=provider_config.get("username"),
+                    password=provider_config.get("password"),
+                    ssl=provider_config.get("ssl", False),
+                    tls=provider_config.get("tls", False),
+                )
 
                 self.providers[NotificationProvider.email] = sync_to_async(
-                    send_notification
+                    lambda title, message, target: part(
+                        subject=title, message=message, to=target
+                    )
                 )
 
             elif provider_type_enum == NotificationProvider.slack:
                 slack = get_notifier("slack")
 
-                def send_notification(title, message, target):
-                    slack.notify(message=f"{title}:\n{message}", channel=target)
-
                 self.providers[NotificationProvider.slack] = sync_to_async(
-                    send_notification
+                    lambda title, message, target: slack.notify(
+                        message=f"{title}:\n{message}", channel=target
+                    )
                 )
 
         preferred_provider = config.get("preferred_provider", None)

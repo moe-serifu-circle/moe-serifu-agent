@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from msa.core.event_handler import EventHandler
 from msa.core import get_supervisor

@@ -5,7 +5,6 @@ from unittest.mock import patch, MagicMock
 from msa.builtins.intents.handlers import IntentToEventHandler
 from msa.builtins.intents.events import IntentEvent
 from msa.core.event import Event
-from tests.async_test_util import AsyncMock
 from schema import Schema
 
 

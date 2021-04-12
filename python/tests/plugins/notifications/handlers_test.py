@@ -2,7 +2,10 @@ import asyncio
 import unittest
 from unittest.mock import patch, MagicMock
 
-from msa.plugins.notifications.handlers import SendNotificationEventHandler
+from msa.plugins.notifications.handlers import (
+    SendNotificationEventHandler,
+    SendPreferredNotificationEvent,
+)
 from msa.plugins.notifications.events import SendNotificationEvent
 from msa.core.event import Event
 from tests.async_test_util import AsyncMock
@@ -77,6 +80,57 @@ class IntentToEventHandlerTest(unittest.TestCase):
 
         for event in events:
             loop.run_until_complete(handler.handle_notify(event))
+
+        for name, notifier in notifiers.items():
+            notifier.notify.called_once_with(*call_args[name])
+
+    @patch("msa.core.supervisor_instance")
+    @patch("msa.plugins.notifications.handlers.get_notifier")
+    def test_preferrred_provider(self, get_notifier_mock, SupervisorMock):
+
+        loop = asyncio.get_event_loop()
+        event_bus_mock = MagicMock()
+        logger_mock = MagicMock()
+        config = {
+            "preferred_provider": "pushbullet",
+            "providers": {
+                "pushbullet": {"token": "abcd1234"},
+                "email": {
+                    "host": "http://test.com",
+                    "port": 0000,
+                    "from": "test@test.com",
+                },
+                "slack": {"webhook_url": "http://slack.com/api/asdfasdfadf-fake"},
+            },
+        }
+
+        # set up notify mocks
+
+        notifiers = {"pushbullet": MagicMock()}
+
+        call_args = {
+            "pushbullet": [
+                "test",
+                "test message",
+                config["providers"]["pushbullet"]["token"],
+            ]
+        }
+
+        get_notifier_mock.side_effect = lambda k: notifiers.get(k, MagicMock())
+
+        handler = SendNotificationEventHandler(
+            loop, event_bus_mock, logger_mock, config
+        )
+
+        event_data = {
+            "title": "test",
+            "message": "test message",
+            "target": "test_target",
+        }
+
+        event = SendPreferredNotificationEvent().init(event_data)
+
+        loop.run_until_complete(handler.handle_preferred(event))
 
         for name, notifier in notifiers.items():
             notifier.notify.called_once_with(*call_args[name])

@@ -15,10 +15,12 @@ async def talk(self, input):
     if response.status == "failed":
         raise Exception("Server Error: \n" + response.text)
 
-    try:
-        print(response.text)
-    except:
+    response = response.text
+
+    if response is None:
         print("It seems there was an issue.")
+    else:
+        print(response)
 
 
 def register_endpoints(api_binder):

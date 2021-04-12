@@ -17,11 +17,6 @@ except:
     exit()
 
 
-class WrapperProvider:
-    def __init__(self):
-        pass
-
-
 class SendNotificationEventHandler(EventHandler):
     """
     Handles ConversationInputEvents

@@ -37,7 +37,7 @@ pipeline:
       branch: master
 
   run-python-tests:
-    image: python:3
+    image: python:3.8
     commands:
       - cd python
       - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -

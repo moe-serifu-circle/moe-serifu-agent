@@ -42,7 +42,7 @@ pipeline:
       - cd python
       - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
       - $HOME/.poetry/bin/poetry install 
-      - "TEST=1 ./test_and_coverage.sh"
+      - $HOME/.poetry/bin/poetry run "TEST=1 ./test_and_coverage.sh"
     when:
       event: [pull_request, push]
       branch: master

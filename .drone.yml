@@ -40,7 +40,7 @@ pipeline:
     image: python:3
     commands:
       - cd python
-      - pip install poetry
+      - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
       - poetry install 
       - "TEST=1 ./test_and_coverage.sh"
     when:

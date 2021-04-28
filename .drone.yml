@@ -38,11 +38,13 @@ pipeline:
 
   run-python-tests:
     image: python:3
+    environment:
+      TEST=1
     commands:
       - cd python
       - pip install poetry
       - poetry install 
-      - "TEST=1 ./test_and_coverage.sh"
+      - ./test_and_coverage.sh
     when:
       event: [pull_request, push]
       branch: master

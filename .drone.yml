@@ -39,7 +39,7 @@ pipeline:
   run-python-tests:
     image: python:3.8
     environment:
-      TEST: 1
+      TEST: "1"
     commands:
       - cd python
       - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -

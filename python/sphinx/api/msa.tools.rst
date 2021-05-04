@@ -1,13 +1,13 @@
-msa.utils package
+msa.tools package
 =================
 
 Submodules
 ----------
 
-msa.utils.asyncio\_utils module
--------------------------------
+msa.tools.msa\_rest\_client\_loader module
+------------------------------------------
 
-.. automodule:: msa.utils.asyncio_utils
+.. automodule:: msa.tools.msa_rest_client_loader
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ msa.utils.asyncio\_utils module
 Module contents
 ---------------
 
-.. automodule:: msa.utils
+.. automodule:: msa.tools
    :members:
    :undoc-members:
    :show-inheritance:

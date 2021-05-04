@@ -21,9 +21,11 @@ aiosqlite = "^0.10.0"
 tortoise-orm = "^0.13.7"
 tabulate = "^0.8.7"
 
+
 # below `extras`. They can be opted into by apps.
 feedparser = { version = "^6.0.1",  optional=true }
 notifiers = { version = "^1.2.1", optional=true }
+docutils = "0.16"
 
 
 [tool.poetry.dev-dependencies]

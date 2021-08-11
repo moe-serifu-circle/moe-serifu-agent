@@ -3,7 +3,6 @@ import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
 from tortoise.contrib.test import initializer, finalizer
 from collections import namedtuple
-import aiocron
 
 
 from msa.builtins.scripting.handlers import *
@@ -118,7 +117,7 @@ class AddScriptHandlerTest(unittest.TestCase):
 
         self.assertIsNotNone(scheduled_script)
         self.assertIsNotNone(scheduled_script.get("task"))
-        self.assertIsNotNone(scheduled_script.get("aiocron_instance"))
+        self.assertIsNotNone(scheduled_script.get("cron"))
 
     @patch("msa.builtins.scripting.script_execution_manager.ScriptExecutionManager")
     @patch("msa.builtins.scripting.entities.ScriptEntity.filter")
@@ -336,13 +335,12 @@ class TriggerScriptListHandlerTest(unittest.TestCase):
         eventBusMock = MagicMock()
         loggerMock = MagicMock()
 
-        aiocronMock = MagicMock()
+        cronMock = MagicMock()
 
-        aiocronMock.handle.when.return_value = 5
-        aiocronMock.time.return_value = datetime.now().timestamp()
+        cronMock.current.return_value = datetime.now()
 
         ScriptExecutionManagerMock.shared_state = {
-            "scheduled_scripts": {"test_script1": {"aiocron_instance": aiocronMock}},
+            "scheduled_scripts": {"test_script1": {"cron": cronMock}},
             "loop": loopMock,
             "running_scripts": set(),
         }
@@ -412,13 +410,12 @@ class TriggerGetScripHandlertTest(unittest.TestCase):
         eventBusMock = MagicMock()
         loggerMock = MagicMock()
 
-        aiocronMock = MagicMock()
+        cronMock = MagicMock()
 
-        aiocronMock.handle.when.return_value = 5
-        aiocronMock.time.return_value = datetime.now().timestamp()
+        cronMock.current.return_value = datetime.now()
 
         ScriptExecutionManagerMock.shared_state = {
-            "scheduled_scripts": {"test_script1": {"aiocron_instance": aiocronMock}},
+            "scheduled_scripts": {"test_script1": {"cron": cronMock}},
             "loop": loopMock,
             "running_scripts": set(),
         }
@@ -466,10 +463,9 @@ class TriggerGetScripHandlertTest(unittest.TestCase):
         eventBusMock = MagicMock()
         loggerMock = MagicMock()
 
-        aiocronMock = MagicMock()
+        cronMock = MagicMock()
 
-        aiocronMock.handle.when.return_value = 5
-        aiocronMock.time.return_value = datetime.now().timestamp()
+        cronMock.current.return_value = datetime.now()
 
         ScriptExecutionManagerMock.shared_state = {
             "scheduled_scripts": {},
@@ -526,11 +522,11 @@ class TriggerDeleteScriptHandlerTest(unittest.TestCase):
         eventBusMock = MagicMock()
         loggerMock = MagicMock()
 
-        aiocronMock = MagicMock()
+        cronMock = MagicMock()
 
         ScriptExecutionManagerMock.shared_state = {
             "scheduled_scripts": {
-                test_script.name: {"aiocron_instance": aiocronMock, "task": None}
+                test_script.name: {"cron": cronMock, "task": None}
             },
             "loop": loopMock,
             "running_scripts": set([test_script.name]),

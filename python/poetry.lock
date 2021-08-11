@@ -7,21 +7,6 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
-name = "aiocron"
-version = "1.6"
-description = "Crontabs for asyncio"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-croniter = "*"
-tzlocal = "*"
-
-[package.extras]
-test = ["coverage"]
-
-[[package]]
 name = "aiohttp"
 version = "3.7.4.post0"
 description = "Async http client/server framework (asyncio)"
@@ -661,15 +646,11 @@ notifications_plugin = ["notifiers"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "013b9434c6a8fcf5f0f3487230d96d17912f300faf3230b0a4f86dc82dc038bf"
+content-hash = "a565fb96390c3898786d9b1b61116bbdd42e06062013a74777cd014c98b84caf"
 
 [metadata.files]
 aioconsole = [
     {file = "aioconsole-0.3.1.tar.gz", hash = "sha256:7c038bb40b7690bf5be6b17154830b7bff25e7be1c02d8420a346c3efbd5d8e5"},
-]
-aiocron = [
-    {file = "aiocron-1.6-py3-none-any.whl", hash = "sha256:ab451380199ef09757f95085220cd34bf6970239bdb77863e3413ee08297fcc5"},
-    {file = "aiocron-1.6.tar.gz", hash = "sha256:21f00288e9993f4e44ae2e51d4301b7822512962fc900b59317d11299c125a6a"},
 ]
 aiohttp = [
     {file = "aiohttp-3.7.4.post0-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:3cf75f7cdc2397ed4442594b935a11ed5569961333d49b7539ea741be2cc79d5"},

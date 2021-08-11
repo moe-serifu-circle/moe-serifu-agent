@@ -141,13 +141,10 @@ class TriggerScriptListHandler(EventHandler):
 
         for script_entity in await ScriptEntity.all():
             if script_entity.name in self.script_execution_manager.scheduled_scripts:
-                aiocron_instance = self.script_execution_manager.scheduled_scripts[
+                cron = self.script_execution_manager.scheduled_scripts[
                     script_entity.name
-                ]["aiocron_instance"]
-                time_sec = aiocron_instance.handle.when() + aiocron_instance.time
-                scheduled_for = datetime.fromtimestamp(time_sec)
-
-                scheduled_for = scheduled_for.strftime("%Y-%m-%dT%H:%M:%S.%f")
+                ]["cron"]
+                scheduled_for = cron.current().strftime("%Y-%m-%dT%H:%M:%S.%f")
             else:
                 scheduled_for = None
 

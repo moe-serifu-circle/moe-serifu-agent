@@ -1,4 +1,3 @@
-import aiocron
 import traceback
 from functools import partial
 import asyncio
@@ -7,6 +6,7 @@ from msa.api.context import ApiContext
 from msa.builtins.scripting.entities import ScriptEntity
 import logging
 from datetime import datetime
+from msa.builtins.scripting.async_cron import AsyncCrontab
 
 
 class ScriptExecutionManager:
@@ -72,10 +72,10 @@ class ScriptExecutionManager:
 
     async def run_script(self, name, script_content):
         # TODO capture log, errors, etc, and log to db via RunScriptResultEvent(Event):
-        if self.scheduled_scripts[name]["aiocron_instance"] is not None:
+        if self.scheduled_scripts[name]["cron"] is not None:
             self.logger.debug(f'Scheduling cron execution of script "{name}"')
             while True:
-                await self.scheduled_scripts[name]["aiocron_instance"].next()
+                await self.scheduled_scripts[name]["cron"].next()
 
                 await self._record_script_run(name)
 
@@ -108,7 +108,7 @@ class ScriptExecutionManager:
 
             self.scheduled_scripts[name] = {
                 "task": self.loop.create_task(script_coro()),
-                "aiocron_instance": aiocron.crontab(crontab_definition)
+                "cron": AsyncCrontab(crontab_definition, self.loop)
                 if crontab_definition
                 else None,
             }

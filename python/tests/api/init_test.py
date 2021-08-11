@@ -2,7 +2,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 import asyncio
 
-from msa.api import get_api, run_async
+from msa.api import get_api
+from msa.utils.asyncio_utils import run_async
 from msa.api.context import ApiContext
 from msa.api import api_clients, patchable_api
 from msa.api.patcher import ApiPatcher

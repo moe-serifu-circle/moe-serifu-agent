@@ -8,8 +8,14 @@ import aiohttp
 from aiohttp.test_utils import TestClient, TestServer
 from aiohttp import web
 
-from msa.api.api_clients import ApiRestClient, ApiWebsocketClient, ApiLocalClient
+from msa.api.api_clients import (
+    ApiRestClient,
+    ApiWebsocketClient,
+    ApiLocalClient,
+    ApiResponse,
+)
 from msa.core.event import Event
+from msa.server.server_response import ServerResponseJson, ServerResponseType
 
 
 def run_aiohttp_client_test(app, func):
@@ -39,12 +45,12 @@ class LocalClientTest(unittest.TestCase):
         self.api_client.route_adapter = route_adapter_mock
 
         async def get_func(request):
-            return 3 + 3
+            return ServerResponseJson(ServerResponseType.success, {"sum": 3 + 3})
 
         lut_fun.return_value = (get_func, {})
 
         result = loop.run_until_complete(self.api_client.get("/test"))
-        self.assertEqual(6, result.payload)
+        self.assertEqual({"sum": 6}, result.json)
 
     def test_post(self):
         loop = asyncio.get_event_loop()
@@ -55,7 +61,7 @@ class LocalClientTest(unittest.TestCase):
         self.api_client.route_adapter = route_adapter_mock
 
         async def post_func(request):
-            return {"verb": "post", "payload": request.data}
+            return ServerResponseJson(ServerResponseType.success, request.data)
 
         lut_fun.return_value = (post_func, {})
 
@@ -63,8 +69,7 @@ class LocalClientTest(unittest.TestCase):
         result = loop.run_until_complete(
             self.api_client.post("/test", payload=request_payload)
         )
-        expected = {"verb": "post", "payload": request_payload}
-        self.assertEqual(expected, result.payload)
+        self.assertEqual(request_payload, result.json)
 
     def test_put(self):
         loop = asyncio.get_event_loop()
@@ -75,7 +80,7 @@ class LocalClientTest(unittest.TestCase):
         self.api_client.route_adapter = route_adapter_mock
 
         async def put_func(request):
-            return {"verb": "put", "payload": request.data}
+            return ServerResponseJson(ServerResponseType.success, request.data)
 
         lut_fun.return_value = (put_func, {})
 
@@ -83,8 +88,7 @@ class LocalClientTest(unittest.TestCase):
         result = loop.run_until_complete(
             self.api_client.put("/test", payload=request_payload)
         )
-        expected = {"verb": "put", "payload": request_payload}
-        self.assertEqual(expected, result.payload)
+        self.assertEqual(request_payload, result.json)
 
     def test_delete(self):
         loop = asyncio.get_event_loop()
@@ -95,7 +99,8 @@ class LocalClientTest(unittest.TestCase):
         self.api_client.route_adapter = route_adapter_mock
 
         async def delete_func(request):
-            return {"verb": "delete", "payload": request.data}
+            return ServerResponseJson(ServerResponseType.success, request.data)
+            # return {"verb": "delete", "payload": request.data}
 
         lut_fun.return_value = (delete_func, {})
 
@@ -103,8 +108,7 @@ class LocalClientTest(unittest.TestCase):
         result = loop.run_until_complete(
             self.api_client.delete("/test", payload=request_payload)
         )
-        expected = {"verb": "delete", "payload": request_payload}
-        self.assertEqual(expected, result.payload)
+        self.assertEqual(request_payload, result.json)
 
     def test_non_existant_route(self):
         loop = asyncio.get_event_loop()
@@ -155,14 +159,16 @@ class LocalClientTest(unittest.TestCase):
 
         result = loop.run_until_complete(self.api_client.get("/test"))
 
-        self.assertTrue("Exception: my_exception" in result.raw)
+        self.assertTrue("Exception: my_exception" in result.text)
 
 
 class RestClientTest(unittest.TestCase):
     def get_application(self):
         # set up server
         async def get_test(request):
-            return web.Response(text="get_text")
+            return web.json_response(
+                {"status": "success", "text": "get_text", "payload": None}
+            )
 
         async def post_test(request):
             data = await request.json()
@@ -191,35 +197,39 @@ class RestClientTest(unittest.TestCase):
             api_client.base_url = ""
 
             result = await api_client.get("/test")
+            self.assertEqual("success", result.status)
             self.assertEqual("get_text", result.text)
+            self.assertEqual(None, result.json)
 
         run_aiohttp_client_test(self.get_application(), async_test_get)
 
     def test_post(self):
         async def async_test_post(loop, client):
-
             api_client = ApiRestClient(host="localhost", port=8080)
             api_client.session = client
             api_client.base_url = ""
 
-            payload = {"this": "is", "a": "test", "payload": 5}
+            payload = {"status": "success", "text": "test text", "payload": None}
 
             result = await api_client.post("/test", payload=payload)
-            self.assertEqual(payload, result.json)
+            self.assertEqual(payload["status"], result.status)
+            self.assertEqual(payload["text"], result.text)
+            self.assertEqual(payload["payload"], result.json)
 
         run_aiohttp_client_test(self.get_application(), async_test_post)
 
     def test_put(self):
         async def async_test_put(loop, client):
-
             api_client = ApiRestClient(host="localhost", port=8080)
             api_client.session = client
             api_client.base_url = ""
 
-            payload = {"this": "is", "a": "test", "payload": 5}
+            payload = {"status": "success", "text": "test text", "payload": None}
 
             result = await api_client.put("/test", payload=payload)
-            self.assertEqual(payload, result.json)
+            self.assertEqual(payload["status"], result.status)
+            self.assertEqual(payload["text"], result.text)
+            self.assertEqual(payload["payload"], result.json)
 
         run_aiohttp_client_test(self.get_application(), async_test_put)
 
@@ -230,20 +240,18 @@ class RestClientTest(unittest.TestCase):
             api_client.session = client
             api_client.base_url = ""
 
-            payload = {"this": "is", "a": "test", "payload": 5}
+            payload = {"status": "success", "text": "test text", "payload": None}
 
             result = await api_client.delete("/test", payload=payload)
-            self.assertEqual(payload, result.json)
+            self.assertEqual(payload["status"], result.status)
+            self.assertEqual(payload["text"], result.text)
+            self.assertEqual(payload["payload"], result.json)
 
         run_aiohttp_client_test(self.get_application(), async_test_delete)
 
 
 class WebsocketClientTest(unittest.TestCase):
     def get_application(self):
-        # set up server
-        async def get_test(request):
-            return web.Response(text="get_text")
-
         async def ws_handler(request):
             ws = web.WebSocketResponse()
             await ws.prepare(request)
@@ -278,9 +286,16 @@ class WebsocketClientTest(unittest.TestCase):
                         await ws.close()
                         return
 
-                    await ws.send_str(
-                        json.dumps({"type": "response", "payload": payload})
-                    )
+                    if payload.get("verb", None) == "get":
+                        payload = {
+                            "payload": {
+                                "status": "success",
+                                "text": "test text",
+                                "payload": {},
+                            }
+                        }
+
+                    await ws.send_str(json.dumps({**payload, "type": "response"}))
 
                 elif msg.type == aiohttp.WSMsgType.ERROR:
                     print("ws connection closed with exception %s" % ws.exception())
@@ -296,11 +311,15 @@ class WebsocketClientTest(unittest.TestCase):
     @patch("aiohttp.ClientSession")
     def test_get(self, session_client_factory_mock):
         async def interact():
-            result = await self.api_client.get("/test")
-            expected = {"verb": "get", "route": "/test", "data": None}
-            self.assertEqual(expected, result.payload)
+            try:
+                result = await self.api_client.get("/test")
+                expected = ApiResponse({"status", "success"})
+                self.assertEqual(expected.status, result.status)
+                self.assertEqual(expected.text, result.text)
+                self.assertEqual(expected.json, result.json)
 
-            await self.api_client.ws.send_json({"type": "close"})
+            finally:
+                await self.api_client.ws.send_json({"type": "close"})
 
         async def propagate(queue):
             pass
@@ -323,12 +342,15 @@ class WebsocketClientTest(unittest.TestCase):
     @patch("aiohttp.ClientSession")
     def test_post(self, session_client_factory_mock):
         async def interact():
-            data = {"vern": "post", "this": "is a payload"}
-            result = await self.api_client.post("/test", payload=data)
-            expected = {"verb": "post", "route": "/test", "data": data}
-            self.assertEqual(expected, result.payload)
-
-            await self.api_client.ws.send_json({"type": "close"})
+            try:
+                data = {"vern": "post", "status": "success", "text": "is a payload"}
+                result = await self.api_client.post("/test", payload=data)
+                expected = ApiResponse(data)
+                self.assertEqual(expected.status, result.status)
+                self.assertEqual(expected.text, result.text)
+                self.assertEqual(expected.json, result.json)
+            finally:
+                await self.api_client.ws.send_json({"type": "close"})
 
         async def propagate(queue):
             pass
@@ -351,12 +373,15 @@ class WebsocketClientTest(unittest.TestCase):
     @patch("aiohttp.ClientSession")
     def test_put(self, session_client_factory_mock):
         async def interact():
-            data = {"verb": "put", "this": "is a payload"}
-            result = await self.api_client.put("/test", payload=data)
-            expected = {"verb": "put", "route": "/test", "data": data}
-            self.assertEqual(expected, result.payload)
-
-            await self.api_client.ws.send_json({"type": "close"})
+            try:
+                data = {"status": "success", "text": "is a payload"}
+                result = await self.api_client.put("/test", payload=data)
+                expected = ApiResponse(data)
+                self.assertEqual(expected.status, result.status)
+                self.assertEqual(expected.text, result.text)
+                self.assertEqual(expected.json, result.json)
+            finally:
+                await self.api_client.ws.send_json({"type": "close"})
 
         async def propagate(queue):
             pass
@@ -379,40 +404,15 @@ class WebsocketClientTest(unittest.TestCase):
     @patch("aiohttp.ClientSession")
     def test_delete(self, session_client_factory_mock):
         async def interact():
-            data = {"verb": "delete", "this": "is a payload"}
-            result = await self.api_client.delete("/test", payload=data)
-            expected = {"verb": "delete", "route": "/test", "data": data}
-            self.assertEqual(expected, result.payload)
-
-            await self.api_client.ws.send_json({"type": "close"})
-
-        async def propagate(queue):
-            pass
-
-        async def async_test_delete(loop, client):
-            session_client_factory_mock.return_value = client
-
-            self.api_client = ApiWebsocketClient(
-                loop=loop,
-                interact=interact,
-                propagate=propagate,
-                host="localhost",
-                port=8080,
-            )
-            self.api_client.base_url = "/ws"
-            await self.api_client.connect()
-
-        run_aiohttp_client_test(self.get_application(), async_test_delete)
-
-    @patch("aiohttp.ClientSession")
-    def test_delete(self, session_client_factory_mock):
-        async def interact():
-            data = {"verb": "delete", "this": "is a payload"}
-            result = await self.api_client.delete("/test", payload=data)
-            expected = {"verb": "delete", "route": "/test", "data": data}
-            self.assertEqual(expected, result.payload)
-
-            await self.api_client.ws.send_json({"type": "close"})
+            try:
+                data = {"status": "success", "text": "is a payload"}
+                result = await self.api_client.delete("/test", payload=data)
+                expected = ApiResponse(data)
+                self.assertEqual(expected.status, result.status)
+                self.assertEqual(expected.text, result.text)
+                self.assertEqual(expected.json, result.json)
+            finally:
+                await self.api_client.ws.send_json({"type": "close"})
 
         async def propagate(queue):
             pass

@@ -9,6 +9,8 @@ from concurrent.futures import ThreadPoolExecutor
 from aiocron import crontab
 from datetime import datetime
 
+from schema import Schema
+
 from msa.core.event import Event
 from msa.core.loader import load_builtin_modules, load_plugin_modules
 from msa.core.event_bus import EventBus
@@ -20,8 +22,7 @@ from msa.data import __models__
 
 
 class Supervisor:
-    """The supervisor is responsible for managing the execution of the application and orchestrating the event system.
-    """
+    """The supervisor is responsible for managing the execution of the application and orchestrating the event system."""
 
     def __init__(self):
         self.config_manager = None
@@ -114,9 +115,7 @@ class Supervisor:
             # helps suppress a warning.
 
         # ### PLACEHOLDER - Load Configuration file here --
-        self.config_manager = ConfigManager(
-            cli_config["config_file"], cli_config["cli_overrides"]
-        )
+        self.config_manager = ConfigManager(cli_config["cli_overrides"])
         config = self.config_manager.get_config()
 
         client_api_binder = get_api(
@@ -127,7 +126,7 @@ class Supervisor:
         # Initialize logging
         self.init_logging(config["logging"])
 
-        plugin_names = ["rss_feed"]
+        plugin_names = config["plugin_modules"]
 
         # ### Loading Modules
         self.logger.info("Loading modules.")
@@ -166,6 +165,21 @@ class Supervisor:
             ):
                 __models__.extend(module.entities_list)
 
+            module_name_tail = module.__name__.split(".")[-1]
+            module_config = config["module_config"].get(module_name_tail, None)
+
+            if not (
+                hasattr(module, "config_schema")
+                and isinstance(module.config_schema, Schema)
+            ):
+                raise Exception(
+                    "All modules must define a `config_schema` property that is an instance of "
+                    "schema.Schema"
+                )
+
+            self.logger.debug(f"Validating module {module.__name__} config schema.")
+            validated_config = module.config_schema.validate(module_config)
+
             self.logger.debug(
                 "Registering handlers for module msa.{}".format(module.__name__)
             )
@@ -178,11 +192,8 @@ class Supervisor:
                 handler_logger = self.root_logger.getChild(namespace)
                 self.loggers[full_namespace] = handler_logger
 
-                module_name_tail = module.__name__.split(".")[-1]
-                module_config = config["module_config"].get(module_name_tail, None)
-
                 inited_handler = handler(
-                    self.loop, self.event_bus, handler_logger, module_config
+                    self.loop, self.event_bus, handler_logger, validated_config
                 )
 
                 self.initialized_event_handlers.append(inited_handler)
@@ -316,7 +327,7 @@ class Supervisor:
             with suppress(asyncio.CancelledError):
                 self.coroutine_futures = await asyncio.gather(*primed_coros)
         except Exception as err:
-            self.logger.error(err, traceback.format_exc())
+            self.logger.exception(err)
 
         self.logger.debug("Startup Coroutine: Finished startup")
 

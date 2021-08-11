@@ -13,12 +13,14 @@ async def talk(self, input):
     response = await self.client.post("/conversation/talk", payload={"input": input})
 
     if response.status == "failed":
-        raise Exception("Server Error: \n" + response.json["message"])
+        raise Exception("Server Error: \n" + response.text)
 
-    try:
-        print(response.json["text"])
-    except:
+    response = response.text
+
+    if response is None:
         print("It seems there was an issue.")
+    else:
+        print(response)
 
 
 def register_endpoints(api_binder):

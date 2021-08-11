@@ -3,7 +3,7 @@
 from msa.core.event_handler import EventHandler
 from msa.core import get_supervisor
 from msa.builtins.conversation import events
-from msa.builtins.signals import events as signal_events
+from msa.builtins.intents.events import IntentEvent
 
 
 class ConversationInputEventHandler(EventHandler):
@@ -35,7 +35,9 @@ class ConversationInputEventHandler(EventHandler):
             new_event = events.ConversationOutputEvent().init({"output": output})
 
         elif "fetch feeds" in input:
-            new_event = events.IntentEvent().init({"type": "rss_feed_request"})
+            new_event = IntentEvent().init(
+                {"type": "msa.plugins.rss_feed.events.RssFeedRequestEvent"}
+            )
 
         else:
             output = "I am afraid I don't know what to say."

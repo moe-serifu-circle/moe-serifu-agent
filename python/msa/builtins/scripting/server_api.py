@@ -1,4 +1,9 @@
 from msa.core import get_supervisor
+from msa.server.server_response import (
+    ServerResponseText,
+    ServerResponseType,
+    ServerResponseJson,
+)
 
 
 async def add_script(request):
@@ -12,7 +17,9 @@ async def add_script(request):
     new_event = AddScriptEvent().init(request.data)
     get_supervisor().fire_event(new_event)
 
-    return {"text": f"{request.data['name']} was sucessfully uploaded"}
+    return ServerResponseText(
+        ServerResponseType.success, f"{request.data['name']} was successfully uploaded"
+    )
 
 
 async def list_scripts(request):
@@ -31,7 +38,10 @@ async def list_scripts(request):
     get_supervisor().fire_event(new_event)
 
     response_event = await get_supervisor().listen_for_result(ListScriptsEvent)
-    return {"scripts": response_event.data["scripts"]}
+
+    return ServerResponseJson(
+        ServerResponseType.success, payload={"scripts": response_event.data["scripts"]}
+    )
 
 
 async def get_script(request):
@@ -50,7 +60,10 @@ async def get_script(request):
     get_supervisor().fire_event(new_event)
 
     response_event = await get_supervisor().listen_for_result(GetScriptEvent)
-    return {"script": response_event.data}
+
+    return ServerResponseJson(
+        ServerResponseType.success, payload={"script": response_event.data}
+    )
 
 
 async def delete_script(request):
@@ -72,7 +85,8 @@ async def delete_script(request):
     get_supervisor().fire_event(new_event)
 
     response_event = await get_supervisor().listen_for_result(ScriptDeletedEvent)
-    return response_event.data
+
+    return ServerResponseJson(ServerResponseType.success, payload=response_event.data)
 
 
 def register_routes(route_binder):

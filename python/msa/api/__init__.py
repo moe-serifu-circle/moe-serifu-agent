@@ -8,7 +8,7 @@ from msa.api import api_clients
 
 def get_api(context, plugin_whitelist=None, **kwargs):
     """
-        kwargs should only be provided if the context you are attempting to retrieve has not been loaded/patched yet.
+    kwargs should only be provided if the context you are attempting to retrieve has not been loaded/patched yet.
     """
     if context is None:
         raise Exception("get_api: context cannot be None.")
@@ -36,12 +36,3 @@ def get_api(context, plugin_whitelist=None, **kwargs):
         api_instance = ApiPatcher.load(context, api_client, plugin_whitelist)
 
     return api_instance
-
-
-def run_async(coroutine):
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        raise Exception(
-            "Asyncio event loop cannot be running in order to use run_async helper function."
-        )
-    return loop.run_until_complete(coroutine)

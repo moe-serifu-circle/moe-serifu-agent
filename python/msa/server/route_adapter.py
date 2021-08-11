@@ -5,6 +5,12 @@ from uuid import uuid4
 import traceback
 
 from msa.server.server_request import SeverRequest
+from msa.server.server_response import (
+    ServerResponse,
+    ServerResponseText,
+    ServerResponseType,
+    ServerResponseJson,
+)
 from msa.server.url_param_parser import UrlParamParser
 
 
@@ -58,6 +64,16 @@ class RouteAdapter:
 
         return self.routes[verb][route]
 
+    def _build_generic_response(self, response):
+        if not isinstance(response, ServerResponse) or not issubclass(
+            type(response), ServerResponse
+        ):
+            raise Exception(
+                "Invalid server response type. Server response, must be a subclass of "
+                "ServerResponse."
+            )
+        return response.get_data()
+
     def generate_websocket_route(self):
         route_adapter = self
 
@@ -108,18 +124,21 @@ class RouteAdapter:
                         )
                         continue
 
-                    if "data" not in payload:
+                    if "payload" not in payload:
                         await ws.send_str(
                             json.dumps(
                                 {
                                     "type": "error",
-                                    "message": "Websocket payload requires a data field.",
+                                    "message": "Websocket payload requires a payload field.",
                                 }
                             )
                         )
 
                     try:
-                        route_func, url_params = route_adapter.lookup_route_and_resolve_url_params(
+                        (
+                            route_func,
+                            url_params,
+                        ) = route_adapter.lookup_route_and_resolve_url_params(
                             payload["verb"], payload["route"]
                         )
                     except Exception as e:
@@ -132,25 +151,23 @@ class RouteAdapter:
                         client_id,
                         payload["verb"],
                         payload["route"],
-                        payload["data"],
+                        payload["payload"],
                         url_params,
                     )
 
                     try:
                         response = await route_func(request)
 
-                        if response is None:
-                            wrapped_response = {"type": "empty_response"}
-                        else:
-                            wrapped_response = {"type": "response", "payload": response}
+                        wrapped_response = {
+                            "type": "response",
+                            "payload": self._build_generic_response(response),
+                        }
+
                         await ws.send_str(json.dumps(wrapped_response))
                     except Exception as e:
                         await ws.send_str(
                             json.dumps(
-                                {
-                                    "type": "error",
-                                    "payload": {"message": traceback.format_exc()},
-                                }
+                                {"type": "error", "message": traceback.format_exc()}
                             )
                         )
                         continue
@@ -192,7 +209,7 @@ class RouteAdapter:
                 )
 
                 response = await func(server_request)
-                return web.Response(**response)
+                return web.json_response(self._build_generic_response(response))
 
             return wrapped_route
 

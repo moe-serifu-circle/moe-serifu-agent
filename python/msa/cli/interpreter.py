@@ -13,7 +13,7 @@ from pygments.lexers.python import Python3Lexer, Python3TracebackLexer
 from pygments.formatters import TerminalFormatter
 from pygments import highlight
 
-from msa.api import get_api, run_async
+from msa.api import get_api
 from msa.api.context import ApiContext
 from msa.core.config_manager import ConfigManager
 
@@ -27,7 +27,7 @@ class Interpreter:
             lexer=PygmentsLexer(Python3Lexer), history=history_file
         )
 
-        self.config_manager = ConfigManager("msa_config.json", cli_overrides)
+        self.config_manager = ConfigManager(cli_overrides)
         self.config = self.config_manager.get_config()
 
         self.loop = asyncio.get_event_loop()
